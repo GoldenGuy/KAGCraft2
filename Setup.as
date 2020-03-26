@@ -5,13 +5,14 @@ void onInit(CRules@ this)
 	this.addCommandID("S_SendMap");
 	this.addCommandID("C_ChangeBlock");
 	
-	if(isServer())
-	{
-		this.AddScript("Server.as");
-	}
-	if(isClient())
-	{
-		Texture::createFromFile("Default_Textures", "Textures/Blocks.png");
-		this.AddScript("Client.as");
-	}
+	this.AddScript("Server.as");
+	this.AddScript("Client.as");
+
+	CMap@ map = getMap();
+	map.topBorder = map.bottomBorder = map.leftBorder = map.rightBorder = map.legacyTileVariations = map.legacyTileEffects = map.legacyTileDestroy = map.legacyTileMinimap = false;
+	SColor col = 0x00000000;
+	map.SetBorderColourLeft(col);
+	map.SetBorderColourRight(col);
+	map.SetBorderColourTop(col);
+	map.SetBorderColourBottom(col);
 }
