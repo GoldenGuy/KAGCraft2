@@ -61,6 +61,52 @@ class World
                 }
             }
         }
-        print("Map generated");
+        debug("Map generated");
+    }
+
+    void Serialize(CBitStream@ params)
+    {
+        uint similars = 1;
+        u8 similar_block_id = 0;
+        u8 block_id = 0;
+        for(int i = 0; i < map_size; i++)
+        {
+            if(i == 0)
+            {
+                similar_block_id = Map[i];
+                block_id = similar_block_id;
+                continue;
+            }
+            else
+            {
+                block_id = Map[i];
+                if(similar_block_id != block_id)
+                {
+                    params.write_u32(similars);
+                    params.write_u8(similar_block_id);
+                    similar_block_id = block_id;
+                    similars = 1;
+                }
+                else
+                {
+                    similars++;
+                }
+            }
+        }
+    }
+
+    void UnSerialize(CBitStream params)
+    {
+        int index = 0;
+        while(!params.isBufferEnd())
+        {
+            u32 amount = params.read_u32();
+            u8 block_id = params.read_u8();
+            for(int i = 0; i < amount; i++)
+            {
+                Map[index+i] = block_id;
+                index++;
+            }
+        }
     }
 }

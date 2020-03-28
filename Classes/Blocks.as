@@ -101,6 +101,7 @@ void InitBlocks()
     AddBlock("Sand", true, false, 15);
     AddBlock("Water", true, false, 17);
     AddBlock("Deep water", true, false, 18);
+    debug("Blocks are created.");
 }
 
 class Block
@@ -149,7 +150,7 @@ class Block
 
 void AddBlock(string name, bool solid, bool see_through, int allsides)
 {
-    print("name: "+name);
+    debug("name: "+name);
     Block newblock;
     newblock.id = counter;
     newblock.name = name;
@@ -164,7 +165,7 @@ void AddBlock(string name, bool solid, bool see_through, int allsides)
 
 void AddBlock(string name, bool solid, bool see_through, int sides, int top_and_bottom)
 {
-    print("name: "+name);
+    debug("name: "+name);
     Block newblock;
     newblock.id = counter;
     newblock.name = name;
@@ -179,7 +180,7 @@ void AddBlock(string name, bool solid, bool see_through, int sides, int top_and_
 
 void AddBlock(string name, bool solid, bool see_through, int sides, int top, int bottom)
 {
-    print("name: "+name);
+    debug("name: "+name);
     Block newblock;
     newblock.id = counter;
     newblock.name = name;
