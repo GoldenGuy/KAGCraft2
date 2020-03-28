@@ -4,13 +4,15 @@
 #include "World.as"
 #include "Vec3f.as"
 
-World world;
+World@ world;
 
 void onInit(CRules@ this)
 {
-	if(isClient()) error("egg");
 	debug("Server init");
-	world.GenerateMap();
+	World _world;
+	_world.GenerateMap();
+	if(isClient()) this.set("world", @_world);
+	@world = @_world;
 }
 
 void onTick(CRules@ this)
@@ -31,9 +33,9 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 		else
 		{
 			//CPlayer@ sender = getNet().getActiveCommandPlayer();
-			CBitStream params_;
-			world.Serialize(@params_);
-			this.SendCommand(this.getCommandID("S_SendMap"), params_, true);
+			CBitStream _params;
+			world.Serialize(@_params);
+			this.SendCommand(this.getCommandID("S_SendMap"), _params, true);
 		}
 	}
 }

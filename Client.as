@@ -4,32 +4,65 @@
 #include "World.as"
 #include "Vec3f.as"
 
-World world;
+World@ world;
 
 void onInit(CRules@ this)
 {
-	Texture::createFromFile("Default_Textures", "Textures/Blocks.png");
 	debug("Client init");
+	Texture::createFromFile("Default_Textures", "Textures/Blocks.png");
 	InitBlocks();
+
+	if(this.exists("world")) this.get("world", @world);
+	else
+	{
+		World _world;
+		@world = @_world;
+	}
 }
 
 bool ask_map = false;
 bool map_ready = false;
 bool map_renderable = false;
+bool faces_generated = false;
+int ask_map_in = 0;
 
 void onTick(CRules@ this)
 {
-	if(getGameTime() > 1 && !ask_map)
+	if(!ask_map)
 	{
-		debug("Asking for map.");
-		this.SendCommand(this.getCommandID("C_RequestMap"), CBitStream(), false);
-		ask_map = true;
+		ask_map_in++;
+		if(ask_map_in == 15)
+		{
+			if(isServer())
+			{
+				debug("No need to ask for map, already generated.");
+				ask_map = true;
+				map_ready = true;
+			}
+			else
+			{
+				debug("Asking for map.");
+				this.SendCommand(this.getCommandID("C_RequestMap"), CBitStream(), true);
+				ask_map = true;
+			}
+		}
 		return;
 	}
 	if(!map_ready) return;
 	else if(!map_renderable)
 	{
-
+		if(!faces_generated)
+		{
+			debug("Generating block faces.");
+			world.GenerateBlockFaces();
+			debug("Done.");
+			faces_generated = true;
+			return;
+		}
+		else
+		{
+			// mesh here
+		}
 	}
 	else
 	{

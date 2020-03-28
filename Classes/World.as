@@ -19,12 +19,13 @@ int map_size = map_width_depth * map_height;
 
 class World
 {
-    u8[] Map;
+    u8[] map;
+    u8[] faces_bits;
 
     void GenerateMap()
     {
-        Map.clear();
-        Map.resize(map_size);
+        map.clear();
+        map.resize(map_size);
 
         for(int y = 0; y < map_height; y++)
         {
@@ -35,33 +36,72 @@ class World
                     int index = y*map_width_depth + z*map_width + x;
                     if(y<10)
                     {
-                        Map[index] = BlockID::block_hard_stone;
+                        map[index] = BlockID::block_hard_stone;
                         continue;
                     }
                     else if(y<14)
                     {
-                        Map[index] = BlockID::block_stone;
+                        map[index] = BlockID::block_stone;
                         continue;
                     }
                     else if(y<16)
                     {
-                        Map[index] = BlockID::block_dirt;
+                        map[index] = BlockID::block_dirt;
                         continue;
                     }
                     else if(y<17)
                     {
-                        Map[index] = BlockID::block_grass_dirt;
+                        map[index] = BlockID::block_grass_dirt;
                         continue;
                     }
                     else
                     {
-                        Map[index] = BlockID::block_air;
+                        map[index] = BlockID::block_air;
                         continue;
                     }
                 }
             }
         }
         debug("Map generated");
+    }
+
+    void GenerateBlockFaces()
+    {
+        print("size: "+Blocks.size());
+        faces_bits.clear();
+        faces_bits.resize(map_size);
+
+        for(int y = 0; y < map_height; y++)
+        {
+            for(int z = 0; z < map_depth; z++)
+            {
+                for(int x = 0; x < map_width; x++)
+                {
+                    //print("x: "+x+"; y: "+y+"; z: "+z);
+                    UpdateBlockFaces(x, y, z);
+                }
+            }
+        }
+    }
+
+    void UpdateBlockFaces(int x, int y, int z)
+    {
+        u8 faces = 0;
+
+        if(x > 0) if(!Blocks[map[getIndex(x-1, y, z)]].see_through) faces += 1;
+        if(x < map_width-1) if(!Blocks[map[getIndex(x+1, y, z)]].see_through) faces += 2;
+        if(z > 0) if(!Blocks[map[getIndex(x, y, z-1)]].see_through) faces += 4;
+        if(z < map_depth-1) if(!Blocks[map[getIndex(x, y, z+1)]].see_through) faces += 8;
+        if(y > 0) if(!Blocks[map[getIndex(x, y-1, z)]].see_through) faces += 16;
+        if(y < map_height-1) if(!Blocks[map[getIndex(x, y+1, z)]].see_through) faces += 32;
+
+        faces_bits[getIndex(x, y, z)] = faces;
+    }
+
+    int getIndex(int x, int y, int z)
+    {
+        int index = y*map_width_depth + z*map_width + x;
+        return index;
     }
 
     void Serialize(CBitStream@ params)
@@ -73,13 +113,13 @@ class World
         {
             if(i == 0)
             {
-                similar_block_id = Map[i];
+                similar_block_id = map[i];
                 block_id = similar_block_id;
                 continue;
             }
             else
             {
-                block_id = Map[i];
+                block_id = map[i];
                 if(similar_block_id != block_id)
                 {
                     params.write_u32(similars);
@@ -97,6 +137,8 @@ class World
 
     void UnSerialize(CBitStream params)
     {
+        map.clear();
+        map.resize(map_size);
         int index = 0;
         while(!params.isBufferEnd())
         {
@@ -104,9 +146,25 @@ class World
             u8 block_id = params.read_u8();
             for(int i = 0; i < amount; i++)
             {
-                Map[index+i] = block_id;
+                map[index+i] = block_id;
                 index++;
             }
         }
+    }
+}
+
+class Chunk
+{
+    World@ _world;
+    int x, y, z, world_x, world_y, world_z;
+    int index, world_index;
+    bool rebuild;
+    Vertex[] mesh;
+
+    Chunk(){}
+
+    void GenerateMesh()
+    {
+        rebuild = false;
     }
 }

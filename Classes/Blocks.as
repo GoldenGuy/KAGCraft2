@@ -56,7 +56,7 @@ namespace BlockID
 }
 
 
-Block@[] Blocks;
+Block[] Blocks;
 
 int counter = 0;
 void InitBlocks()
@@ -158,7 +158,7 @@ void AddBlock(string name, bool solid, bool see_through, int allsides)
     newblock.see_through = see_through;
     newblock.MakeUVs(allsides, allsides, allsides);
 
-    Blocks.push_back(@newblock);
+    Blocks.push_back(newblock);
 
     counter++;
 }
@@ -173,7 +173,7 @@ void AddBlock(string name, bool solid, bool see_through, int sides, int top_and_
     newblock.see_through = see_through;
     newblock.MakeUVs(sides, top_and_bottom, top_and_bottom);
 
-    Blocks.push_back(@newblock);
+    Blocks.push_back(newblock);
 
     counter++;
 }
@@ -188,7 +188,7 @@ void AddBlock(string name, bool solid, bool see_through, int sides, int top, int
     newblock.see_through = see_through;
     newblock.MakeUVs(sides, top, bottom);
 
-    Blocks.push_back(@newblock);
+    Blocks.push_back(newblock);
 
     counter++;
 }
@@ -203,7 +203,7 @@ void AddPlantBlock(string name, int sides)
     newblock.plant = true;
     newblock.MakeUVs(sides, sides, sides);
 
-    Blocks.push_back(@newblock);
+    Blocks.push_back(newblock);
 
     counter++;
 }
