@@ -2,55 +2,59 @@
 const f32 u_step = 1.0f/16.0f;
 const f32 v_step = 1.0f/16.0f;
 
-enum block_id
+namespace BlockID
 {
-	block_air = 0,
-	block_grass_dirt,
-	block_dirt,
-	block_stone,
-	block_hard_stone,
-	block_stone_wall,
-	block_gold,
-	block_crate,
-	
-	block_log_birch,
-	block_log,
-	block_leaves,
-	block_planks_birch,
-	block_planks,
-	block_bricks,
-	block_glass,
-	block_wool_red,
-	
-	block_wool_orange,
-	block_wool_yellow,
-	block_wool_green,
-	block_wool_cyan,
-	block_wool_blue,
-	block_wool_darkblue,
-	block_wool_purple,
-	block_wool_white,
-	
-	block_wool_gray,
-	block_wool_black,
-	block_wool_brown,
-	block_wool_pink,
-	block_metal_shiny,
-	block_metal,
-	block_gearbox,
-	block_bedrock,
-	
-	block_fence,
-	block_grass,
-	block_tulip,
-	block_tdelweiss,
-	block_log_palm,
-	block_sand,
-	block_water,
-	block_watersecond,
-	
-	blocks_count
+    enum block_id
+    {
+        block_air = 0,
+        block_grass_dirt,
+        block_dirt,
+        block_stone,
+        block_hard_stone,
+        block_stone_wall,
+        block_gold,
+        block_crate,
+        
+        block_log_birch,
+        block_log,
+        block_leaves,
+        block_planks_birch,
+        block_planks,
+        block_bricks,
+        block_glass,
+        block_wool_red,
+        
+        block_wool_orange,
+        block_wool_yellow,
+        block_wool_green,
+        block_wool_cyan,
+        block_wool_blue,
+        block_wool_darkblue,
+        block_wool_purple,
+        block_wool_white,
+        
+        block_wool_gray,
+        block_wool_black,
+        block_wool_brown,
+        block_wool_pink,
+        block_metal_shiny,
+        block_metal,
+        block_gearbox,
+        block_bedrock,
+        
+        block_fence,
+        block_grass,
+        block_tulip,
+        block_tdelweiss,
+        block_log_palm,
+        block_sand,
+        block_water,
+        block_watersecond,
+        
+        blocks_count
+    }
 }
+
 
 Block@[] Blocks;
 
