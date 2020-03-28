@@ -2,6 +2,7 @@
 void onInit(CRules@ this)
 {
 	this.addCommandID("error");
+	this.addCommandID("C_RequestMap");
 	this.addCommandID("S_SendMap");
 	this.addCommandID("C_ChangeBlock");
 	

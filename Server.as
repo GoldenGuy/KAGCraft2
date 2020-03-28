@@ -2,6 +2,7 @@
 #define SERVER_ONLY
 
 #include "World.as"
+#include "Vec3f.as"
 
 World world;
 
