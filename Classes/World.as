@@ -21,6 +21,7 @@ class World
 {
     u8[] map;
     u8[] faces_bits;
+    Chunk[] chunks;
 
     void GenerateMap()
     {
@@ -62,12 +63,11 @@ class World
                 }
             }
         }
-        debug("Map generated");
+        Debug("Map generated");
     }
 
     void GenerateBlockFaces()
     {
-        print("size: "+Blocks.size());
         faces_bits.clear();
         faces_bits.resize(map_size);
 
@@ -77,7 +77,6 @@ class World
             {
                 for(int x = 0; x < map_width; x++)
                 {
-                    //print("x: "+x+"; y: "+y+"; z: "+z);
                     UpdateBlockFaces(x, y, z);
                 }
             }
@@ -96,6 +95,20 @@ class World
         if(y < map_height-1) if(!Blocks[map[getIndex(x, y+1, z)]].see_through) faces += 32;
 
         faces_bits[getIndex(x, y, z)] = faces;
+    }
+
+    void SetUpChunks()
+    {
+        chunks.clear();
+        for(int i = 0; i < world_size; i++)
+        {
+            Chunk chunk;
+            @chunk._world = @this;
+            chunk.index = i;
+            chunk.x = i % world_width; chunk.z = i / world_width; chunk.y = i / world_width_depth;
+            chunk.visible = false; chunk.rebuild = true;
+            chunks.push_back(chunk);
+        }
     }
 
     int getIndex(int x, int y, int z)
@@ -158,7 +171,7 @@ class Chunk
     World@ _world;
     int x, y, z, world_x, world_y, world_z;
     int index, world_index;
-    bool rebuild;
+    bool visible, rebuild;
     Vertex[] mesh;
 
     Chunk(){}
@@ -166,5 +179,6 @@ class Chunk
     void GenerateMesh()
     {
         rebuild = false;
+        mesh.clear();
     }
 }

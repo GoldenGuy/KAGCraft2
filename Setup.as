@@ -13,31 +13,4 @@ void onInit(CRules@ this)
 	map.SetBorderColourRight(col);
 	map.SetBorderColourTop(col);
 	map.SetBorderColourBottom(col);
-
-	/*if(isServer())
-	{
-		print("server");
-		this.AddScript("Server.as");
-	}
-	if(isClient())
-	{
-		print("client");
-		//this.AddScript("Client.as");
-	}*/
 }
-
-/*void onTick(CRules@ this)
-{
-	if(getGameTime() == 1)
-	{
-		if(isServer())
-		{
-			this.AddScript("Server.as");
-		}
-		if(isClient())
-		{
-			this.AddScript("Client.as");
-		}
-		this.RemoveScript("Setup.as");
-	}
-}*/

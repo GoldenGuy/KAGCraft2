@@ -56,11 +56,15 @@ namespace BlockID
 }
 
 
-Block[] Blocks;
+Block[]@ Blocks;
 
 int counter = 0;
 void InitBlocks()
 {
+    Block[] _Blocks;
+    if(isServer()) getRules().set("Blocks", @_Blocks);
+	@Blocks = @_Blocks;
+
     AddBlock("Air", false, true, 0);
     AddBlock("Grass dirt", true, false, 1, 2, 3);
     AddBlock("Dirt", true, false, 3);

@@ -1,14 +1,22 @@
 
 #define CLIENT_ONLY
 
+#include "Debug.as"
 #include "World.as"
 #include "Vec3f.as"
+#include "ClientLoading.as"
+#include "FrameTime.as"
+#include "Camera.as"
+#include "Player.as"
 
 World@ world;
+Camera@ cam;
+Player player;
+int[] chunks_to_render;
 
 void onInit(CRules@ this)
 {
-	debug("Client init");
+	Debug("Client init");
 	Texture::createFromFile("Default_Textures", "Textures/Blocks.png");
 	InitBlocks();
 
@@ -20,49 +28,13 @@ void onInit(CRules@ this)
 	}
 }
 
-bool ask_map = false;
-bool map_ready = false;
-bool map_renderable = false;
-bool faces_generated = false;
-int ask_map_in = 0;
-
 void onTick(CRules@ this)
 {
-	if(!ask_map)
+	this.set_f32("interGameTime", getGameTime());
+	this.set_f32("interFrameTime", 0);
+	if(isLoading(this))
 	{
-		ask_map_in++;
-		if(ask_map_in == 15)
-		{
-			if(isServer())
-			{
-				debug("No need to ask for map, already generated.");
-				ask_map = true;
-				map_ready = true;
-			}
-			else
-			{
-				debug("Asking for map.");
-				this.SendCommand(this.getCommandID("C_RequestMap"), CBitStream(), true);
-				ask_map = true;
-			}
-		}
 		return;
-	}
-	if(!map_ready) return;
-	else if(!map_renderable)
-	{
-		if(!faces_generated)
-		{
-			debug("Generating block faces.");
-			world.GenerateBlockFaces();
-			debug("Done.");
-			faces_generated = true;
-			return;
-		}
-		else
-		{
-			// mesh here
-		}
 	}
 	else
 	{
@@ -72,10 +44,22 @@ void onTick(CRules@ this)
 
 void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 {
-	debug("Client.as - Command: "+cmd+" : "+this.getNameFromCommandID(cmd));
+	Debug("Client.as - Command: "+cmd+" : "+this.getNameFromCommandID(cmd));
 	if(cmd == this.getCommandID("S_SendMap"))
 	{
 		world.UnSerialize(params);
 		map_ready = true;
 	}
+}
+
+void getChunksToRender()
+{
+
+}
+
+void Render(int id)
+{
+	CRules@ rules = getRules();
+	rules.set_f32("interFrameTime", Maths::Clamp01(rules.get_f32("interFrameTime")+getRenderApproximateCorrectionFactor()));
+	rules.add_f32("interGameTime", getRenderApproximateCorrectionFactor());
 }
