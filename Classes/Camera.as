@@ -38,7 +38,7 @@ class Camera
 		
 		fov = Maths::Pi/2.0000f;
 		z_near = 0.1f;
-		z_far = 100.0f;
+		z_far = 1000.0f;
 		
 		pos = Vec3f();
 		next_pos = Vec3f();
@@ -107,7 +107,7 @@ class Camera
 		Matrix::Multiply(another_temp_mat, temp_mat, and_another_temp_mat);
 		
 		Matrix::MakeIdentity(temp_mat);
-		Matrix::SetTranslation(temp_mat, interpolated_pos.x, interpolated_pos.y, interpolated_pos.z);
+		Matrix::SetTranslation(temp_mat, interpolated_pos.x, -interpolated_pos.y, interpolated_pos.z);
 		
 		Matrix::Multiply(and_another_temp_mat, temp_mat, view);
 	}

@@ -28,6 +28,10 @@ void onInit(CRules@ this)
 	}
 }
 
+f32 dir_x = 0.01f;
+f32 dir_y = 0.01f;
+float sensitivity = 0.16;
+
 void onTick(CRules@ this)
 {
 	this.set_f32("interGameTime", getGameTime());
@@ -39,6 +43,7 @@ void onTick(CRules@ this)
 	else
 	{
 		// game here
+		player.Update();
 	}
 }
 
@@ -57,9 +62,30 @@ void getChunksToRender()
 
 }
 
+float[] model;
+
 void Render(int id)
 {
 	CRules@ rules = getRules();
 	rules.set_f32("interFrameTime", Maths::Clamp01(rules.get_f32("interFrameTime")+getRenderApproximateCorrectionFactor()));
 	rules.add_f32("interGameTime", getRenderApproximateCorrectionFactor());
+
+	Render::ClearZ();
+	Render::SetZBuffer(true, true);
+	Render::SetAlphaBlend(true);
+	Render::SetBackfaceCull(false);
+	Render::SetTransformWorldspace();
+	
+	cam.render_update();
+	Matrix::MakeIdentity(model);
+	Render::SetTransform(model, cam.view, cam.projection);
+
+	Vertex[] verts = {
+		Vertex(0, 0, 0, 0, 1, color_white),
+		Vertex(0, 0, map_width, 0, 0, color_white),
+		Vertex(map_depth,	0, map_width,	1, 0, color_white),
+		Vertex(map_depth,	0, 0, 1, 1, color_white)
+	};
+
+	Render::RawQuads("Blocks.png", verts);
 }
