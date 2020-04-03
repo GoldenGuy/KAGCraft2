@@ -22,7 +22,7 @@ class World
     u8[] map;
     u8[] faces_bits;
     Chunk@[] chunks;
-    bool poop = false;
+    bool poop = true;
 
     void GenerateMap()
     {
@@ -74,17 +74,16 @@ class World
         chunks.clear();
         for(int i = 0; i < world_size; i++)
         {
-            Chunk chunk;
-            @chunk._world = @this;
+            Chunk chunk(this, i);
+            /*@chunk._world = @this;
             chunk.index = i;
             chunk.x = i % world_width; chunk.z = (i / world_width) % world_depth; chunk.y = i / world_width_depth;
             //print("chunk: "+chunk.x+","+chunk.y+","+chunk.z);
             chunk.world_x = chunk.x*chunk_width; chunk.world_z = chunk.z*chunk_depth; chunk.world_y = chunk.y*chunk_height;
             chunk.world_x_bounds = chunk.world_x+chunk_width; chunk.world_z_bounds = chunk.world_z+chunk_depth; chunk.world_y_bounds = chunk.world_y+chunk_height;
-            chunk.visible = false; chunk.rebuild = true;
+            chunk.visible = false; chunk.rebuild = true;*/
             chunks.push_back(@chunk);
         }
-        poop = false;
     }
 
     void GenerateBlockFaces()
@@ -206,19 +205,26 @@ class Chunk
 
     Chunk(){}
 
+    Chunk(World@ reference, int _index)
+    {
+        @_world = @reference;
+        index = _index;
+        x = _index % world_width; z = (_index / world_width) % world_depth; y = _index / world_width_depth;
+        world_x = x*chunk_width; world_z = z*chunk_depth; world_y = y*chunk_height;
+        world_x_bounds = world_x+chunk_width; world_z_bounds = world_z+chunk_depth; world_y_bounds = world_y+chunk_height;
+        visible = false;
+        rebuild = true;
+    }
+
     void GenerateMesh()
     {
+        _world.poop = false;
         print("generating.");
         rebuild = false;
         mesh.clear();
         //Vec3f(x,y,z).Print();
         //Vec3f(world_x,world_y,world_z).Print();
         //Vec3f(world_x_bounds,world_y_bounds,world_z_bounds).Print();
-
-        for (int i = 0; i < 500; i++)
-        {
-            print("block: "+_world.map[i]);
-        }
 
         /*for (int _y = world_y; _y < world_y_bounds; _y++)
 		{
