@@ -44,7 +44,7 @@ bool isLoading(CRules@ this)
         Camera _cam();
         @cam = @_cam;
         @player.cam = @cam;
-        player.pos = Vec3f(map_width/2, map_height, map_depth/2);
+        player.pos = Vec3f(map_width/2, 12, map_depth/2);
         player_ready = true;
 		Render::addScript(Render::layer_background, "Client.as", "Render", 1);
     }

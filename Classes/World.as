@@ -105,7 +105,10 @@ class World
             Chunk chunk;
             @chunk._world = @this;
             chunk.index = i;
-            chunk.x = i % world_width; chunk.z = i / world_width; chunk.y = i / world_width_depth;
+            chunk.x = i % world_width; chunk.z = (i / world_width) % world_depth; chunk.y = i / world_width_depth;
+            //print("chunk: "+chunk.x+","+chunk.y+","+chunk.z);
+            chunk.world_x = chunk.x*chunk_width; chunk.world_z = chunk.z*chunk_depth; chunk.world_y = chunk.y*chunk_height;
+            chunk.world_x_bounds = chunk.world_x+chunk_width; chunk.world_z_bounds = chunk.world_z+chunk_depth; chunk.world_y_bounds = chunk.world_y+chunk_height;
             chunk.visible = false; chunk.rebuild = true;
             chunks.push_back(chunk);
         }
@@ -164,12 +167,35 @@ class World
             }
         }
     }
+
+    Chunk@ getChunk(int x, int y, int z)
+    {
+        if(!inChunkBounds(x, y, z)) return null;
+        int index = y*world_width_depth + z*world_width + x;
+        Chunk chunk = chunks[index];
+        return @chunk;
+    }
+
+    bool inChunkBounds(int x, int y, int z)
+    {
+        //print("---pos: "+x+","+y+","+z);
+        if(x<0 || y<0 || z<0 || x>=world_width || y>=world_height || z>=world_depth) return false;
+        return true;
+    }
+
+    void clearVisibility()
+    {
+        for(int i = 0; i < world_size; i++)
+        {
+            chunks[i].visible = false;
+        }
+    }
 }
 
 class Chunk
 {
     World@ _world;
-    int x, y, z, world_x, world_y, world_z;
+    int x, y, z, world_x, world_y, world_z, world_x_bounds, world_y_bounds, world_z_bounds;
     int index, world_index;
     bool visible, rebuild;
     Vertex[] mesh;
@@ -178,7 +204,163 @@ class Chunk
 
     void GenerateMesh()
     {
+        print("generating.");
         rebuild = false;
         mesh.clear();
+
+        for (int _y = world_y; _y < world_y_bounds; _y++)
+		{
+			for (int _z = world_z; _z < world_z_bounds; _z++)
+			{
+				for (int _x = world_x; _x < world_x_bounds; _x++)
+				{
+                    int index = _world.getIndex(_x, _y, _z);
+                    u8 block = _world.map[index];
+                    //if(block == BlockID::block_air) continue;
+
+                    Block b = Blocks[block];
+                    addFaces(@b, _world.faces_bits[index], Vec3f(_x,_y,_z));
+                }
+            }
+        }
+    }
+
+    void addFaces(Block@ b, u8 face_info, Vec3f pos)//, AmbientOcclusion@ block_ao)
+	{
+		switch(face_info)
+		{
+			case 0:{ break;}
+			case 1:{ addFrontFace(@b, pos); break;}
+			case 2:{ addBackFace(@b, pos); break;}
+			case 3:{ addFrontFace(@b, pos); addBackFace(@b, pos); break;}
+			case 4:{ addUpFace(@b, pos); break;}
+			case 5:{ addFrontFace(@b, pos); addUpFace(@b, pos); break;}
+			case 6:{ addBackFace(@b, pos); addUpFace(@b, pos); break;}
+			case 7:{ addFrontFace(@b, pos); addBackFace(@b, pos); addUpFace(@b, pos); break;}
+			case 8:{ addDownFace(@b, pos); break;}
+			case 9:{ addFrontFace(@b, pos); addDownFace(@b, pos); break;}
+			case 10:{ addBackFace(@b, pos); addDownFace(@b, pos); break;}
+			case 11:{ addFrontFace(@b, pos); addBackFace(@b, pos); addDownFace(@b, pos); break;}
+			case 12:{ addUpFace(@b, pos); addDownFace(@b, pos); break;}
+			case 13:{ addFrontFace(@b, pos); addUpFace(@b, pos); addDownFace(@b, pos); break;}
+			case 14:{ addBackFace(@b, pos); addUpFace(@b, pos); addDownFace(@b, pos); break;}
+			case 15:{ addFrontFace(@b, pos); addBackFace(@b, pos); addUpFace(@b, pos); addDownFace(@b, pos); break;}
+			case 16:{ addRightFace(@b, pos); break;}
+			case 17:{ addFrontFace(@b, pos); addRightFace(@b, pos); break;}
+			case 18:{ addBackFace(@b, pos); addRightFace(@b, pos); break;}
+			case 19:{ addFrontFace(@b, pos); addBackFace(@b, pos); addRightFace(@b, pos); break;}
+			case 20:{ addUpFace(@b, pos); addRightFace(@b, pos); break;}
+			case 21:{ addFrontFace(@b, pos); addUpFace(@b, pos); addRightFace(@b, pos); break;}
+			case 22:{ addBackFace(@b, pos); addUpFace(@b, pos); addRightFace(@b, pos); break;}
+			case 23:{ addFrontFace(@b, pos); addBackFace(@b, pos); addUpFace(@b, pos); addRightFace(@b, pos); break;}
+			case 24:{ addDownFace(@b, pos); addRightFace(@b, pos); break;}
+			case 25:{ addFrontFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); break;}
+			case 26:{ addBackFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); break;}
+			case 27:{ addFrontFace(@b, pos); addBackFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); break;}
+			case 28:{ addUpFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); break;}
+			case 29:{ addFrontFace(@b, pos); addUpFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); break;}
+			case 30:{ addBackFace(@b, pos); addUpFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); break;}
+			case 31:{ addFrontFace(@b, pos); addBackFace(@b, pos); addUpFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); break;}
+			case 32:{ addLeftFace(@b, pos); break;}
+			case 33:{ addFrontFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 34:{ addBackFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 35:{ addFrontFace(@b, pos); addBackFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 36:{ addUpFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 37:{ addFrontFace(@b, pos); addUpFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 38:{ addBackFace(@b, pos); addUpFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 39:{ addFrontFace(@b, pos); addBackFace(@b, pos); addUpFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 40:{ addDownFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 41:{ addFrontFace(@b, pos); addDownFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 42:{ addBackFace(@b, pos); addDownFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 43:{ addFrontFace(@b, pos); addBackFace(@b, pos); addDownFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 44:{ addUpFace(@b, pos); addDownFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 45:{ addFrontFace(@b, pos); addUpFace(@b, pos); addDownFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 46:{ addBackFace(@b, pos); addUpFace(@b, pos); addDownFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 47:{ addFrontFace(@b, pos); addBackFace(@b, pos); addUpFace(@b, pos); addDownFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 48:{ addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 49:{ addFrontFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 50:{ addBackFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 51:{ addFrontFace(@b, pos); addBackFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 52:{ addUpFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 53:{ addFrontFace(@b, pos); addUpFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 54:{ addBackFace(@b, pos); addUpFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 55:{ addFrontFace(@b, pos); addBackFace(@b, pos); addUpFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 56:{ addDownFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 57:{ addFrontFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 58:{ addBackFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 59:{ addFrontFace(@b, pos); addBackFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 60:{ addUpFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 61:{ addFrontFace(@b, pos); addUpFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 62:{ addBackFace(@b, pos); addUpFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+			case 63:{ addFrontFace(@b, pos); addBackFace(@b, pos); addUpFace(@b, pos); addDownFace(@b, pos); addRightFace(@b, pos); addLeftFace(@b, pos); break;}
+		}
+	}
+	
+	void addFrontFace(Block@ b, Vec3f pos)
+	{
+		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z,	b.sides_start_u,	b.sides_start_v,	front_scol));
+		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,	b.sides_end_u,	    b.sides_start_v,	front_scol));
+		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z,	b.sides_end_u,	    b.sides_end_v,	    front_scol));
+		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z,	b.sides_start_u,	b.sides_end_v,	    front_scol));
+	}
+	
+	void addBackFace(Block@ b, Vec3f pos)
+	{
+		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.sides_start_u,	b.sides_start_v,	back_scol));
+		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.sides_end_u,	    b.sides_start_v,	back_scol));
+		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.sides_end_u,	    b.sides_end_v,		back_scol));
+		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.sides_start_u,	b.sides_end_v,		back_scol));
+	}
+	
+	void addUpFace(Block@ b, Vec3f pos)
+	{
+		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.top_start_u,	b.top_start_v,	top_scol));
+		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.top_end_u,    b.top_start_v,	top_scol));
+		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		b.top_end_u,    b.top_end_v,    top_scol));
+		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		b.top_start_u,	b.top_end_v,    top_scol));
+	}
+	
+	void addDownFace(Block@ b, Vec3f pos)
+	{
+		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z,		b.bottom_start_u,	b.bottom_start_v,	bottom_scol));
+		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		b.bottom_end_u,	    b.bottom_start_v,	bottom_scol));
+		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.bottom_end_u,	    b.bottom_end_v,		bottom_scol));
+		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.bottom_start_u,	b.bottom_end_v,		bottom_scol));
+	}
+	
+	void addRightFace(Block@ b, Vec3f pos)
+	{
+		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		b.sides_start_u,	b.sides_start_v,	right_scol));
+		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.sides_end_u,	    b.sides_start_v,	right_scol));
+		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.sides_end_u,	    b.sides_end_v,		right_scol));
+		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		b.sides_start_u,	b.sides_end_v,		right_scol));
+	}
+	
+	void addLeftFace(Block@ b, Vec3f pos)
+	{
+		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.sides_start_u,	b.sides_start_v,	left_scol));
+        mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		b.sides_end_u,	    b.sides_start_v,	left_scol));
+        mesh.push_back(Vertex(pos.x,	pos.y,		pos.z,		b.sides_end_u,	    b.sides_end_v,		left_scol));
+        mesh.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.sides_start_u,	b.sides_end_v,		left_scol));
+	}
+
+    void Render()
+    {
+        Render::RawQuads("Blocks.png", mesh);
     }
 }
+
+const u8 debug_alpha =	255;
+const u8 top_col =		255;
+const u8 bottom_col =	166;
+const u8 left_col =		191;
+const u8 right_col =	191;
+const u8 front_col =	230;
+const u8 back_col =		230;
+
+const SColor top_scol = SColor(debug_alpha, top_col, top_col, top_col);
+const SColor bottom_scol = SColor(debug_alpha, bottom_col, bottom_col, bottom_col);
+const SColor left_scol = SColor(debug_alpha, left_col, left_col, left_col);
+const SColor right_scol = SColor(debug_alpha, right_col, right_col, right_col);
+const SColor front_scol = SColor(debug_alpha, front_col, front_col, front_col);
+const SColor back_scol = SColor(debug_alpha, back_col, back_col, back_col);

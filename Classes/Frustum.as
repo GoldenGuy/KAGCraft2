@@ -2,7 +2,7 @@
 #include "Plane.as"
 #include "AABB.as"
 
-const f32 MAGIC_VALUE = -14;
+const f32 MAGIC_VALUE = -6;
 
 class Frustum
 {

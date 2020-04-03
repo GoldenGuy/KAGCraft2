@@ -9,10 +9,11 @@
 #include "Camera.as"
 #include "Player.as"
 
+float sensitivity = 0.16;
+
 World@ world;
 Camera@ cam;
 Player player;
-int[] chunks_to_render;
 
 void onInit(CRules@ this)
 {
@@ -28,10 +29,6 @@ void onInit(CRules@ this)
 	}
 }
 
-f32 dir_x = 0.01f;
-f32 dir_y = 0.01f;
-float sensitivity = 0.16;
-
 void onTick(CRules@ this)
 {
 	this.set_f32("interGameTime", getGameTime());
@@ -44,7 +41,77 @@ void onTick(CRules@ this)
 	{
 		// game here
 		player.Update();
+		clearChunks();
+		getChunksToRender();
+		//print("size: "+chunks_to_render.size());
 	}
+}
+
+Chunk@[] chunks_to_render;
+
+void clearChunks()
+{
+	/*for(int i = 0; i < chunks_to_render.size(); i++)
+	{
+		Chunk@ temp;
+		@temp = @chunks_to_render[i];
+		//print("chunk: "+temp.x+","+temp.y+","+temp.z);
+		temp.visible = false;
+	}*/
+	world.clearVisibility();
+	chunks_to_render.clear();
+}
+
+void getChunksToRender()
+{
+	Vec3f initial_pos = player.pos + Vec3f(chunk_width/2, chunk_height/2, chunk_depth/2);
+	initial_pos = Vec3f(int(initial_pos.x/chunk_width), int(initial_pos.y/chunk_height), int(initial_pos.z/chunk_depth));
+
+	Chunk@ temp;
+	@temp = world.getChunk(initial_pos.x, initial_pos.y, initial_pos.z);
+	if(temp !is null)
+	{
+		temp.visible = true;
+		if(temp.rebuild) temp.GenerateMesh();
+		chunks_to_render.push_back(@temp);
+	}
+
+	//addChunk(initial_pos);
+
+	addChunk(initial_pos+Vec3f(1,0,0));
+	addChunk(initial_pos+Vec3f(0,1,0));
+	addChunk(initial_pos+Vec3f(0,0,1));
+	addChunk(initial_pos+Vec3f(-1,0,0));
+	addChunk(initial_pos+Vec3f(0,-1,0));
+	addChunk(initial_pos+Vec3f(0,0,-1));
+}
+
+void addChunk(Vec3f pos)
+{
+	//print("----------------------------pos: "+pos.x+","+pos.y+","+pos.z);
+	if(chunks_to_render.size() > 32) return;//{print("------------size over."); return;}
+	if(!world.inChunkBounds(pos.x, pos.y, pos.z)) return;//{print("------------not in bounds."); return;}
+	Chunk@ temp = world.getChunk(pos.x, pos.y, pos.z);
+	if(temp is null) return;//{print("------------null."); return;}
+	if(temp.visible) return;//{print("------------visible already."); return;}
+
+	Vec3f point = Vec3f(temp.world_x+chunk_width/2,temp.world_y+chunk_height/2,temp.world_z+chunk_depth/2)-cam.pos;
+	//point.Print();
+	if(cam.frustum.Contains(point))
+	{
+		//print("------------added.");
+		temp.visible = true;
+		//if(temp.rebuild) temp.GenerateMesh();
+		chunks_to_render.push_back(@temp);
+
+		addChunk(pos+Vec3f(1,0,0));
+		addChunk(pos+Vec3f(0,1,0));
+		addChunk(pos+Vec3f(0,0,1));
+		addChunk(pos+Vec3f(-1,0,0));
+		addChunk(pos+Vec3f(0,-1,0));
+		addChunk(pos+Vec3f(0,0,-1));
+	}
+	//else print("------------not in frustum.");
 }
 
 void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
@@ -57,10 +124,7 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 	}
 }
 
-void getChunksToRender()
-{
 
-}
 
 float[] model;
 
@@ -88,4 +152,9 @@ void Render(int id)
 	};
 
 	Render::RawQuads("Blocks.png", verts);
+
+	for(int i = 0; i < chunks_to_render.size(); i++)
+	{
+		chunks_to_render[i].Render();
+	}
 }
