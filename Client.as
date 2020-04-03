@@ -67,23 +67,24 @@ void getChunksToRender()
 	Vec3f initial_pos = player.pos + Vec3f(chunk_width/2, chunk_height/2, chunk_depth/2);
 	initial_pos = Vec3f(int(initial_pos.x/chunk_width), int(initial_pos.y/chunk_height), int(initial_pos.z/chunk_depth));
 
-	Chunk@ temp;
-	@temp = world.getChunk(initial_pos.x, initial_pos.y, initial_pos.z);
+	Chunk@ temp = world.getChunk(initial_pos.x, initial_pos.y, initial_pos.z);
 	if(temp !is null)
 	{
-		temp.visible = true;
+		//temp.visible = true;
+		//print("size: "+temp.mesh.size());
+		temp.SetVisible();
 		if(temp.rebuild) temp.GenerateMesh();
 		chunks_to_render.push_back(@temp);
 	}
 
 	//addChunk(initial_pos);
 
-	addChunk(initial_pos+Vec3f(1,0,0));
+	/*addChunk(initial_pos+Vec3f(1,0,0));
 	addChunk(initial_pos+Vec3f(0,1,0));
 	addChunk(initial_pos+Vec3f(0,0,1));
 	addChunk(initial_pos+Vec3f(-1,0,0));
 	addChunk(initial_pos+Vec3f(0,-1,0));
-	addChunk(initial_pos+Vec3f(0,0,-1));
+	addChunk(initial_pos+Vec3f(0,0,-1));*/
 }
 
 void addChunk(Vec3f pos)

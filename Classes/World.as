@@ -21,7 +21,8 @@ class World
 {
     u8[] map;
     u8[] faces_bits;
-    Chunk[] chunks;
+    Chunk@[] chunks;
+    bool poop = false;
 
     void GenerateMap()
     {
@@ -35,35 +36,55 @@ class World
                 for(int x = 0; x < map_width; x++)
                 {
                     int index = y*map_width_depth + z*map_width + x;
-                    if(y<10)
+                    /*if(y<10)
                     {
-                        map[index] = BlockID::block_hard_stone;
+                        map[index] = block_hard_stone;
                         continue;
                     }
                     else if(y<14)
                     {
-                        map[index] = BlockID::block_stone;
+                        map[index] = block_stone;
                         continue;
                     }
                     else if(y<16)
                     {
-                        map[index] = BlockID::block_dirt;
+                        map[index] = block_dirt;
                         continue;
                     }
                     else if(y<17)
                     {
-                        map[index] = BlockID::block_grass_dirt;
+                        map[index] = block_grass_dirt;
                         continue;
                     }
                     else
                     {
-                        map[index] = BlockID::block_air;
+                        map[index] = block_air;
                         continue;
-                    }
+                    }*/
+                    if(index % 2 == 1) map[index] = block_stone;
+                    else map[index] = block_air;
                 }
             }
         }
         Debug("Map generated");
+    }
+
+    void SetUpChunks()
+    {
+        chunks.clear();
+        for(int i = 0; i < world_size; i++)
+        {
+            Chunk chunk;
+            @chunk._world = @this;
+            chunk.index = i;
+            chunk.x = i % world_width; chunk.z = (i / world_width) % world_depth; chunk.y = i / world_width_depth;
+            //print("chunk: "+chunk.x+","+chunk.y+","+chunk.z);
+            chunk.world_x = chunk.x*chunk_width; chunk.world_z = chunk.z*chunk_depth; chunk.world_y = chunk.y*chunk_height;
+            chunk.world_x_bounds = chunk.world_x+chunk_width; chunk.world_z_bounds = chunk.world_z+chunk_depth; chunk.world_y_bounds = chunk.world_y+chunk_height;
+            chunk.visible = false; chunk.rebuild = true;
+            chunks.push_back(@chunk);
+        }
+        poop = false;
     }
 
     void GenerateBlockFaces()
@@ -95,23 +116,6 @@ class World
         if(y < map_height-1) if(!Blocks[map[getIndex(x, y+1, z)]].see_through) faces += 32;
 
         faces_bits[getIndex(x, y, z)] = faces;
-    }
-
-    void SetUpChunks()
-    {
-        chunks.clear();
-        for(int i = 0; i < world_size; i++)
-        {
-            Chunk chunk;
-            @chunk._world = @this;
-            chunk.index = i;
-            chunk.x = i % world_width; chunk.z = (i / world_width) % world_depth; chunk.y = i / world_width_depth;
-            //print("chunk: "+chunk.x+","+chunk.y+","+chunk.z);
-            chunk.world_x = chunk.x*chunk_width; chunk.world_z = chunk.z*chunk_depth; chunk.world_y = chunk.y*chunk_height;
-            chunk.world_x_bounds = chunk.world_x+chunk_width; chunk.world_z_bounds = chunk.world_z+chunk_depth; chunk.world_y_bounds = chunk.world_y+chunk_height;
-            chunk.visible = false; chunk.rebuild = true;
-            chunks.push_back(chunk);
-        }
     }
 
     int getIndex(int x, int y, int z)
@@ -172,7 +176,7 @@ class World
     {
         if(!inChunkBounds(x, y, z)) return null;
         int index = y*world_width_depth + z*world_width + x;
-        Chunk chunk = chunks[index];
+        Chunk@ chunk = @chunks[index];
         return @chunk;
     }
 
@@ -207,22 +211,39 @@ class Chunk
         print("generating.");
         rebuild = false;
         mesh.clear();
+        //Vec3f(x,y,z).Print();
+        //Vec3f(world_x,world_y,world_z).Print();
+        //Vec3f(world_x_bounds,world_y_bounds,world_z_bounds).Print();
 
-        for (int _y = world_y; _y < world_y_bounds; _y++)
+        for (int i = 0; i < 500; i++)
+        {
+            print("block: "+_world.map[i]);
+        }
+
+        /*for (int _y = world_y; _y < world_y_bounds; _y++)
 		{
 			for (int _z = world_z; _z < world_z_bounds; _z++)
 			{
 				for (int _x = world_x; _x < world_x_bounds; _x++)
 				{
+                    //print("pos: "+x+","+y+","+z);
+                    //Vec3f(_x,_y,_z).Print();
                     int index = _world.getIndex(_x, _y, _z);
+                    //print("i: "+index);
                     u8 block = _world.map[index];
-                    //if(block == BlockID::block_air) continue;
+                    //print("block: "+_world.map[index]);
+                    //if(block == block_air) continue;
 
-                    Block b = Blocks[block];
+                    Block@ b = Blocks[block];
                     addFaces(@b, _world.faces_bits[index], Vec3f(_x,_y,_z));
                 }
             }
-        }
+        }*/
+    }
+
+    void SetVisible()
+    {
+        visible = true;
     }
 
     void addFaces(Block@ b, u8 face_info, Vec3f pos)//, AmbientOcclusion@ block_ao)
