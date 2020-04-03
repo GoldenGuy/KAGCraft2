@@ -3,6 +3,7 @@
 
 #include "Debug.as"
 #include "World.as"
+#include "Tree.as"
 #include "Vec3f.as"
 #include "ClientLoading.as"
 #include "FrameTime.as"
@@ -21,7 +22,10 @@ void onInit(CRules@ this)
 	Texture::createFromFile("Default_Textures", "Textures/Blocks.png");
 	InitBlocks();
 
-	if(this.exists("world")) this.get("world", @world);
+	if(this.exists("world"))
+	{
+		this.get("world", @world);
+	}
 	else
 	{
 		World _world;
@@ -43,7 +47,7 @@ void onTick(CRules@ this)
 		player.Update();
 		clearChunks();
 		getChunksToRender();
-		print("size: "+chunks_to_render.size());
+		//print("size: "+chunks_to_render.size());
 	}
 }
 
@@ -126,7 +130,7 @@ void addChunk(Vec3f pos)
 
 void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 {
-	Debug("Client.as - Command: "+cmd+" : "+this.getNameFromCommandID(cmd));
+	Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
 	if(cmd == this.getCommandID("S_SendMap"))
 	{
 		if(params.Length() != 7) world.UnSerialize(params);

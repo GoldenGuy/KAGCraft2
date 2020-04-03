@@ -253,9 +253,14 @@ class World
         return @chunk;
     }
 
+    bool inWorldBounds(int x, int y, int z)
+    {
+        if(x<0 || y<0 || z<0 || x>=map_width || y>=map_height || z>=map_depth) return false;
+        return true;
+    }
+    
     bool inChunkBounds(int x, int y, int z)
     {
-        //print("---pos: "+x+","+y+","+z);
         if(x<0 || y<0 || z<0 || x>=world_width || y>=world_height || z>=world_depth) return false;
         return true;
     }
@@ -294,7 +299,7 @@ class Chunk
     void GenerateMesh()
     {
         //_world.poop = false;
-        print("generating.");
+        //print("generating.");
         rebuild = false;
         mesh.clear();
         //Vec3f(x,y,z).Print();

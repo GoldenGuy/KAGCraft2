@@ -15,7 +15,6 @@ class Frustum
 	void Update(float[] projection, float[] view)
 	{
 		float[] mat = Matrix_Multiply(view, projection);
-        //Matrix::Multiply(view, projection, mat);
 		
 		// left
 		m_planes[2].m_normal.x	= mat[12] + mat[0];

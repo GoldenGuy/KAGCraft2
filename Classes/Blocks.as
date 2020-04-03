@@ -53,15 +53,13 @@ enum block_id
 }
 
 
-Block@[]@ Blocks;
+Block@[] Blocks;
 
 int counter = 0;
 void InitBlocks()
 {
-    Block@[] _Blocks;
-    if(isServer()) getRules().set("Blocks", @_Blocks);
-	@Blocks = @_Blocks;
-
+    counter = 0;
+    Blocks.clear();
     AddBlock("Air", false, true, 0);
     AddBlock("Grass dirt", true, false, 1, 2, 3);
     AddBlock("Dirt", true, false, 3);
@@ -102,7 +100,7 @@ void InitBlocks()
     AddBlock("Sand", true, false, 15);
     AddBlock("Water", true, false, 17);
     AddBlock("Deep water", true, false, 18);
-    debug("Blocks are created.");
+    Debug("Blocks are created.");
 }
 
 class Block

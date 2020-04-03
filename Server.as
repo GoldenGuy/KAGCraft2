@@ -10,10 +10,13 @@ World@ world;
 void onInit(CRules@ this)
 {
 	Debug("Server init");
-	World _world;
-	_world.GenerateMap();
-	if(isClient()) this.set("world", @_world);
-	@world = @_world;
+
+	InitBlocks();
+
+	World temp;
+	temp.GenerateMap();
+	if(isClient()) this.set("world", @temp);
+	@world = @temp;
 }
 
 void onTick(CRules@ this)
@@ -23,13 +26,13 @@ void onTick(CRules@ this)
 
 void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 {
-	Debug("Server.as - Command: "+cmd+" : "+this.getNameFromCommandID(cmd));
+	Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
 	if(cmd == this.getCommandID("C_RequestMap"))
 	{
 		if(isClient())
 		{
 			Debug("Localhost, ignore.");
-			this.get("Blocks", @Blocks);
+			//this.get("Blocks", @Blocks);
 			this.SendCommand(this.getCommandID("S_SendMap"), CBitStream(), true);
 			return;
 		}
