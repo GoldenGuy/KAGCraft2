@@ -17,6 +17,11 @@ int map_height = world_height * chunk_height;
 int map_width_depth = map_width * map_depth;
 int map_size = map_width_depth * map_height;
 
+float sample_frequency = 0.05f;
+float fractal_frequency = 0.02f;
+float add_height = 0.2f;
+float dirt_start = 0.16f;
+
 class World
 {
     u8[] map;
@@ -29,43 +34,112 @@ class World
         map.clear();
         map.resize(map_size);
 
-        for(int y = 0; y < map_height; y++)
+
+        Noise noise(69);
+        Random rand(69);
+        
+        float something = 1.0f/map_height;
+    
+        Vec3f[] trees;
+        trees.clear();
+        
+        for(float y = 0.0f; y < map_height; y += 1.0f)
+        {
+            float h_diff = y/float(map_height);
+            for(float z = 0.0f; z < map_depth; z += 1.0f)
+            {
+                for(float x = 0.0f; x < map_width; x += 1.0f)
+                {
+                    int index = y*map_width_depth + z*map_width + x;
+
+                    int tree_rand = rand.NextRanged(200);
+                    //print(""+tree_rand);
+                    bool make_tree = tree_rand == 1;
+                    
+                    int grass_rand = rand.NextRanged(8);
+                    bool make_grass = grass_rand == 1;
+                    
+                    int flower_rand = rand.NextRanged(20);
+                    bool make_flower = flower_rand == 1;
+                
+                    int flower_type_rand = rand.NextRanged(2);
+                    bool flower_type = flower_type_rand == 1;
+                    
+                    float h = noise.Sample(x * sample_frequency, z * sample_frequency) * (noise.Fractal(x * fractal_frequency, z * fractal_frequency)/2) + add_height;//+Maths::Pow(y / float(map_height), 1.1024f)-0.5;
+                    if(y == 0)
+                    {
+                        //set_block(int(x), int(y), int(z), block_bedrock);
+                        map[index] = block_bedrock;
+                    }
+                    else if(h > h_diff)
+                    {
+                        if(h-h_diff <= dirt_start)
+                        {
+                            if(h-something > h_diff)
+                                map[index] = block_dirt;//set_block(int(x), int(y), int(z), block_dirt);
+                            else
+                            {
+                                map[index] = block_grass_dirt;//set_block(int(x), int(y), int(z), block_grass_dirt);
+                                /*if(make_tree)
+                                {
+                                    trees.push_back(Vec3f(x,y+1,z));
+                                    set_block(int(x), int(y), int(z), block_dirt);
+                                }
+                                else if(make_grass)
+                                {
+                                    if(make_flower)
+                                    {
+                                        if(flower_type)
+                                        {
+                                            set_block(int(x), int(y+1), int(z), block_tulip);
+                                        }
+                                        else
+                                        {
+                                            set_block(int(x), int(y+1), int(z), block_tdelweiss);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        set_block(int(x), int(y+1), int(z), block_grass);
+                                    }
+                                }*/
+                            }
+                        }
+                        else
+                        {
+                            if(h-h_diff > dirt_start+0.06)
+                            {
+                                map[index] = block_hard_stone;//set_block(int(x), int(y), int(z), block_hard_stone);
+                            }
+                            else
+                            {
+                                map[index] = block_stone;//set_block(int(x), int(y), int(z), block_stone);
+                            }
+                        }
+                    }
+                    getNet().server_KeepConnectionsAlive();
+                }
+            }
+        }
+        /*for(int i = 0; i < trees.size(); i++)
+        {
+            MakeTree(trees[i]);
+        }*/
+
+
+        /*for(int y = 0; y < map_height; y++)
         {
             for(int z = 0; z < map_depth; z++)
             {
                 for(int x = 0; x < map_width; x++)
                 {
                     int index = y*map_width_depth + z*map_width + x;
-                    /*if(y<10)
-                    {
-                        map[index] = block_hard_stone;
-                        continue;
-                    }
-                    else if(y<14)
-                    {
-                        map[index] = block_stone;
-                        continue;
-                    }
-                    else if(y<16)
-                    {
-                        map[index] = block_dirt;
-                        continue;
-                    }
-                    else if(y<17)
-                    {
-                        map[index] = block_grass_dirt;
-                        continue;
-                    }
-                    else
-                    {
-                        map[index] = block_air;
-                        continue;
-                    }*/
-                    if(index % 2 == 1) map[index] = block_stone;
-                    else map[index] = block_air;
+                    
+                    
+
                 }
             }
-        }
+        }*/
         Debug("Map generated");
     }
 
@@ -107,12 +181,12 @@ class World
     {
         u8 faces = 0;
 
-        if(x > 0) if(!Blocks[map[getIndex(x-1, y, z)]].see_through) faces += 1;
-        if(x < map_width-1) if(!Blocks[map[getIndex(x+1, y, z)]].see_through) faces += 2;
-        if(z > 0) if(!Blocks[map[getIndex(x, y, z-1)]].see_through) faces += 4;
-        if(z < map_depth-1) if(!Blocks[map[getIndex(x, y, z+1)]].see_through) faces += 8;
-        if(y > 0) if(!Blocks[map[getIndex(x, y-1, z)]].see_through) faces += 16;
-        if(y < map_height-1) if(!Blocks[map[getIndex(x, y+1, z)]].see_through) faces += 32;
+        if(z > 0 && Blocks[map[getIndex(x, y, z-1)]].see_through) faces += 1;
+        if(z < map_depth-1 && Blocks[map[getIndex(x, y, z+1)]].see_through) faces += 2;
+        if(y < map_height-1 && Blocks[map[getIndex(x, y+1, z)]].see_through) faces += 4;
+        if(y > 0 && Blocks[map[getIndex(x, y-1, z)]].see_through) faces += 8;
+        if(x < map_width-1 && Blocks[map[getIndex(x+1, y, z)]].see_through) faces += 16;
+        if(x > 0 && Blocks[map[getIndex(x-1, y, z)]].see_through) faces += 32;
 
         faces_bits[getIndex(x, y, z)] = faces;
     }
@@ -200,7 +274,7 @@ class Chunk
     World@ _world;
     int x, y, z, world_x, world_y, world_z, world_x_bounds, world_y_bounds, world_z_bounds;
     int index, world_index;
-    bool visible, rebuild;
+    bool visible, rebuild, empty;
     Vertex[] mesh;
 
     Chunk(){}
@@ -214,11 +288,12 @@ class Chunk
         world_x_bounds = world_x+chunk_width; world_z_bounds = world_z+chunk_depth; world_y_bounds = world_y+chunk_height;
         visible = false;
         rebuild = true;
+        empty = false;
     }
 
     void GenerateMesh()
     {
-        _world.poop = false;
+        //_world.poop = false;
         print("generating.");
         rebuild = false;
         mesh.clear();
@@ -226,7 +301,7 @@ class Chunk
         //Vec3f(world_x,world_y,world_z).Print();
         //Vec3f(world_x_bounds,world_y_bounds,world_z_bounds).Print();
 
-        /*for (int _y = world_y; _y < world_y_bounds; _y++)
+        for (int _y = world_y; _y < world_y_bounds; _y++)
 		{
 			for (int _z = world_z; _z < world_z_bounds; _z++)
 			{
@@ -244,7 +319,12 @@ class Chunk
                     addFaces(@b, _world.faces_bits[index], Vec3f(_x,_y,_z));
                 }
             }
-        }*/
+        }
+        //print("mesh.size(): "+mesh.size());
+        if(mesh.size() == 0)
+        {
+            empty = true;
+        }
     }
 
     void SetVisible()

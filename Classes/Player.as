@@ -31,10 +31,34 @@ class Player
 			
 			Vec2f asuREEEEEE = Vec2f(3,26);//Vec2f(0,0);
 			c.setMousePosition(ScrMid-asuREEEEEE);
+
+			if(c.isKeyPressed(KEY_KEY_W))
+			{
+				vel.z += Maths::Cos(dir_x*Maths::Pi/180)*acceleration;
+				vel.x += Maths::Sin(dir_x*Maths::Pi/180)*acceleration;
+			}
+			if(c.isKeyPressed(KEY_KEY_S))
+			{
+				vel.z -= Maths::Cos(dir_x*Maths::Pi/180)*acceleration;
+				vel.x -= Maths::Sin(dir_x*Maths::Pi/180)*acceleration;
+			}
+			if(c.isKeyPressed(KEY_KEY_A))
+			{
+				vel.z -= Maths::Sin(-dir_x*Maths::Pi/180)*acceleration;
+				vel.x -= Maths::Cos(dir_x*Maths::Pi/180)*acceleration;
+			}
+			if(c.isKeyPressed(KEY_KEY_D))
+			{
+				vel.z += Maths::Sin(-dir_x*Maths::Pi/180)*acceleration;
+				vel.x += Maths::Cos(dir_x*Maths::Pi/180)*acceleration;
+			}
 		}
 
 		//physics here
-
+		vel.x *= friction;
+		vel.z *= friction;
+		f32 vel_len = vel.Length();
+		pos += vel;
 		//------------
 		
 		cam.move(pos+Vec3f(0,0,0), false);

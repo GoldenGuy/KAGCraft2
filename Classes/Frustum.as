@@ -2,8 +2,6 @@
 #include "Plane.as"
 #include "AABB.as"
 
-const f32 MAGIC_VALUE = -6;
-
 class Frustum
 {
 	Plane[] m_planes;
@@ -16,8 +14,8 @@ class Frustum
 	
 	void Update(float[] projection, float[] view)
 	{
-		float[] mat;// = Matrix_Multiply(view, projection);
-        Matrix::Multiply(view, projection, mat);
+		float[] mat = Matrix_Multiply(view, projection);
+        //Matrix::Multiply(view, projection, mat);
 		
 		// left
 		m_planes[2].m_normal.x	= mat[12] + mat[0];
@@ -56,7 +54,7 @@ class Frustum
 		m_planes[1].m_scalar	= mat[15] - mat[11];
 	}
 	
-	bool Contains(AABB box)
+	bool ContainsAABB(AABB box)
 	{
 		if (!m_planes[0].Intersects(box))
 			return false;
@@ -73,25 +71,42 @@ class Frustum
 		return true;
 	}
 	
-	bool Contains(Vec3f point)
+	bool ContainsPoint(Vec3f point)
 	{
-		if (m_planes[0].DistanceFromPoint(point) < MAGIC_VALUE)
+		if (m_planes[0].DistanceFromPoint(point) < 0)
 			return false;
-		if (m_planes[1].DistanceFromPoint(point) < MAGIC_VALUE)
+		if (m_planes[1].DistanceFromPoint(point) < 0)
 			return false;
-		if (m_planes[2].DistanceFromPoint(point) < MAGIC_VALUE)
+		if (m_planes[2].DistanceFromPoint(point) < 0)
 			return false;
-		if (m_planes[3].DistanceFromPoint(point) < MAGIC_VALUE)
+		if (m_planes[3].DistanceFromPoint(point) < 0)
 			return false;
-		if (m_planes[4].DistanceFromPoint(point) < MAGIC_VALUE)
+		if (m_planes[4].DistanceFromPoint(point) < 0)
 			return false;
-		if (m_planes[5].DistanceFromPoint(point) < MAGIC_VALUE)
+		if (m_planes[5].DistanceFromPoint(point) < 0)
+			return false;
+		return true;
+	}
+
+	bool ContainsSphere(Vec3f point, f32 radius)
+	{
+		if (m_planes[0].DistanceFromPoint(point) < -radius)
+			return false;
+		if (m_planes[1].DistanceFromPoint(point) < -radius)
+			return false;
+		if (m_planes[2].DistanceFromPoint(point) < -radius)
+			return false;
+		if (m_planes[3].DistanceFromPoint(point) < -radius)
+			return false;
+		if (m_planes[4].DistanceFromPoint(point) < -radius)
+			return false;
+		if (m_planes[5].DistanceFromPoint(point) < -radius)
 			return false;
 		return true;
 	}
 }
 
-/*float[] Matrix_Multiply(float[] first, float[] second)
+float[] Matrix_Multiply(float[] first, float[] second)
 {
 	float[] new(16);
 	for(int i = 0; i < 4; i++)
@@ -99,4 +114,4 @@ class Frustum
 			for(int k = 0; k < 4; k++)
 				new[i+j*4] += first[i+k*4] * second[j+k*4];
 	return new;
-}*/
+}
