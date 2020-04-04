@@ -35,6 +35,7 @@ class Root
     void Check()
     {
         chunks_to_render.clear();
+
         BRxz.Check();
         BRx1z.Check();
         BRxz1.Check();
