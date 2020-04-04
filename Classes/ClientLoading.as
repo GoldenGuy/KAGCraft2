@@ -11,7 +11,7 @@ bool isLoading(CRules@ this)
     if(!ask_map)
 	{
 		ask_map_in++;
-		if(ask_map_in == 8)
+		if(ask_map_in == 15)
 		{
 			Debug("Asking for map.");
 			this.SendCommand(this.getCommandID("C_RequestMap"), CBitStream(), true);
