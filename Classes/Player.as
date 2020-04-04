@@ -35,7 +35,7 @@ class Player
 			dir_x += dir.x*sensitivity;
 			dir_y = Maths::Clamp(dir_y-(dir.y*sensitivity),-90,90);
 			
-			Vec2f asuREEEEEE = /*Vec2f(3,26);*/Vec2f(0,0);
+			Vec2f asuREEEEEE =/*Vec2f(3,26);*/Vec2f(0,0);
 			c.setMousePosition(ScrMid-asuREEEEEE);
 
 			if(blob.isKeyPressed(key_up))
