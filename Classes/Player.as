@@ -67,6 +67,15 @@ class Player
 			{
 				vel.y -= acceleration;
 			}
+
+			if(c.isKeyJustPressed(KEY_KEY_R))
+			{
+				for(int i = 0; i < chunks_to_render.size(); i++)
+				{
+					Chunk@ chunk = chunks_to_render[i];
+					chunk.rebuild = true;
+				}
+			}
 		}
 
 		//physics here

@@ -40,7 +40,7 @@ class AABB
 		m_dim.y = Maths::Abs(m_max.y - m_min.y);
 		m_dim.z = Maths::Abs(m_max.z - m_min.z);
 
-		corner = Maths::Pow(Maths::Pow(m_dim.x, 3)+Maths::Pow(m_dim.y, 3)+Maths::Pow(m_dim.z, 3), 1.0f/3.0f)/2.0f;
+		corner = Maths::Pow(Maths::Pow(m_dim.x, 3)+Maths::Pow(m_dim.y, 3)+Maths::Pow(m_dim.z, 3), 1.0f/3.0f);
 	}
 }
 

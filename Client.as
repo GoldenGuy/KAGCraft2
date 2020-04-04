@@ -188,4 +188,4 @@ void Render(int id)
 	}
 }
 
-int max_generate = 3;
+int max_generate = 5;

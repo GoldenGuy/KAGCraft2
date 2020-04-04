@@ -1,9 +1,9 @@
 
 #include "Blocks.as"
 
-const u32 chunk_width = 10;
-const u32 chunk_depth = 10;
-const u32 chunk_height = 10;
+const u32 chunk_width = 12;
+const u32 chunk_depth = 12;
+const u32 chunk_height = 12;
 
 u32 world_width = 16;
 u32 world_depth = 16;
@@ -17,7 +17,7 @@ u32 map_height = world_height * chunk_height;
 u32 map_width_depth = map_width * map_depth;
 u32 map_size = map_width_depth * map_height;
 
-float sample_frequency = 0.05f;
+float sample_frequency = 0.02f;
 float fractal_frequency = 0.02f;
 float add_height = 0.2f;
 float dirt_start = 0.16f;
@@ -53,7 +53,7 @@ class World
                 {
                     u32 index = y*map_width_depth + z*map_width + x;
 
-                    u32 tree_rand = rand.NextRanged(200);
+                    /*u32 tree_rand = rand.NextRanged(200);
                     bool make_tree = tree_rand == 1;
                     
                     u32 grass_rand = rand.NextRanged(8);
@@ -63,7 +63,7 @@ class World
                     bool make_flower = flower_rand == 1;
                 
                     u32 flower_type_rand = rand.NextRanged(2);
-                    bool flower_type = flower_type_rand == 1;
+                    bool flower_type = flower_type_rand == 1;*/
                     
                     float h = noise.Sample(x * sample_frequency, z * sample_frequency) * (noise.Fractal(x * fractal_frequency, z * fractal_frequency)/2) + add_height;//+Maths::Pow(y / float(map_height), 1.1024f)-0.5;
                     if(y == 0)
@@ -164,6 +164,7 @@ class World
             {
                 for(int x = 0; x < map_width; x++)
                 {
+                    if(map[getIndex(x, y, z)] == block_air) continue;
                     UpdateBlockFaces(x, y, z);
                 }
             }
@@ -302,6 +303,7 @@ class Chunk
         box = AABB(Vec3f(world_x, world_y, world_z), Vec3f(world_x_bounds, world_y_bounds, world_z_bounds));
         visible = false;
         rebuild = true;
+
         for (int _y = world_y; _y < world_y_bounds; _y++)
 		{
 			for (int _z = world_z; _z < world_z_bounds; _z++)
@@ -309,8 +311,7 @@ class Chunk
 				for (int _x = world_x; _x < world_x_bounds; _x++)
 				{
                     int index = _world.getIndex(_x, _y, _z);
-                    u8 block = _world.map[index];
-                    if(block != 0)
+                    if(_world.faces_bits[index] > 0)
                     {
                         empty = false;
                         return;
