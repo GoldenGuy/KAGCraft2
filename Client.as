@@ -133,7 +133,7 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 	Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
 	if(cmd == this.getCommandID("S_SendMap"))
 	{
-		if(params.Length() != 7) world.UnSerialize(params);
+		if(params.Length() > 90) world.UnSerialize(@params);
 		map_ready = true;
 	}
 }

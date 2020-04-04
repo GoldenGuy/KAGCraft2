@@ -32,16 +32,15 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 		if(isClient())
 		{
 			Debug("Localhost, ignore.");
-			//this.get("Blocks", @Blocks);
 			this.SendCommand(this.getCommandID("S_SendMap"), CBitStream(), true);
 			return;
 		}
 		else
 		{
 			//CPlayer@ sender = getNet().getActiveCommandPlayer();
-			CBitStream _params;
-			world.Serialize(@_params);
-			this.SendCommand(this.getCommandID("S_SendMap"), _params, true);
+			CBitStream to_send;
+			world.Serialize(@to_send);
+			this.SendCommand(this.getCommandID("S_SendMap"), to_send, true);
 		}
 	}
 }

@@ -1,21 +1,21 @@
 
 #include "Blocks.as"
 
-const int chunk_width = 10;
-const int chunk_depth = 10;
-const int chunk_height = 10;
+const u32 chunk_width = 10;
+const u32 chunk_depth = 10;
+const u32 chunk_height = 10;
 
-int world_width = 12;
-int world_depth = 12;
-int world_height = 6;
-int world_width_depth = world_width * world_depth;
-int world_size = world_width_depth * world_height;
+u32 world_width = 16;
+u32 world_depth = 16;
+u32 world_height = 8;
+u32 world_width_depth = world_width * world_depth;
+u32 world_size = world_width_depth * world_height;
 
-int map_width = world_width * chunk_width;
-int map_depth = world_depth * chunk_depth;
-int map_height = world_height * chunk_height;
-int map_width_depth = map_width * map_depth;
-int map_size = map_width_depth * map_height;
+u32 map_width = world_width * chunk_width;
+u32 map_depth = world_depth * chunk_depth;
+u32 map_height = world_height * chunk_height;
+u32 map_width_depth = map_width * map_depth;
+u32 map_size = map_width_depth * map_height;
 
 float sample_frequency = 0.05f;
 float fractal_frequency = 0.02f;
@@ -33,6 +33,7 @@ class World
     {
         map.clear();
         map.resize(map_size);
+        Debug("map_size: "+map_size);
 
 
         Noise noise(69);
@@ -50,19 +51,18 @@ class World
             {
                 for(float x = 0.0f; x < map_width; x += 1.0f)
                 {
-                    int index = y*map_width_depth + z*map_width + x;
+                    u32 index = y*map_width_depth + z*map_width + x;
 
-                    int tree_rand = rand.NextRanged(200);
-                    //print(""+tree_rand);
+                    u32 tree_rand = rand.NextRanged(200);
                     bool make_tree = tree_rand == 1;
                     
-                    int grass_rand = rand.NextRanged(8);
+                    u32 grass_rand = rand.NextRanged(8);
                     bool make_grass = grass_rand == 1;
                     
-                    int flower_rand = rand.NextRanged(20);
+                    u32 flower_rand = rand.NextRanged(20);
                     bool make_flower = flower_rand == 1;
                 
-                    int flower_type_rand = rand.NextRanged(2);
+                    u32 flower_type_rand = rand.NextRanged(2);
                     bool flower_type = flower_type_rand == 1;
                     
                     float h = noise.Sample(x * sample_frequency, z * sample_frequency) * (noise.Fractal(x * fractal_frequency, z * fractal_frequency)/2) + add_height;//+Maths::Pow(y / float(map_height), 1.1024f)-0.5;
@@ -149,13 +149,6 @@ class World
         for(int i = 0; i < world_size; i++)
         {
             Chunk chunk(this, i);
-            /*@chunk._world = @this;
-            chunk.index = i;
-            chunk.x = i % world_width; chunk.z = (i / world_width) % world_depth; chunk.y = i / world_width_depth;
-            //print("chunk: "+chunk.x+","+chunk.y+","+chunk.z);
-            chunk.world_x = chunk.x*chunk_width; chunk.world_z = chunk.z*chunk_depth; chunk.world_y = chunk.y*chunk_height;
-            chunk.world_x_bounds = chunk.world_x+chunk_width; chunk.world_z_bounds = chunk.world_z+chunk_depth; chunk.world_y_bounds = chunk.world_y+chunk_height;
-            chunk.visible = false; chunk.rebuild = true;*/
             chunks.push_back(@chunk);
         }
     }
@@ -197,50 +190,62 @@ class World
         return index;
     }
 
-    void Serialize(CBitStream@ params)
+    void Serialize(CBitStream@ to_send)
     {
-        uint similars = 1;
+        u32 similars = 0;
         u8 similar_block_id = 0;
         u8 block_id = 0;
-        for(int i = 0; i < map_size; i++)
+        u32 index = 0;
+        for(u32 i = 0; i < map_size; i++)
         {
             if(i == 0)
             {
                 similar_block_id = map[i];
                 block_id = similar_block_id;
+                similars++;
                 continue;
             }
             else
             {
                 block_id = map[i];
-                if(similar_block_id != block_id)
+                if(similar_block_id == block_id)
                 {
-                    params.write_u32(similars);
-                    params.write_u8(similar_block_id);
-                    similar_block_id = block_id;
-                    similars = 1;
+                    similars++;
+                    continue;
                 }
                 else
                 {
-                    similars++;
+                    to_send.write_u32(similars);
+                    to_send.write_u8(similar_block_id);
+                    similar_block_id = block_id;
+                    similars = 1;
+                    index++;
                 }
             }
         }
     }
 
-    void UnSerialize(CBitStream params)
+    void UnSerialize(CBitStream@ to_read)
     {
         map.clear();
         map.resize(map_size);
-        int index = 0;
-        while(!params.isBufferEnd())
+        u32 map_index = 0;
+        while(!to_read.isBufferEnd())
         {
-            u32 amount = params.read_u32();
-            u8 block_id = params.read_u8();
-            for(int i = 0; i < amount; i++)
+            u32 amount = to_read.read_u32();
+            u8 block_id = to_read.read_u8();
+            for(u32 j = 0; j < amount; j++)
             {
-                map[index+i] = block_id;
-                index++;
+                if(map_index >= map_size)
+                {
+                    Debug("MAP LIMIT: "+map_index+" >= "+map_size, 3);
+                    Debug("j: "+j+" amount: "+amount, 3);
+                    Debug("block_id: "+block_id, 3);
+                    Debug("If map looks like shit tell goldenguy and show him thie message.", 3);
+                    return;
+                }
+                map[map_index] = block_id;
+                map_index++;
             }
         }
     }
@@ -298,13 +303,8 @@ class Chunk
 
     void GenerateMesh()
     {
-        //_world.poop = false;
-        //print("generating.");
         rebuild = false;
         mesh.clear();
-        //Vec3f(x,y,z).Print();
-        //Vec3f(world_x,world_y,world_z).Print();
-        //Vec3f(world_x_bounds,world_y_bounds,world_z_bounds).Print();
 
         for (int _y = world_y; _y < world_y_bounds; _y++)
 		{
@@ -312,20 +312,14 @@ class Chunk
 			{
 				for (int _x = world_x; _x < world_x_bounds; _x++)
 				{
-                    //print("pos: "+x+","+y+","+z);
-                    //Vec3f(_x,_y,_z).Print();
                     int index = _world.getIndex(_x, _y, _z);
-                    //print("i: "+index);
                     u8 block = _world.map[index];
-                    //print("block: "+_world.map[index]);
-                    //if(block == block_air) continue;
 
                     Block@ b = Blocks[block];
                     addFaces(@b, _world.faces_bits[index], Vec3f(_x,_y,_z));
                 }
             }
         }
-        //print("mesh.size(): "+mesh.size());
         if(mesh.size() == 0)
         {
             empty = true;
@@ -337,7 +331,7 @@ class Chunk
         visible = true;
     }
 
-    void addFaces(Block@ b, u8 face_info, Vec3f pos)//, AmbientOcclusion@ block_ao)
+    void addFaces(Block@ b, u8 face_info, Vec3f pos)
 	{
 		switch(face_info)
 		{
