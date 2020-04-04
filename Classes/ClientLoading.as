@@ -35,6 +35,7 @@ bool isLoading(CRules@ this)
 			Debug("Setting up chunks.");
             world.SetUpChunks();
             Debug("Done.");
+			SetUpTree();
 			map_renderable = true;
 		}
         return true;

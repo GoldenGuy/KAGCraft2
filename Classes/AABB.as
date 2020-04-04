@@ -5,6 +5,7 @@ class AABB
 	Vec3f m_max;
 	Vec3f m_center;
 	Vec3f m_dim;
+	f32 corner;
 	
 	AABB()
 	{
@@ -27,6 +28,9 @@ class AABB
 		m_max = middle+range;
 		UpdateAttributes();
 	}
+
+	AABB opAdd(const Vec3f &in oof) { return AABB(m_min + oof, m_max + oof); }
+	AABB opSub(const Vec3f &in oof) { return AABB(m_min - oof, m_max - oof); }
 	
 	void UpdateAttributes()
 	{
@@ -35,6 +39,8 @@ class AABB
 		m_dim.x = Maths::Abs(m_max.x - m_min.x);
 		m_dim.y = Maths::Abs(m_max.y - m_min.y);
 		m_dim.z = Maths::Abs(m_max.z - m_min.z);
+
+		corner = Maths::Pow(Maths::Pow(m_dim.x, 3)+Maths::Pow(m_dim.y, 3)+Maths::Pow(m_dim.z, 3), 1.0f/3.0f)/2.0f;
 	}
 }
 

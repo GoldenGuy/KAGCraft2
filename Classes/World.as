@@ -222,6 +222,7 @@ class World
                     index++;
                 }
             }
+            getNet().server_KeepConnectionsAlive();
         }
     }
 
@@ -241,11 +242,12 @@ class World
                     Debug("MAP LIMIT: "+map_index+" >= "+map_size, 3);
                     Debug("j: "+j+" amount: "+amount, 3);
                     Debug("block_id: "+block_id, 3);
-                    Debug("If map looks like shit tell goldenguy and show him thie message.", 3);
+                    Debug("If map looks like shit tell goldenguy and show him this message.", 3);
                     return;
                 }
                 map[map_index] = block_id;
                 map_index++;
+                getNet().server_KeepConnectionsAlive();
             }
         }
     }
@@ -286,6 +288,7 @@ class Chunk
     int index, world_index;
     bool visible, rebuild, empty;
     Vertex[] mesh;
+    AABB box;
 
     Chunk(){}
 
@@ -296,9 +299,26 @@ class Chunk
         x = _index % world_width; z = (_index / world_width) % world_depth; y = _index / world_width_depth;
         world_x = x*chunk_width; world_z = z*chunk_depth; world_y = y*chunk_height;
         world_x_bounds = world_x+chunk_width; world_z_bounds = world_z+chunk_depth; world_y_bounds = world_y+chunk_height;
+        box = AABB(Vec3f(world_x, world_y, world_z), Vec3f(world_x_bounds, world_y_bounds, world_z_bounds));
         visible = false;
         rebuild = true;
-        empty = false;
+        for (int _y = world_y; _y < world_y_bounds; _y++)
+		{
+			for (int _z = world_z; _z < world_z_bounds; _z++)
+			{
+				for (int _x = world_x; _x < world_x_bounds; _x++)
+				{
+                    int index = _world.getIndex(_x, _y, _z);
+                    u8 block = _world.map[index];
+                    if(block != 0)
+                    {
+                        empty = false;
+                        return;
+                    }
+                }
+            }
+        }
+        empty = true;
     }
 
     void GenerateMesh()

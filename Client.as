@@ -45,23 +45,24 @@ void onTick(CRules@ this)
 	{
 		// game here
 		player.Update();
-		clearChunks();
-		getChunksToRender();
-		//print("size: "+chunks_to_render.size());
+		tree.Check();
+		//clearChunks();
+		//getChunksToRender();
+		print("size: "+chunks_to_render.size());
 	}
 }
 
-Chunk@[] chunks_to_render;
+/*Chunk@[] chunks_to_render;
 
 void clearChunks()
 {
-	/*for(int i = 0; i < chunks_to_render.size(); i++)
-	{
-		Chunk@ temp;
-		@temp = @chunks_to_render[i];
-		//print("chunk: "+temp.x+","+temp.y+","+temp.z);
-		temp.visible = false;
-	}*/
+	//for(int i = 0; i < chunks_to_render.size(); i++)
+	//{
+	//	Chunk@ temp;
+	//	@temp = @chunks_to_render[i];
+	//	//print("chunk: "+temp.x+","+temp.y+","+temp.z);
+	//	temp.visible = false;
+	//}
 	world.clearVisibility();
 	chunks_to_render.clear();
 }
@@ -126,7 +127,7 @@ void addChunk(Vec3f pos)
 		addChunk(pos+Vec3f(0,0,-1));
 	}
 	//else print("------------not in frustum.");
-}
+}*/
 
 void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 {
@@ -148,11 +149,7 @@ void Render(int id)
 	rules.set_f32("interFrameTime", Maths::Clamp01(rules.get_f32("interFrameTime")+getRenderApproximateCorrectionFactor()));
 	rules.add_f32("interGameTime", getRenderApproximateCorrectionFactor());
 
-	Render::ClearZ();
-	Render::SetZBuffer(true, true);
-	Render::SetAlphaBlend(true);
-	Render::SetBackfaceCull(true);
-	//Render::SetTransformWorldspace();
+	Render::SetTransformWorldspace();
 	
 	cam.render_update();
 	Matrix::MakeIdentity(model);
@@ -165,10 +162,30 @@ void Render(int id)
 		Vertex(map_depth,	0, 0, 1, 1, color_white)
 	};
 
+	Render::ClearZ();
+	Render::SetZBuffer(true, false);
+	Render::SetAlphaBlend(false);
+	Render::SetBackfaceCull(true);
+
 	Render::RawQuads("Blocks.png", verts);
 
+	int generated = 0;
 	for(int i = 0; i < chunks_to_render.size(); i++)
 	{
-		chunks_to_render[i].Render();
+		Chunk@ chunk = chunks_to_render[i];
+		if(chunk.rebuild)
+		{
+			if(generated < max_generate)
+			{
+				chunk.GenerateMesh();
+				generated++;
+			}
+		}
+		else
+		{
+			chunks_to_render[i].Render();
+		}
 	}
 }
+
+int max_generate = 3;
