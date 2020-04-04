@@ -81,7 +81,6 @@ class Branch
             Vec3f chunk_pos_start = pos_start/Vec3f(chunk_width, chunk_height, chunk_depth);
 
             @CHxyz =     world.getChunk(chunk_pos_start.x, chunk_pos_start.y, chunk_pos_start.z);
-            //if(CHxyz is null) print("IS null");
             @CHx1yz =    world.getChunk(chunk_pos_start.x+1, chunk_pos_start.y, chunk_pos_start.z);
             @CHxyz1 =    world.getChunk(chunk_pos_start.x, chunk_pos_start.y, chunk_pos_start.z+1);
             @CHx1yz1 =   world.getChunk(chunk_pos_start.x+1, chunk_pos_start.y, chunk_pos_start.z+1);

@@ -1,6 +1,7 @@
 
 void Debug(string text, int color = 0)
 {
+    //return; // uncomment when release
     string[] path = getCurrentScriptName().split("/");
     string script = path[path.size()-1];
     print(script+" | ---> | "+text, colors[color]);

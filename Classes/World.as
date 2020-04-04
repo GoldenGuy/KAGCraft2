@@ -31,9 +31,10 @@ class World
 
     void GenerateMap()
     {
+        Debug("Generating map.");
         map.clear();
         map.resize(map_size);
-        Debug("map_size: "+map_size);
+        Debug("map_size: "+map_size, 2);
 
 
         Noise noise(69);
@@ -53,10 +54,10 @@ class World
                 {
                     u32 index = y*map_width_depth + z*map_width + x;
 
-                    /*u32 tree_rand = rand.NextRanged(200);
+                    u32 tree_rand = rand.NextRanged(200);
                     bool make_tree = tree_rand == 1;
                     
-                    u32 grass_rand = rand.NextRanged(8);
+                    /*u32 grass_rand = rand.NextRanged(8);
                     bool make_grass = grass_rand == 1;
                     
                     u32 flower_rand = rand.NextRanged(20);
@@ -76,16 +77,16 @@ class World
                         if(h-h_diff <= dirt_start)
                         {
                             if(h-something > h_diff)
-                                map[index] = block_dirt;//set_block(int(x), int(y), int(z), block_dirt);
+                                map[index] = block_dirt;
                             else
                             {
-                                map[index] = block_grass_dirt;//set_block(int(x), int(y), int(z), block_grass_dirt);
-                                /*if(make_tree)
+                                map[index] = block_grass_dirt;
+                                if(make_tree)
                                 {
                                     trees.push_back(Vec3f(x,y+1,z));
-                                    set_block(int(x), int(y), int(z), block_dirt);
+                                    map[index] = block_dirt;
                                 }
-                                else if(make_grass)
+                                /*else if(make_grass)
                                 {
                                     if(make_flower)
                                     {
@@ -109,11 +110,11 @@ class World
                         {
                             if(h-h_diff > dirt_start+0.06)
                             {
-                                map[index] = block_hard_stone;//set_block(int(x), int(y), int(z), block_hard_stone);
+                                map[index] = block_hard_stone;
                             }
                             else
                             {
-                                map[index] = block_stone;//set_block(int(x), int(y), int(z), block_stone);
+                                map[index] = block_stone;
                             }
                         }
                     }
@@ -121,10 +122,11 @@ class World
                 }
             }
         }
-        /*for(int i = 0; i < trees.size(); i++)
+        Debug("Making trees...", 2);
+        for(int i = 0; i < trees.size(); i++)
         {
             MakeTree(trees[i]);
-        }*/
+        }
 
 
         /*for(int y = 0; y < map_height; y++)
@@ -140,7 +142,74 @@ class World
                 }
             }
         }*/
-        Debug("Map generated");
+        Debug("Map generated.");
+    }
+
+    void MakeTree(Vec3f pos)
+	{
+		u8 tree_type = block_log;
+		if(XORRandom(3) == 0)
+			tree_type = block_log_birch;
+		if(inWorldBounds(pos.x, pos.y, pos.z))
+		{
+			SetBlock(pos.x, pos.y, pos.z, tree_type);
+			pos.y += 1;
+			if(inWorldBounds(pos.x, pos.y, pos.z))
+			{
+				SetBlock(pos.x, pos.y, pos.z, tree_type);
+				pos.y += 1;
+				if(inWorldBounds(pos.x, pos.y, pos.z))
+				{
+					SetBlock(pos.x, pos.y, pos.z, tree_type);
+					
+					for(int _z = -2; _z <= 2; _z++)
+						for(int _x = -2; _x <= 2; _x++)
+							if(!(_x == 0 && _z == 0))
+								SetBlock(pos.x+_x, pos.y, pos.z+_z, block_leaves);
+					
+					pos.y += 1;
+					if(inWorldBounds(pos.x, pos.y, pos.z))
+					{
+						SetBlock(pos.x, pos.y, pos.z, tree_type);
+						
+						for(int _z = -2; _z <= 2; _z++)
+							for(int _x = -2; _x <= 2; _x++)
+								if(!(_x == 0 && _z == 0))
+									SetBlock(pos.x+_x, pos.y, pos.z+_z, block_leaves);
+						
+						pos.y += 1;
+						if(inWorldBounds(pos.x, pos.y, pos.z))
+						{
+							SetBlock(pos.x, pos.y, pos.z, tree_type);
+							
+							for(int _z = -1; _z <= 1; _z++)
+								for(int _x = -1; _x <= 1; _x++)
+									if(!(_x == 0 && _z == 0))
+										SetBlock(pos.x+_x, pos.y, pos.z+_z, block_leaves);
+							
+							pos.y += 1;
+							if(inWorldBounds(pos.x, pos.y, pos.z))
+							{
+								SetBlock(pos.x+1, pos.y, pos.z, block_leaves);
+								SetBlock(pos.x-1, pos.y, pos.z, block_leaves);
+								SetBlock(pos.x, pos.y, pos.z, block_leaves);
+								SetBlock(pos.x, pos.y, pos.z+1, block_leaves);
+								SetBlock(pos.x, pos.y, pos.z-1, block_leaves);
+								getNet().server_KeepConnectionsAlive();
+							}
+						}
+					}
+					getNet().server_KeepConnectionsAlive();
+				}
+			}
+		}
+		getNet().server_KeepConnectionsAlive();
+	}
+
+    void SetBlock(int x, int y, int z, u8 block_id)
+    {
+        u32 index = y*map_width_depth + z*map_width + x;
+        map[index] = block_id;
     }
 
     void SetUpChunks()

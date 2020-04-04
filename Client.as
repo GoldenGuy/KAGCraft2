@@ -46,88 +46,9 @@ void onTick(CRules@ this)
 		// game here
 		player.Update();
 		tree.Check();
-		//clearChunks();
-		//getChunksToRender();
-		print("size: "+chunks_to_render.size());
+		//print("size: "+chunks_to_render.size());
 	}
 }
-
-/*Chunk@[] chunks_to_render;
-
-void clearChunks()
-{
-	//for(int i = 0; i < chunks_to_render.size(); i++)
-	//{
-	//	Chunk@ temp;
-	//	@temp = @chunks_to_render[i];
-	//	//print("chunk: "+temp.x+","+temp.y+","+temp.z);
-	//	temp.visible = false;
-	//}
-	world.clearVisibility();
-	chunks_to_render.clear();
-}
-
-Vec3f look_dir;
-
-void getChunksToRender()
-{
-	Vec3f initial_pos = player.pos + Vec3f(chunk_width/2, chunk_height/2, chunk_depth/2);
-	initial_pos = Vec3f(int(initial_pos.x/chunk_width), int(initial_pos.y/chunk_height), int(initial_pos.z/chunk_depth));
-
-	Chunk@ temp = world.getChunk(initial_pos.x, initial_pos.y, initial_pos.z);
-	if(temp !is null)
-	{
-		//temp.visible = true;
-		//print("size: "+temp.mesh.size());
-		temp.SetVisible();
-		if(temp.rebuild) temp.GenerateMesh();
-		chunks_to_render.push_back(@temp);
-	}
-
-	look_dir = Vec3f(	int(Maths::Sin((player.dir_x)*Maths::Pi/180.0f)*Maths::Cos(player.dir_y*Maths::Pi/180.0f)+0.1f),
-							int(Maths::Sin(player.dir_y*Maths::Pi/180.0f)+0.1f),
-							int(Maths::Cos((player.dir_x)*Maths::Pi/180.0f)*Maths::Cos(player.dir_y*Maths::Pi/180.0f)+0.1f));
-
-	addChunk(initial_pos+look_dir);
-
-	addChunk(initial_pos+Vec3f(1,0,0));
-	addChunk(initial_pos+Vec3f(0,1,0));
-	addChunk(initial_pos+Vec3f(0,0,1));
-	addChunk(initial_pos+Vec3f(-1,0,0));
-	addChunk(initial_pos+Vec3f(0,-1,0));
-	addChunk(initial_pos+Vec3f(0,0,-1));
-}
-
-void addChunk(Vec3f pos)
-{
-	//print("----------------------------pos: "+pos.x+","+pos.y+","+pos.z);
-	if(chunks_to_render.size() > 64) return;//{print("------------size over."); return;}
-	if(!world.inChunkBounds(pos.x, pos.y, pos.z)) return;//{print("------------not in bounds."); return;}
-	Chunk@ temp = world.getChunk(pos.x, pos.y, pos.z);
-	if(temp is null) return;//{print("------------null."); return;}
-	if(temp.visible) return;//{print("------------visible already."); return;}
-
-	Vec3f point = Vec3f(temp.world_x+chunk_width/2,temp.world_y+chunk_height/2,temp.world_z+chunk_depth/2)-cam.pos;
-	if(point.Length() > 30) return;
-	//point.Print();
-	if(cam.frustum.ContainsSphere(point, 12))
-	{
-		//print("------------added.");
-		temp.visible = true;
-		if(temp.rebuild) temp.GenerateMesh();
-		if(!temp.empty) chunks_to_render.push_back(@temp);
-
-		addChunk(pos+look_dir);
-		
-		addChunk(pos+Vec3f(1,0,0));
-		addChunk(pos+Vec3f(0,1,0));
-		addChunk(pos+Vec3f(0,0,1));
-		addChunk(pos+Vec3f(-1,0,0));
-		addChunk(pos+Vec3f(0,-1,0));
-		addChunk(pos+Vec3f(0,0,-1));
-	}
-	//else print("------------not in frustum.");
-}*/
 
 void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 {

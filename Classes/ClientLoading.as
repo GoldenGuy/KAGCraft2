@@ -4,6 +4,7 @@ bool map_ready = false;
 bool map_renderable = false;
 bool faces_generated = false;
 bool player_ready = false;
+int intro = 0; // later...
 int ask_map_in = 0;
 
 bool isLoading(CRules@ this)
@@ -28,7 +29,7 @@ bool isLoading(CRules@ this)
 			world.GenerateBlockFaces();
 			Debug("Done.");
 			faces_generated = true;
-			//return true;
+			return true;
 		}
 		else
 		{
@@ -37,8 +38,8 @@ bool isLoading(CRules@ this)
             Debug("Done.");
 			SetUpTree();
 			map_renderable = true;
+			return true;
 		}
-        return true;
 	}
     else if(!player_ready)
     {

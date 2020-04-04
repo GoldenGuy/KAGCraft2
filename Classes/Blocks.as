@@ -149,7 +149,7 @@ class Block
 
 void AddBlock(string name, bool solid, bool see_through, int allsides)
 {
-    debug("name: "+name);
+    Debug("name: "+name, 2);
     Block newblock;
     newblock.id = counter;
     newblock.name = name;
@@ -164,7 +164,7 @@ void AddBlock(string name, bool solid, bool see_through, int allsides)
 
 void AddBlock(string name, bool solid, bool see_through, int sides, int top_and_bottom)
 {
-    debug("name: "+name);
+    Debug("name: "+name, 2);
     Block newblock;
     newblock.id = counter;
     newblock.name = name;
@@ -179,7 +179,7 @@ void AddBlock(string name, bool solid, bool see_through, int sides, int top_and_
 
 void AddBlock(string name, bool solid, bool see_through, int sides, int top, int bottom)
 {
-    debug("name: "+name);
+    Debug("name: "+name, 2);
     Block newblock;
     newblock.id = counter;
     newblock.name = name;
