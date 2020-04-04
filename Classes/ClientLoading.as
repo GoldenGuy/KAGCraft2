@@ -46,6 +46,7 @@ bool isLoading(CRules@ this)
         @cam = @_cam;
         @player.cam = @cam;
         player.pos = Vec3f(0, map_height-30, 0);
+		player.SetBlob(getLocalPlayerBlob());
         player_ready = true;
 		Render::addScript(Render::layer_background, "Client.as", "Render", 1);
     }

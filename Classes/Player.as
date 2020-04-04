@@ -12,10 +12,16 @@ const float player_diameter = player_radius*2;
 class Player
 {
     Vec3f pos, vel;
+	CBlob@ blob;
     bool onGround = false;
     Camera@ cam;
 	f32 dir_x = 0.01f;
 	f32 dir_y = 0.01f;
+
+	void SetBlob(CBlob@ _blob)
+	{
+		@blob = @_blob;
+	}
 
     void Update()
     {
@@ -32,31 +38,41 @@ class Player
 			Vec2f asuREEEEEE = /*Vec2f(3,26);*/Vec2f(0,0);
 			c.setMousePosition(ScrMid-asuREEEEEE);
 
-			if(c.isKeyPressed(KEY_KEY_W))
+			if(blob.isKeyPressed(key_up))
 			{
 				vel.z += Maths::Cos(dir_x*Maths::Pi/180)*acceleration;
 				vel.x += Maths::Sin(dir_x*Maths::Pi/180)*acceleration;
 			}
-			if(c.isKeyPressed(KEY_KEY_S))
+			if(blob.isKeyPressed(key_down))
 			{
 				vel.z -= Maths::Cos(dir_x*Maths::Pi/180)*acceleration;
 				vel.x -= Maths::Sin(dir_x*Maths::Pi/180)*acceleration;
 			}
-			if(c.isKeyPressed(KEY_KEY_A))
+			if(blob.isKeyPressed(key_left))
 			{
 				vel.z -= Maths::Sin(-dir_x*Maths::Pi/180)*acceleration;
 				vel.x -= Maths::Cos(dir_x*Maths::Pi/180)*acceleration;
 			}
-			if(c.isKeyPressed(KEY_KEY_D))
+			if(blob.isKeyPressed(key_right))
 			{
 				vel.z += Maths::Sin(-dir_x*Maths::Pi/180)*acceleration;
 				vel.x += Maths::Cos(dir_x*Maths::Pi/180)*acceleration;
+			}
+
+			if(c.isKeyPressed(KEY_SPACE))
+			{
+				vel.y += acceleration;
+			}
+			if(c.isKeyPressed(KEY_LSHIFT))
+			{
+				vel.y -= acceleration;
 			}
 		}
 
 		//physics here
 		vel.x *= friction;
 		vel.z *= friction;
+		vel.y *= friction; // temp, for flying
 		f32 vel_len = vel.Length();
 		pos += vel;
 		//------------
