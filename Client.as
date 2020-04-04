@@ -163,7 +163,7 @@ void Render(int id)
 	};
 
 	Render::ClearZ();
-	Render::SetZBuffer(true, false);
+	Render::SetZBuffer(true, true);
 	Render::SetAlphaBlend(false);
 	Render::SetBackfaceCull(true);
 
