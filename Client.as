@@ -90,6 +90,8 @@ void Render(int id)
 
 	Render::RawQuads("Blocks.png", verts);
 
+	if(getControls().isKeyPressed(KEY_KEY_Q)) return;
+
 	int generated = 0;
 	for(int i = 0; i < chunks_to_render.size(); i++)
 	{
@@ -109,4 +111,4 @@ void Render(int id)
 	}
 }
 
-int max_generate = 5;
+int max_generate = 3;
