@@ -19,7 +19,7 @@ Player player;
 void onInit(CRules@ this)
 {
 	Debug("Client init");
-	Texture::createFromFile("Default_Textures", "Textures/Blocks.png");
+	Texture::createFromFile("Default_Textures", "Textures/Blocks_PublicEnemy.png");
 	InitBlocks();
 
 	if(this.exists("world"))

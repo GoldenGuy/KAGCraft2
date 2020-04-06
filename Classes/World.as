@@ -542,7 +542,7 @@ class Chunk
 
     void Render()
     {
-        Render::RawQuads("Blocks.png", mesh);
+        Render::RawQuads("Default_Textures", mesh);
     }
 }
 
