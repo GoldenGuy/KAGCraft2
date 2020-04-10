@@ -73,7 +73,10 @@ class Vec3f
 	{
 		float length = this.Length();
 		if(length == 0)
-			print("(Normalize) invalid vector");
+		{
+			//error("(Normalize) invalid vector");
+			return;
+		}
 		x /= length;
 		y /= length;
 		z /= length;
@@ -81,9 +84,24 @@ class Vec3f
 	
 	float Length()
 	{
-		float boi = Maths::Sqrt(x*x + y*y + z*z);
-		//if(boi == 0) return 0;
-		return boi;
+		return Maths::Sqrt(x*x + y*y + z*z);
+	}
+
+	void RotateXZ(float degr)
+	{
+		Vec2f new = Vec2f(x,z);
+		new.RotateByDegrees(degr);
+		x = new.x; z = new.y;
+	}
+
+	string IntString()
+	{
+		return int(x)+", "+int(y)+", "+int(z);
+	}
+
+	string FloatString()
+	{
+		return x+", "+y+", "+z;
 	}
 }
 
@@ -91,3 +109,5 @@ float DotProduct(Vec3f v1, Vec3f v2)
 {
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
+
+const float piboe = Maths::Pi/180.0f;

@@ -90,25 +90,33 @@ void Render(int id)
 
 	Render::RawQuads("Blocks.png", verts);
 
-	if(getControls().isKeyPressed(KEY_KEY_Q)) return;
-
-	int generated = 0;
-	for(int i = 0; i < chunks_to_render.size(); i++)
+	if(!getControls().isKeyPressed(KEY_KEY_Q))
 	{
-		Chunk@ chunk = chunks_to_render[i];
-		if(chunk.rebuild)
+		int generated = 0;
+		for(int i = 0; i < chunks_to_render.size(); i++)
 		{
-			if(generated < max_generate)
+			Chunk@ chunk = chunks_to_render[i];
+			if(chunk.rebuild)
 			{
-				chunk.GenerateMesh();
-				generated++;
+				if(generated < max_generate)
+				{
+					chunk.GenerateMesh();
+					generated++;
+				}
+			}
+			else
+			{
+				chunks_to_render[i].Render();
 			}
 		}
-		else
-		{
-			chunks_to_render[i].Render();
-		}
 	}
+
+	GUI::SetFont("menu");
+	GUI::DrawShadowedText("Pos: "+player.pos.IntString(), Vec2f(20,20), color_white);
+	GUI::DrawShadowedText("Vel: "+player.vel.FloatString(), Vec2f(20,40), color_white);
+	GUI::DrawShadowedText("Ang: "+player.look_dir.FloatString(), Vec2f(20,60), color_white);
+
+	GUI::DrawShadowedText("dir_x: "+player.dir_x, Vec2f(20,80), color_white);
 }
 
 int max_generate = 3;

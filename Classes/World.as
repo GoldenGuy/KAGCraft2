@@ -1,9 +1,9 @@
 
 #include "Blocks.as"
 
-const u32 chunk_width = 12;
-const u32 chunk_depth = 12;
-const u32 chunk_height = 12;
+const u32 chunk_width = 6;
+const u32 chunk_depth = 6;
+const u32 chunk_height = 6;
 
 u32 world_width = 16;
 u32 world_depth = 16;
@@ -36,9 +36,12 @@ class World
         map.resize(map_size);
         Debug("map_size: "+map_size, 2);
 
+        u32 seed = XORRandom(2147483646);
 
-        Noise noise(69);
-        Random rand(69);
+        Debug("map seed: "+seed, 2);
+
+        Noise noise(seed);
+        Random rand(seed);
         
         float something = 1.0f/map_height;
     
@@ -69,7 +72,6 @@ class World
                     float h = noise.Sample(x * sample_frequency, z * sample_frequency) * (noise.Fractal(x * fractal_frequency, z * fractal_frequency)/2) + add_height;//+Maths::Pow(y / float(map_height), 1.1024f)-0.5;
                     if(y == 0)
                     {
-                        //set_block(int(x), int(y), int(z), block_bedrock);
                         map[index] = block_bedrock;
                     }
                     else if(h > h_diff)
@@ -127,21 +129,6 @@ class World
         {
             MakeTree(trees[i]);
         }
-
-
-        /*for(int y = 0; y < map_height; y++)
-        {
-            for(int z = 0; z < map_depth; z++)
-            {
-                for(int x = 0; x < map_width; x++)
-                {
-                    int index = y*map_width_depth + z*map_width + x;
-                    
-                    
-
-                }
-            }
-        }*/
         Debug("Map generated.");
     }
 
@@ -348,6 +335,12 @@ class World
         {
             chunks[i].visible = false;
         }
+    }
+
+    bool isTileSolid(int x, int y, int z)
+    {
+        if(!inWorldBounds(x, y, z)) return false;
+        return Blocks[map[getIndex(x, y, z)]].solid;
     }
 }
 
