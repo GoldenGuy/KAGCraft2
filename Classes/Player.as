@@ -1,12 +1,13 @@
 
 const float acceleration = 0.04f;
+const float jump_acceleration = 0.35f;
 const float friction = 0.8f;
-const float air_friction = 0.12f;
+const float air_friction = 0.9f;
 const float eye_height = 1.7f;
 const float player_height = 1.85f;
 const float player_radius = 0.35f;
 const float player_diameter = player_radius*2;
-bool fly = true;
+bool fly = false;
 
 //vel.y = Maths::Max(vel.y-0.08f, -0.5f); // gravity
 
@@ -15,6 +16,7 @@ class Player
     Vec3f pos, vel;
 	CBlob@ blob;
     bool onGround = false;
+	bool Crouch = false;
     Camera@ cam;
 	f32 dir_x = 0.01f;
 	f32 dir_y = 0.01f;
@@ -27,7 +29,9 @@ class Player
 
     void Update()
     {
-        CControls@ c = getControls();
+        f32 temp_friction = friction;
+		
+		CControls@ c = getControls();
 		Driver@ d = getDriver();
 		if(d !is null && c !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null)
 		{
@@ -46,6 +50,8 @@ class Player
 								Maths::Sin(dir_y*piboe),
 								Maths::Cos((dir_x)*piboe)*Maths::Cos(dir_y*piboe));
 
+			fly = c.isKeyPressed(KEY_XBUTTON2);
+			
 			if(fly)
 			{
 				Vec3f vel_dir;
@@ -77,16 +83,60 @@ class Player
 
 				if(c.isKeyPressed(KEY_SPACE))
 				{
-					vel.y += acceleration;
+					vel.y += temp_acceleration;
 				}
 				if(c.isKeyPressed(KEY_LSHIFT))
 				{
-					vel.y -= acceleration;
+					vel.y -= temp_acceleration;
 				}
 			}
 			else // do actual movement here
 			{
+				Vec3f vel_dir;
+				
+				if(blob.isKeyPressed(key_up))
+				{
+					vel_dir.z += 1;
+				}
+				if(blob.isKeyPressed(key_down))
+				{
+					vel_dir.z -= 1;
+				}
+				if(blob.isKeyPressed(key_left))
+				{
+					vel_dir.x -= 1;
+				}
+				if(blob.isKeyPressed(key_right))
+				{
+					vel_dir.x += 1;
+				}
 
+				f32 temp_acceleration = acceleration;
+
+				Crouch = false;
+
+				if(onGround)
+				{
+					if(c.isKeyPressed(KEY_SPACE))
+					{
+						vel.y += jump_acceleration;
+						onGround = false;
+					}
+					else if(c.isKeyPressed(KEY_LSHIFT))
+					{
+						Crouch = true;
+					}
+				}
+				else
+				{
+					temp_friction = air_friction;
+				}
+
+				vel_dir.RotateXZ(-dir_x);
+				vel_dir.Normalize();
+				vel_dir *= temp_acceleration;
+
+				vel += vel_dir;
 			}
 
 			if(c.isKeyJustPressed(KEY_KEY_R))
@@ -99,20 +149,46 @@ class Player
 			}
 		}
 
-		//physics here
-		vel.x *= friction;
-		vel.z *= friction;
-		vel.y *= friction; // temp, for flying
-		f32 vel_len = vel.Length();
+		if(fly)
+		{
+			vel.x *= friction;
+			vel.z *= friction;
+			vel.y *= friction;
+		}
+		else
+		{
+			vel.x *= temp_friction;
+			vel.z *= temp_friction;
+
+			if(!onGround)
+			{
+				vel.y = Maths::Max(vel.y-0.04f, -0.3f);
+			}
+		}
 
 		CollisionResponse(@pos, @vel);
+
+		onGround = false;
+
+		Vec3f[] floor_check = {	Vec3f(pos.x-(player_diameter/2.0f), pos.y-0.0002f, pos.z-(player_diameter/2.0f)),
+								Vec3f(pos.x+(player_diameter/2.0f), pos.y-0.0002f, pos.z-(player_diameter/2.0f)),
+								Vec3f(pos.x+(player_diameter/2.0f), pos.y-0.0002f, pos.z+(player_diameter/2.0f)),
+								Vec3f(pos.x-(player_diameter/2.0f), pos.y-0.0002f, pos.z+(player_diameter/2.0f))};
+		
+		for(int i = 0; i < 4; i++)
+		{
+			Vec3f temp_pos = floor_check[i];
+			if(world.isTileSolid(temp_pos.x, temp_pos.y, temp_pos.z))
+			{
+				onGround = true;
+			}
+		}
+
+		f32 vel_len = vel.Length();
 
 		if(vel.x < 0.0001f && vel.x > -0.0001f) vel.x = 0;
 		if(vel.y < 0.0001f && vel.y > -0.0001f) vel.y = 0;
 		if(vel.z < 0.0001f && vel.z > -0.0001f) vel.z = 0;
-
-		//pos += vel;
-		//------------
 		
 		cam.move(pos+Vec3f(0,eye_height,0), false);
 		cam.turn(dir_x, dir_y, 0, false);
