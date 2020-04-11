@@ -57,7 +57,7 @@ class Vec3f
 	void opDivAssign(const float &in oof){x/=oof;y/=oof;z/=oof;}
 
 	// only for asu's build, since as upgrade
-	void opAssign(const Vec3f &in oof){x=oof.x;y=oof.y;z=oof.z;}
+	//void opAssign(const Vec3f &in oof){x=oof.x;y=oof.y;z=oof.z;}
 	
 	Vec3f Lerp(Vec3f desired, float t)
 	{
