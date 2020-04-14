@@ -1,13 +1,13 @@
 
 #include "Blocks.as"
 
-const u32 chunk_width = 6;
-const u32 chunk_depth = 6;
-const u32 chunk_height = 6;
+const u32 chunk_width = 18;
+const u32 chunk_depth = 18;
+const u32 chunk_height = 18;
 
-u32 world_width = 16;
-u32 world_depth = 16;
-u32 world_height = 8;
+u32 world_width = 8;
+u32 world_depth = 8;
+u32 world_height = 4;
 u32 world_width_depth = world_width * world_depth;
 u32 world_size = world_width_depth * world_height;
 
@@ -19,7 +19,7 @@ u32 map_size = map_width_depth * map_height;
 
 float sample_frequency = 0.02f;
 float fractal_frequency = 0.02f;
-float add_height = 0.2f;
+float add_height = 0.16f;
 float dirt_start = 0.16f;
 
 class World
@@ -396,10 +396,15 @@ class Chunk
 				for (int _x = world_x; _x < world_x_bounds; _x++)
 				{
                     int index = _world.getIndex(_x, _y, _z);
+
+                    int faces = _world.faces_bits[index];
+
+                    if(faces == 0) continue;
+
                     u8 block = _world.map[index];
 
                     Block@ b = Blocks[block];
-                    addFaces(@b, _world.faces_bits[index], Vec3f(_x,_y,_z));
+                    addFaces(@b, faces, Vec3f(_x,_y,_z));
                 }
             }
         }

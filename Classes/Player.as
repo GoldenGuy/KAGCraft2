@@ -43,7 +43,7 @@ class Player
 			dir_x = dir_x % 360;
 			dir_y = Maths::Clamp(dir_y-(dir.y*sensitivity),-90,90);
 			
-			Vec2f asuREEEEEE =/*Vec2f(3,26);*/Vec2f(0,0);
+			Vec2f asuREEEEEE = /*Vec2f(3,26);*/Vec2f(0,0);
 			c.setMousePosition(ScrMid-asuREEEEEE);
 
 			look_dir = Vec3f(	Maths::Sin((dir_x)*piboe)*Maths::Cos(dir_y*piboe),

@@ -38,7 +38,7 @@ class Camera
 		
 		fov = Maths::Pi/2.0000f;
 		z_near = 0.1f;
-		z_far = 90.0f;
+		z_far = 80.0f;
 		
 		pos = Vec3f();
 		next_pos = Vec3f();
