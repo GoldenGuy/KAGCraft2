@@ -4,101 +4,101 @@
 
 class Frustum
 {
-	Plane m_plane0;
-	Plane m_plane1;
-	Plane m_plane2;
-	Plane m_plane3;
-	Plane m_plane4;
-	Plane m_plane5;
+	Plane plane0;
+	Plane plane1;
+	Plane plane2;
+	Plane plane3;
+	Plane plane4;
+	Plane plane5;
 	
 	Frustum(){}
 	
 	void Update(float[] proj_view)
 	{
-		// left
-		m_plane2.m_normal.x	= proj_view[12] + proj_view[0];
-		m_plane2.m_normal.y	= proj_view[13] + proj_view[1];
-		m_plane2.m_normal.z	= proj_view[14] + proj_view[2];
-		m_plane2.m_scalar	= proj_view[15] + proj_view[3];
-
-		// right
-		m_plane3.m_normal.x	= proj_view[12] - proj_view[0];
-		m_plane3.m_normal.y	= proj_view[13] - proj_view[1];
-		m_plane3.m_normal.z	= proj_view[14] - proj_view[2];
-		m_plane3.m_scalar	= proj_view[15] - proj_view[3];
-
-		// bottom
-		m_plane5.m_normal.x	= proj_view[12] + proj_view[4];
-		m_plane5.m_normal.y	= proj_view[13] + proj_view[5];
-		m_plane5.m_normal.z	= proj_view[14] + proj_view[6];
-		m_plane5.m_scalar	= proj_view[15] + proj_view[7];
-
-		// top
-		m_plane4.m_normal.x	= proj_view[12] - proj_view[4];
-		m_plane4.m_normal.y	= proj_view[13] - proj_view[5];
-		m_plane4.m_normal.z	= proj_view[14] - proj_view[6];
-		m_plane4.m_scalar	= proj_view[15] - proj_view[7];
-
 		// near
-		m_plane0.m_normal.x	= proj_view[12] + proj_view[8];
-		m_plane0.m_normal.y	= proj_view[13] + proj_view[9];
-		m_plane0.m_normal.z	= proj_view[14] + proj_view[10];
-		m_plane0.m_scalar	= proj_view[15] + proj_view[11];
+		plane0.normal.x	= proj_view[12] + proj_view[8];
+		plane0.normal.y	= proj_view[13] + proj_view[9];
+		plane0.normal.z	= proj_view[14] + proj_view[10];
+		plane0.distance_to_origin = proj_view[15] + proj_view[11];
 
 		// far
-		m_plane1.m_normal.x	= proj_view[12] - proj_view[8];
-		m_plane1.m_normal.y	= proj_view[13] - proj_view[9];
-		m_plane1.m_normal.z	= proj_view[14] - proj_view[10];
-		m_plane1.m_scalar	= proj_view[15] - proj_view[11];
+		plane1.normal.x	= proj_view[12] - proj_view[8];
+		plane1.normal.y	= proj_view[13] - proj_view[9];
+		plane1.normal.z	= proj_view[14] - proj_view[10];
+		plane1.distance_to_origin = proj_view[15] - proj_view[11];
+		
+		// left
+		plane2.normal.x	= proj_view[12] + proj_view[0];
+		plane2.normal.y	= proj_view[13] + proj_view[1];
+		plane2.normal.z	= proj_view[14] + proj_view[2];
+		plane2.distance_to_origin = proj_view[15] + proj_view[3];
+
+		// right
+		plane3.normal.x	= proj_view[12] - proj_view[0];
+		plane3.normal.y	= proj_view[13] - proj_view[1];
+		plane3.normal.z	= proj_view[14] - proj_view[2];
+		plane3.distance_to_origin = proj_view[15] - proj_view[3];
+
+		// top
+		plane4.normal.x	= proj_view[12] - proj_view[4];
+		plane4.normal.y	= proj_view[13] - proj_view[5];
+		plane4.normal.z	= proj_view[14] - proj_view[6];
+		plane4.distance_to_origin = proj_view[15] - proj_view[7];
+
+		// bottom
+		plane5.normal.x	= proj_view[12] + proj_view[4];
+		plane5.normal.y	= proj_view[13] + proj_view[5];
+		plane5.normal.z	= proj_view[14] + proj_view[6];
+		plane5.distance_to_origin = proj_view[15] + proj_view[7];
 	}
 	
 	bool ContainsAABB(AABB box)
 	{
-		if (!m_plane0.Intersects(box))
+		if (!plane0.Intersects(box))
 			return false;
-		if (!m_plane1.Intersects(box))
+		if (!plane1.Intersects(box))
 			return false;
-		if (!m_plane2.Intersects(box))
+		if (!plane2.Intersects(box))
 			return false;
-		if (!m_plane3.Intersects(box))
+		if (!plane3.Intersects(box))
 			return false;
-		if (!m_plane4.Intersects(box))
+		if (!plane4.Intersects(box))
 			return false;
-		if (!m_plane5.Intersects(box))
+		if (!plane5.Intersects(box))
 			return false;
 		return true;
 	}
 	
 	bool ContainsPoint(Vec3f point)
 	{
-		if (m_plane0.DistanceFromPoint(point) < 0)
+		if (plane0.DistanceToPoint(point) < 0)
 			return false;
-		if (m_plane1.DistanceFromPoint(point) < 0)
+		if (plane1.DistanceToPoint(point) < 0)
 			return false;
-		if (m_plane2.DistanceFromPoint(point) < 0)
+		if (plane2.DistanceToPoint(point) < 0)
 			return false;
-		if (m_plane3.DistanceFromPoint(point) < 0)
+		if (plane3.DistanceToPoint(point) < 0)
 			return false;
-		if (m_plane4.DistanceFromPoint(point) < 0)
+		if (plane4.DistanceToPoint(point) < 0)
 			return false;
-		if (m_plane5.DistanceFromPoint(point) < 0)
+		if (plane5.DistanceToPoint(point) < 0)
 			return false;
 		return true;
 	}
 
 	bool ContainsSphere(Vec3f point, f32 radius)
 	{
-		if (m_plane0.DistanceFromPoint(point) < -radius)
+		if (plane0.DistanceToPoint(point) < -radius)
 			return false;
-		if (m_plane1.DistanceFromPoint(point) < -radius)
+		if (plane1.DistanceToPoint(point) < -radius)
 			return false;
-		if (m_plane2.DistanceFromPoint(point) < -radius)
+		if (plane2.DistanceToPoint(point) < -radius)
 			return false;
-		if (m_plane3.DistanceFromPoint(point) < -radius)
+		if (plane3.DistanceToPoint(point) < -radius)
 			return false;
-		if (m_plane4.DistanceFromPoint(point) < -radius)
+		if (plane4.DistanceToPoint(point) < -radius)
 			return false;
-		if (m_plane5.DistanceFromPoint(point) < -radius)
+		if (plane5.DistanceToPoint(point) < -radius)
 			return false;
 		return true;
 	}

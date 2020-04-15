@@ -1,48 +1,48 @@
 
 class Plane
 {
-	Vec3f m_normal;
-	float m_scalar;
+	Vec3f normal;
+	float distance_to_origin;
 	
 	Plane()
 	{
-		m_normal = Vec3f(0,0,0);
-		m_scalar = 0.0f;
+		normal = Vec3f(0,0,0);
+		distance_to_origin = 0.0f;
 	}
 
 	Plane(Plane plane)
 	{
-		m_normal = plane.m_normal;
-		m_scalar = plane.m_scalar;
+		normal = plane.normal;
+		distance_to_origin = plane.distance_to_origin;
 	}
 
 	Plane(float x, float y, float z, float scalar)
 	{
-		m_normal = Vec3f(x, y, z);
-		m_scalar = scalar;
+		normal = Vec3f(x, y, z);
+		distance_to_origin = scalar;
 	}
 	
-	bool Intersects(AABB box)
+	bool Intersects(AABB box) // fake, just checks sphere with 
 	{
-		float d = DotProduct(box.m_center, m_normal);
-		float r = box.m_dim.x * Maths::Abs(m_normal.x) + box.m_dim.y * Maths::Abs(m_normal.y) + box.m_dim.z * Maths::Abs(m_normal.z);
+		float d = DotProduct(box.m_center, normal);
+		float r = box.m_dim.x * Maths::Abs(normal.x) + box.m_dim.y * Maths::Abs(normal.y) + box.m_dim.z * Maths::Abs(normal.z);
 		float dpr = d + r;
 
-		if (dpr < -m_scalar)
+		if (dpr < -distance_to_origin)
 			return false;
 		return true;
 	}
 	
-	float DistanceFromPoint(Vec3f point)
+	float DistanceToPoint(Vec3f point)
 	{
-		return DotProduct(m_normal, point) + m_scalar;
+		return DotProduct(normal, point) + distance_to_origin;
 	}
 	
 	void SetAndNormalize(Vec3f normal, float scalar)
 	{
 		float length = normal.Length();
 
-		m_normal = normal / length;
-		m_scalar = scalar / length;
+		normal = normal / length;
+		distance_to_origin = scalar / length;
 	}
 }
