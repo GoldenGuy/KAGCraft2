@@ -46,7 +46,7 @@ void onTick(CRules@ this)
 		// game here
 		player.Update();
 		tree.Check();
-		//print("size: "+chunks_to_render.size());
+		print("size: "+chunks_to_render.size());
 	}
 }
 
@@ -104,7 +104,7 @@ void Render(int id)
 					generated++;
 				}
 			}
-			else
+			//else
 			{
 				chunks_to_render[i].Render();
 			}
