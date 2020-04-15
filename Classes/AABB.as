@@ -15,10 +15,10 @@ class AABB
 		dim = Vec3f(0,0,0);
 	}
 	
-	AABB(Vec3f min, Vec3f max)
+	AABB(Vec3f _min, Vec3f _max)
 	{
-		min = min;
-		max = max;
+		min = _min;
+		max = _max;
 		UpdateAttributes();
 	}
 	
@@ -34,13 +34,13 @@ class AABB
 	
 	void UpdateAttributes()
 	{
-		center = (max + min) / 2.0f;
-
 		dim.x = Maths::Abs(max.x - min.x);
 		dim.y = Maths::Abs(max.y - min.y);
 		dim.z = Maths::Abs(max.z - min.z);
 
-		corner = Maths::Pow(Maths::Pow(dim.x, 3)+Maths::Pow(dim.y, 3)+Maths::Pow(dim.z, 3), 1.0f/3.0f);
+		center = dim / 2.0f + min;
+
+		corner = Maths::Pow( Maths::Pow(dim.x, 3) + Maths::Pow(dim.y, 3) + Maths::Pow(dim.z, 3), 1.0f / 3.0f) * 0.85f;
 	}
 }
 
