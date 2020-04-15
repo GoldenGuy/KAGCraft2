@@ -4,8 +4,6 @@
 
 class Frustum
 {
-	//Plane[] m_planes;
-
 	Plane m_plane0;
 	Plane m_plane1;
 	Plane m_plane2;
@@ -13,11 +11,7 @@ class Frustum
 	Plane m_plane4;
 	Plane m_plane5;
 	
-	Frustum()
-	{
-		//Plane[] _m_planes(6, Plane());
-		//m_planes = _m_planes;
-	}
+	Frustum(){}
 	
 	void Update(float[] projection, float[] view)
 	{
