@@ -10,8 +10,6 @@ const float player_diameter = player_radius*2;
 bool fly = true;
 bool hold_frustum = false;
 
-//vel.y = Maths::Max(vel.y-0.08f, -0.5f); // gravity
-
 class Player
 {
     Vec3f pos, vel;
