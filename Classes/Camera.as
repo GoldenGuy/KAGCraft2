@@ -73,7 +73,6 @@ class Camera
 		interpolated_dir_y = Maths::Lerp(dir_y, next_dir_y, getInterFrameTime());
 		interpolated_dir_z = Maths::Lerp(dir_z, next_dir_z, getInterFrameTime());
 		interpolated_pos = pos.Lerp(next_pos, getInterFrameTime());
-		if(!hold_frustum) frustum_pos = interpolated_pos;
 		
 		Matrix::MakePerspective(projection, fov, f32(getDriver().getScreenWidth()) / f32(getDriver().getScreenHeight()), z_near, z_far/*f32(render_distance)/2.0f*chunk_depth+5*/);
 		makeMatrix();
@@ -85,6 +84,7 @@ class Camera
 		dir_y = next_dir_y;
 		dir_z = next_dir_z;
 		pos = next_pos;
+		if(!hold_frustum) frustum_pos = next_pos;
 	}
 	
 	void makeMatrix()
