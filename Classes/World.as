@@ -1,9 +1,9 @@
 
 #include "Blocks.as"
 
-const u32 chunk_width = 6;
-const u32 chunk_depth = 6;
-const u32 chunk_height = 6;
+const u32 chunk_width = 16;
+const u32 chunk_depth = 16;
+const u32 chunk_height = 12;
 
 u32 world_width = 16;
 u32 world_depth = 16;
@@ -246,7 +246,6 @@ class World
         if(x > 0 && Blocks[map[y][z][x-1]].see_through) faces += 32;
 
         faces_bits[y][z][x] = faces;
-        //if(faces != 0) print("faces: "+faces);
     }
 
     int getIndex(int x, int y, int z)
