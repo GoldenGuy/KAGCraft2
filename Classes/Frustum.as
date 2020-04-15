@@ -13,45 +13,43 @@ class Frustum
 	
 	Frustum(){}
 	
-	void Update(float[] projection, float[] view)
+	void Update(float[] proj_view)
 	{
-		float[] mat = Matrix_Multiply(view, projection);
-		
 		// left
-		m_plane2.m_normal.x	= mat[12] + mat[0];
-		m_plane2.m_normal.y	= mat[13] + mat[1];
-		m_plane2.m_normal.z	= mat[14] + mat[2];
-		m_plane2.m_scalar	= mat[15] + mat[3];
+		m_plane2.m_normal.x	= proj_view[12] + proj_view[0];
+		m_plane2.m_normal.y	= proj_view[13] + proj_view[1];
+		m_plane2.m_normal.z	= proj_view[14] + proj_view[2];
+		m_plane2.m_scalar	= proj_view[15] + proj_view[3];
 
 		// right
-		m_plane3.m_normal.x	= mat[12] - mat[0];
-		m_plane3.m_normal.y	= mat[13] - mat[1];
-		m_plane3.m_normal.z	= mat[14] - mat[2];
-		m_plane3.m_scalar	= mat[15] - mat[3];
+		m_plane3.m_normal.x	= proj_view[12] - proj_view[0];
+		m_plane3.m_normal.y	= proj_view[13] - proj_view[1];
+		m_plane3.m_normal.z	= proj_view[14] - proj_view[2];
+		m_plane3.m_scalar	= proj_view[15] - proj_view[3];
 
 		// bottom
-		m_plane5.m_normal.x	= mat[12] + mat[4];
-		m_plane5.m_normal.y	= mat[13] + mat[5];
-		m_plane5.m_normal.z	= mat[14] + mat[6];
-		m_plane5.m_scalar	= mat[15] + mat[7];
+		m_plane5.m_normal.x	= proj_view[12] + proj_view[4];
+		m_plane5.m_normal.y	= proj_view[13] + proj_view[5];
+		m_plane5.m_normal.z	= proj_view[14] + proj_view[6];
+		m_plane5.m_scalar	= proj_view[15] + proj_view[7];
 
 		// top
-		m_plane4.m_normal.x	= mat[12] - mat[4];
-		m_plane4.m_normal.y	= mat[13] - mat[5];
-		m_plane4.m_normal.z	= mat[14] - mat[6];
-		m_plane4.m_scalar	= mat[15] - mat[7];
+		m_plane4.m_normal.x	= proj_view[12] - proj_view[4];
+		m_plane4.m_normal.y	= proj_view[13] - proj_view[5];
+		m_plane4.m_normal.z	= proj_view[14] - proj_view[6];
+		m_plane4.m_scalar	= proj_view[15] - proj_view[7];
 
 		// near
-		m_plane0.m_normal.x	= mat[12] + mat[8];
-		m_plane0.m_normal.y	= mat[13] + mat[9];
-		m_plane0.m_normal.z	= mat[14] + mat[10];
-		m_plane0.m_scalar	= mat[15] + mat[11];
+		m_plane0.m_normal.x	= proj_view[12] + proj_view[8];
+		m_plane0.m_normal.y	= proj_view[13] + proj_view[9];
+		m_plane0.m_normal.z	= proj_view[14] + proj_view[10];
+		m_plane0.m_scalar	= proj_view[15] + proj_view[11];
 
 		// far
-		m_plane1.m_normal.x	= mat[12] - mat[8];
-		m_plane1.m_normal.y	= mat[13] - mat[9];
-		m_plane1.m_normal.z	= mat[14] - mat[10];
-		m_plane1.m_scalar	= mat[15] - mat[11];
+		m_plane1.m_normal.x	= proj_view[12] - proj_view[8];
+		m_plane1.m_normal.y	= proj_view[13] - proj_view[9];
+		m_plane1.m_normal.z	= proj_view[14] - proj_view[10];
+		m_plane1.m_scalar	= proj_view[15] - proj_view[11];
 	}
 	
 	bool ContainsAABB(AABB box)
