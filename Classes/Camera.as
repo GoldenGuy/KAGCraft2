@@ -91,25 +91,25 @@ class Camera
 		Matrix::MakeIdentity(temp_mat);
 		float[] another_temp_mat;
 		Matrix::MakeIdentity(another_temp_mat);
-		float[] and_another_temp_mat;
 		
 		Matrix::SetRotationDegrees(temp_mat, 0, interpolated_dir_x, 0);
-		Matrix::SetRotationDegrees(another_temp_mat, -interpolated_dir_y, 0, 0);
-		Matrix::Multiply(temp_mat, another_temp_mat, and_another_temp_mat);
-		frustum.Update(projection, and_another_temp_mat);
+		Matrix::SetRotationDegrees(another_temp_mat, interpolated_dir_y, 0, 0);
+		temp_mat = Matrix_Multiply(temp_mat, another_temp_mat);
+		temp_mat = Matrix_Multiply(temp_mat, projection);
+
+		if(!hold_frustum) frustum.Update(temp_mat);
 		
 		Matrix::MakeIdentity(temp_mat);
 		Matrix::MakeIdentity(another_temp_mat);
 		
-		
-		Matrix::SetRotationDegrees(temp_mat, 0, -interpolated_dir_x, 0);
+		Matrix::SetRotationDegrees(temp_mat, 0, interpolated_dir_x, 0);
 		Matrix::SetRotationDegrees(another_temp_mat, interpolated_dir_y, 0, 0);
-		Matrix::Multiply(another_temp_mat, temp_mat, and_another_temp_mat);
+		temp_mat = Matrix_Multiply(another_temp_mat, temp_mat);
 		
-		Matrix::MakeIdentity(temp_mat);
-		Matrix::SetTranslation(temp_mat, -interpolated_pos.x, -interpolated_pos.y, -interpolated_pos.z);
+		Matrix::MakeIdentity(another_temp_mat);
+		Matrix::SetTranslation(another_temp_mat, -interpolated_pos.x, -interpolated_pos.y, -interpolated_pos.z);
 		
-		Matrix::Multiply(and_another_temp_mat, temp_mat, view);
+		Matrix::Multiply(temp_mat, another_temp_mat, view);
 	}
 	
 	Vec3f getInterpolatedPosition()
@@ -123,4 +123,14 @@ class Camera
 		temp_dir_y = interpolated_dir_y;
 		temp_dir_z = interpolated_dir_z;
 	}
+}
+
+float[] Matrix_Multiply(float[] first, float[] second) // inbuilt function is retarded
+{
+	float[] new(16);
+	for(int i = 0; i < 4; i++)
+		for(int j = 0; j < 4; j++)
+			for(int k = 0; k < 4; k++)
+				new[i+j*4] += first[i+k*4] * second[j+k*4];
+	return new;
 }
