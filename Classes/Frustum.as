@@ -111,13 +111,3 @@ class Frustum
 		return true;
 	}
 }
-
-float[] Matrix_Multiply(float[] first, float[] second)
-{
-	float[] new(16);
-	for(int i = 0; i < 4; i++)
-		for(int j = 0; j < 4; j++)
-			for(int k = 0; k < 4; k++)
-				new[i+j*4] += first[i+k*4] * second[j+k*4];
-	return new;
-}
