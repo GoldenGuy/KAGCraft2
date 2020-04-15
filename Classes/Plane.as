@@ -24,8 +24,8 @@ class Plane
 	
 	bool Intersects(AABB box)
 	{
-		float d = DotProduct(box.m_center, normal);
-		float r = box.m_dim.x * Maths::Abs(normal.x) + box.m_dim.y * Maths::Abs(normal.y) + box.m_dim.z * Maths::Abs(normal.z);
+		float d = DotProduct(box.center, normal);
+		float r = box.dim.x * Maths::Abs(normal.x) + box.dim.y * Maths::Abs(normal.y) + box.dim.z * Maths::Abs(normal.z);
 		float dpr = d + r;
 
 		if (dpr < -distance_to_origin)

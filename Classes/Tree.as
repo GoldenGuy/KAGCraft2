@@ -109,18 +109,18 @@ class Branch
 
     void Check()
     {
-        if(cam.frustum.ContainsSphere( box.center-cam.pos, box.corner))//(cam.frustum.ContainsAABB(box - cam.pos))
+        if(cam.frustum.ContainsSphere( box.center-cam.frustum_pos, box.corner))//(cam.frustum.ContainsAABB(box - cam.frustum_pos))
         {
             if(leaf)
             {
-                if(!CHxyz.empty && cam.frustum.ContainsSphere( CHxyz.box.center-cam.pos, CHxyz.box.corner)) chunks_to_render.push_back(@CHxyz);
-                if(!CHx1yz.empty && cam.frustum.ContainsSphere( CHx1yz.box.center-cam.pos, CHx1yz.box.corner)) chunks_to_render.push_back(@CHx1yz);
-                if(!CHxyz1.empty && cam.frustum.ContainsSphere( CHxyz1.box.center-cam.pos, CHxyz1.box.corner)) chunks_to_render.push_back(@CHxyz1);
-                if(!CHx1yz1.empty && cam.frustum.ContainsSphere( CHx1yz1.box.center-cam.pos, CHx1yz1.box.corner)) chunks_to_render.push_back(@CHx1yz1);
-                if(!CHxy1z.empty && cam.frustum.ContainsSphere( CHxy1z.box.center-cam.pos, CHxy1z.box.corner)) chunks_to_render.push_back(@CHxy1z);
-                if(!CHx1y1z.empty && cam.frustum.ContainsSphere( CHx1y1z.box.center-cam.pos, CHx1y1z.box.corner)) chunks_to_render.push_back(@CHx1y1z);
-                if(!CHxy1z1.empty && cam.frustum.ContainsSphere( CHxy1z1.box.center-cam.pos, CHxy1z1.box.corner)) chunks_to_render.push_back(@CHxy1z1);
-                if(!CHx1y1z1.empty && cam.frustum.ContainsSphere( CHx1y1z1.box.center-cam.pos, CHx1y1z1.box.corner)) chunks_to_render.push_back(@CHx1y1z1);
+                if(!CHxyz.empty && cam.frustum.ContainsSphere( CHxyz.box.center-cam.frustum_pos, CHxyz.box.corner)) chunks_to_render.push_back(@CHxyz);
+                if(!CHx1yz.empty && cam.frustum.ContainsSphere( CHx1yz.box.center-cam.frustum_pos, CHx1yz.box.corner)) chunks_to_render.push_back(@CHx1yz);
+                if(!CHxyz1.empty && cam.frustum.ContainsSphere( CHxyz1.box.center-cam.frustum_pos, CHxyz1.box.corner)) chunks_to_render.push_back(@CHxyz1);
+                if(!CHx1yz1.empty && cam.frustum.ContainsSphere( CHx1yz1.box.center-cam.frustum_pos, CHx1yz1.box.corner)) chunks_to_render.push_back(@CHx1yz1);
+                if(!CHxy1z.empty && cam.frustum.ContainsSphere( CHxy1z.box.center-cam.frustum_pos, CHxy1z.box.corner)) chunks_to_render.push_back(@CHxy1z);
+                if(!CHx1y1z.empty && cam.frustum.ContainsSphere( CHx1y1z.box.center-cam.frustum_pos, CHx1y1z.box.corner)) chunks_to_render.push_back(@CHx1y1z);
+                if(!CHxy1z1.empty && cam.frustum.ContainsSphere( CHxy1z1.box.center-cam.frustum_pos, CHxy1z1.box.corner)) chunks_to_render.push_back(@CHxy1z1);
+                if(!CHx1y1z1.empty && cam.frustum.ContainsSphere( CHx1y1z1.box.center-cam.frustum_pos, CHx1y1z1.box.corner)) chunks_to_render.push_back(@CHx1y1z1);
             }
             else
             {
