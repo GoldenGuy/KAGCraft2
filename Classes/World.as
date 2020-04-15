@@ -3,11 +3,11 @@
 
 const u32 chunk_width = 18;
 const u32 chunk_depth = 18;
-const u32 chunk_height = 18;
+const u32 chunk_height = 12;
 
-u32 world_width = 8;
-u32 world_depth = 8;
-u32 world_height = 4;
+u32 world_width = 16;
+u32 world_depth = 16;
+u32 world_height = 8;
 u32 world_width_depth = world_width * world_depth;
 u32 world_size = world_width_depth * world_height;
 
@@ -24,8 +24,9 @@ float dirt_start = 0.16f;
 
 class World
 {
-    u8[] map;
-    u8[] faces_bits;
+    // y z x
+    u8[][][] map;
+    u8[][][] faces_bits;
     Chunk@[] chunks;
     bool poop = true;
 
@@ -33,7 +34,6 @@ class World
     {
         Debug("Generating map.");
         map.clear();
-        map.resize(map_size);
         Debug("map_size: "+map_size, 2);
 
         u32 seed = XORRandom(2147483646);
@@ -48,14 +48,19 @@ class World
         Vec3f[] trees;
         trees.clear();
         
+        //map.resize(map_height);
+        u8[][][] _map(map_height, u8[][](map_depth, u8[](map_width, 0)));
+        map = _map;
         for(float y = 0.0f; y < map_height; y += 1.0f)
         {
+            //map[y].resize(map_depth);
             float h_diff = y/float(map_height);
             for(float z = 0.0f; z < map_depth; z += 1.0f)
             {
+                //map[y][z].resize(map_width);
                 for(float x = 0.0f; x < map_width; x += 1.0f)
                 {
-                    u32 index = y*map_width_depth + z*map_width + x;
+                    //u32 index = y*map_width_depth + z*map_width + x;
 
                     u32 tree_rand = rand.NextRanged(200);
                     bool make_tree = tree_rand == 1;
@@ -72,21 +77,20 @@ class World
                     float h = noise.Sample(x * sample_frequency, z * sample_frequency) * (noise.Fractal(x * fractal_frequency, z * fractal_frequency)/2) + add_height;//+Maths::Pow(y / float(map_height), 1.1024f)-0.5;
                     if(y == 0)
                     {
-                        map[index] = block_bedrock;
+                        map[y][z][x] = block_bedrock;
                     }
                     else if(h > h_diff)
                     {
                         if(h-h_diff <= dirt_start)
                         {
                             if(h-something > h_diff)
-                                map[index] = block_dirt;
+                                map[y][z][x] = block_dirt;
                             else
                             {
-                                map[index] = block_grass_dirt;
                                 if(make_tree)
                                 {
                                     trees.push_back(Vec3f(x,y+1,z));
-                                    map[index] = block_dirt;
+                                    map[y][z][x] = block_dirt;
                                 }
                                 /*else if(make_grass)
                                 {
@@ -106,17 +110,18 @@ class World
                                         set_block(int(x), int(y+1), int(z), block_grass);
                                     }
                                 }*/
+                                else map[y][z][x] = block_grass_dirt;
                             }
                         }
                         else
                         {
                             if(h-h_diff > dirt_start+0.06)
                             {
-                                map[index] = block_hard_stone;
+                                map[y][z][x] = block_hard_stone;
                             }
                             else
                             {
-                                map[index] = block_stone;
+                                map[y][z][x] = block_stone;
                             }
                         }
                     }
@@ -195,8 +200,8 @@ class World
 
     void SetBlock(int x, int y, int z, u8 block_id)
     {
-        u32 index = y*map_width_depth + z*map_width + x;
-        map[index] = block_id;
+        //u32 index = y*map_width_depth + z*map_width + x;
+        if(inWorldBounds(x, y, z)) map[y][z][x] = block_id;
     }
 
     void SetUpChunks()
@@ -211,8 +216,10 @@ class World
 
     void GenerateBlockFaces()
     {
-        faces_bits.clear();
-        faces_bits.resize(map_size);
+        //faces_bits.clear();
+        //faces_bits.resize(map_size);
+        u8[][][] _faces_bits(map_height, u8[][](map_depth, u8[](map_width, 0)));
+        faces_bits = _faces_bits;
 
         for(int y = 0; y < map_height; y++)
         {
@@ -220,7 +227,7 @@ class World
             {
                 for(int x = 0; x < map_width; x++)
                 {
-                    if(map[getIndex(x, y, z)] == block_air) continue;
+                    if(map[y][z][x] == block_air) continue;
                     UpdateBlockFaces(x, y, z);
                 }
             }
@@ -231,14 +238,15 @@ class World
     {
         u8 faces = 0;
 
-        if(z > 0 && Blocks[map[getIndex(x, y, z-1)]].see_through) faces += 1;
-        if(z < map_depth-1 && Blocks[map[getIndex(x, y, z+1)]].see_through) faces += 2;
-        if(y < map_height-1 && Blocks[map[getIndex(x, y+1, z)]].see_through) faces += 4;
-        if(y > 0 && Blocks[map[getIndex(x, y-1, z)]].see_through) faces += 8;
-        if(x < map_width-1 && Blocks[map[getIndex(x+1, y, z)]].see_through) faces += 16;
-        if(x > 0 && Blocks[map[getIndex(x-1, y, z)]].see_through) faces += 32;
+        if(z > 0 && Blocks[map[y][z-1][x]].see_through) faces += 1;
+        if(z < map_depth-1 && Blocks[map[y][z+1][x]].see_through) faces += 2;
+        if(y < map_height-1 && Blocks[map[y+1][z][x]].see_through) faces += 4;
+        if(y > 0 && Blocks[map[y-1][z][x]].see_through) faces += 8;
+        if(x < map_width-1 && Blocks[map[y][z][x+1]].see_through) faces += 16;
+        if(x > 0 && Blocks[map[y][z][x-1]].see_through) faces += 32;
 
-        faces_bits[getIndex(x, y, z)] = faces;
+        faces_bits[y][z][x] = faces;
+        //if(faces != 0) print("faces: "+faces);
     }
 
     int getIndex(int x, int y, int z)
@@ -247,13 +255,18 @@ class World
         return index;
     }
 
+    Vec3f getPosFromWorldIndex(int index)
+    {
+        return Vec3f(index % map_width, index / map_width_depth, (index / map_width) % map_depth);
+    }
+
     void Serialize(CBitStream@ to_send)
     {
         u32 similars = 0;
         u8 similar_block_id = 0;
         u8 block_id = 0;
         u32 index = 0;
-        for(u32 i = 0; i < map_size; i++)
+        /*for(u32 i = 0; i < map_size; i++)
         {
             if(i == 0)
             {
@@ -280,13 +293,53 @@ class World
                 }
             }
             getNet().server_KeepConnectionsAlive();
+        }*/
+
+        for(int y = 0; y < map_height; y++)
+        {
+            for(int z = 0; z < map_depth; z++)
+            {
+                for(int x = 0; x < map_width; x++)
+                {
+                    if(x == 0 && z == 0 && y == 0)
+                    {
+                        similar_block_id = map[y][z][x];
+                        block_id = similar_block_id;
+                        similars++;
+                        continue;
+                    }
+                    else
+                    {
+                        block_id = map[y][z][x];
+                        if(similar_block_id == block_id)
+                        {
+                            similars++;
+                            continue;
+                        }
+                        else
+                        {
+                            to_send.write_u32(similars);
+                            to_send.write_u8(similar_block_id);
+                            similar_block_id = block_id;
+                            similars = 1;
+                            index++;
+                        }
+                    }
+                    getNet().server_KeepConnectionsAlive();
+                }
+            }
         }
     }
 
     void UnSerialize(CBitStream@ to_read)
     {
-        map.clear();
-        map.resize(map_size);
+        u8[][][] _map(map_height, u8[][](map_depth, u8[](map_width, 0)));
+        map = _map;
+        //map.clear();
+        //map.resize(map_size);
+        //map.resize(map_height);
+        //u32 map_x = 0;
+        //u32 map_z = 0;
         u32 map_index = 0;
         while(!to_read.isBufferEnd())
         {
@@ -294,15 +347,18 @@ class World
             u8 block_id = to_read.read_u8();
             for(u32 j = 0; j < amount; j++)
             {
-                if(map_index >= map_size)
+                /*if(map_index >= map_size)
                 {
                     Debug("MAP LIMIT: "+map_index+" >= "+map_size, 3);
                     Debug("j: "+j+" amount: "+amount, 3);
                     Debug("block_id: "+block_id, 3);
                     Debug("If map looks like shit tell goldenguy and show him this message.", 3);
                     return;
-                }
-                map[map_index] = block_id;
+                }*/
+                Vec3f pos = getPosFromWorldIndex(map_index);
+                //pos.Print();
+                if(pos.y >= map_height) return;
+                map[pos.y][pos.z][pos.x] = block_id;
                 map_index++;
                 getNet().server_KeepConnectionsAlive();
             }
@@ -340,7 +396,7 @@ class World
     bool isTileSolid(int x, int y, int z)
     {
         if(!inWorldBounds(x, y, z)) return false;
-        return Blocks[map[getIndex(x, y, z)]].solid;
+        return Blocks[map[y][z][x]].solid;
     }
 }
 
@@ -372,8 +428,9 @@ class Chunk
 			{
 				for (int _x = world_x; _x < world_x_bounds; _x++)
 				{
-                    int index = _world.getIndex(_x, _y, _z);
-                    if(_world.faces_bits[index] > 0)
+                    //int index = _world.getIndex(_x, _y, _z);
+                    //Vec3f(x,y,z).Print();
+                    if(_world.faces_bits[_y][_z][_x] > 0)
                     {
                         empty = false;
                         return;
@@ -395,13 +452,15 @@ class Chunk
 			{
 				for (int _x = world_x; _x < world_x_bounds; _x++)
 				{
-                    int index = _world.getIndex(_x, _y, _z);
+                    //int index = _world.getIndex(_x, _y, _z);
 
-                    int faces = _world.faces_bits[index];
+                    int faces = _world.faces_bits[_y][_z][_x];
 
                     if(faces == 0) continue;
 
-                    u8 block = _world.map[index];
+                    //print("faces "+faces);
+
+                    u8 block = _world.map[_y][_z][_x];
 
                     Block@ b = Blocks[block];
                     addFaces(@b, faces, Vec3f(_x,_y,_z));
