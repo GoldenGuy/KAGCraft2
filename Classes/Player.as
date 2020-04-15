@@ -7,7 +7,8 @@ const float eye_height = 1.7f;
 const float player_height = 1.85f;
 const float player_radius = 0.35f;
 const float player_diameter = player_radius*2;
-bool fly = false;
+bool fly = true;
+bool hold_frustum = false;
 
 //vel.y = Maths::Max(vel.y-0.08f, -0.5f); // gravity
 
@@ -50,7 +51,8 @@ class Player
 								Maths::Sin(dir_y*piboe),
 								Maths::Cos((dir_x)*piboe)*Maths::Cos(dir_y*piboe));
 
-			fly = c.isKeyPressed(KEY_XBUTTON2);
+			if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
+			if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
 			
 			if(fly)
 			{
