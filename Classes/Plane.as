@@ -22,7 +22,7 @@ class Plane
 		distance_to_origin = scalar;
 	}
 	
-	bool Intersects(AABB box) // fake, just checks sphere with 
+	bool Intersects(AABB box)
 	{
 		float d = DotProduct(box.m_center, normal);
 		float r = box.m_dim.x * Maths::Abs(normal.x) + box.m_dim.y * Maths::Abs(normal.y) + box.m_dim.z * Maths::Abs(normal.z);

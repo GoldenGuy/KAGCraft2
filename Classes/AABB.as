@@ -1,54 +1,54 @@
 
 class AABB
 {
-	Vec3f m_min;
-	Vec3f m_max;
-	Vec3f m_center;
-	Vec3f m_dim;
-	f32 corner;
+	Vec3f min;
+	Vec3f max;
+	Vec3f center;
+	Vec3f dim;
+	f32 corner; // radius of a sphere, that is outside the box and collides with each corner
 	
 	AABB()
 	{
-		m_min = Vec3f(0,0,0);
-		m_max = Vec3f(0,0,0);
-		m_center = Vec3f(0,0,0);
-		m_dim = Vec3f(0,0,0);
+		min = Vec3f(0,0,0);
+		max = Vec3f(0,0,0);
+		center = Vec3f(0,0,0);
+		dim = Vec3f(0,0,0);
 	}
 	
 	AABB(Vec3f min, Vec3f max)
 	{
-		m_min = min;
-		m_max = max;
+		min = min;
+		max = max;
 		UpdateAttributes();
 	}
 	
 	AABB(Vec3f middle, f32 range)
 	{
-		m_min = middle-range;
-		m_max = middle+range;
+		min = middle-range;
+		max = middle+range;
 		UpdateAttributes();
 	}
 
-	AABB opAdd(const Vec3f &in oof) { return AABB(m_min + oof, m_max + oof); }
-	AABB opSub(const Vec3f &in oof) { return AABB(m_min - oof, m_max - oof); }
+	AABB opAdd(const Vec3f &in oof) { return AABB(min + oof, max + oof); }
+	AABB opSub(const Vec3f &in oof) { return AABB(min - oof, max - oof); }
 	
 	void UpdateAttributes()
 	{
-		m_center = (m_max + m_min) / 2.0f;
+		center = (max + min) / 2.0f;
 
-		m_dim.x = Maths::Abs(m_max.x - m_min.x);
-		m_dim.y = Maths::Abs(m_max.y - m_min.y);
-		m_dim.z = Maths::Abs(m_max.z - m_min.z);
+		dim.x = Maths::Abs(max.x - min.x);
+		dim.y = Maths::Abs(max.y - min.y);
+		dim.z = Maths::Abs(max.z - min.z);
 
-		corner = Maths::Pow(Maths::Pow(m_dim.x, 3)+Maths::Pow(m_dim.y, 3)+Maths::Pow(m_dim.z, 3), 1.0f/3.0f);
+		corner = Maths::Pow(Maths::Pow(dim.x, 3)+Maths::Pow(dim.y, 3)+Maths::Pow(dim.z, 3), 1.0f/3.0f)/2.0f;
 	}
 }
 
 bool testAABBAABB(AABB a, AABB b)
 {
-    if ( a.m_min.x > b.m_max.x || a.m_max.x < b.m_min.x ) {return false;}
-    if ( a.m_min.y > b.m_max.y || a.m_max.y < b.m_min.y ) {return false;}
-    if ( a.m_min.z > b.m_max.z || a.m_max.z < b.m_min.z ) {return false;}
+    if ( a.min.x > b.max.x || a.max.x < b.min.x ) {return false;}
+    if ( a.min.y > b.max.y || a.max.y < b.min.y ) {return false;}
+    if ( a.min.z > b.max.z || a.max.z < b.min.z ) {return false;}
  
     // We have an overlap
     return true;
