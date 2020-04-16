@@ -32,7 +32,7 @@ class Player
 		
 		CControls@ c = getControls();
 		Driver@ d = getDriver();
-		if(d !is null && c !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null)
+		if(blob !is null && d !is null && c !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null)
 		{
 			Vec2f ScrMid = Vec2f(f32(getScreenWidth()) / 2.0f, f32(getScreenHeight()) / 2.0f);
 			Vec2f dir = (c.getMouseScreenPos() - ScrMid);
@@ -51,6 +51,16 @@ class Player
 
 			if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
 			if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
+
+			if(blob.isKeyPressed(key_action1))
+			{
+				Vec3f hit_pos;
+				u8 check = RaycastWorld(cam.pos, look_dir, 4, hit_pos);
+				if(check == Raycast::S_HIT)
+				{
+					server_SetBlock(block_air, hit_pos);
+				}
+			}
 			
 			if(fly)
 			{

@@ -1,9 +1,9 @@
 
 #include "Blocks.as"
 
-const u32 chunk_width = 16;
-const u32 chunk_depth = 16;
-const u32 chunk_height = 12;
+const u32 chunk_width = 6;
+const u32 chunk_depth = 6;
+const u32 chunk_height = 6;
 
 u32 world_width = 16;
 u32 world_depth = 16;
@@ -372,6 +372,15 @@ class World
         return @chunk;
     }
 
+    Chunk@ getChunkWorldPos(int x, int y, int z)
+    {
+        if(!inWorldBounds(x, y, z)) return null;
+        x /= chunk_width; y /= chunk_height; x /= chunk_depth;
+        int index = y*world_width_depth + z*world_width + x;
+        Chunk@ chunk = @chunks[index];
+        return @chunk;
+    }
+
     bool inWorldBounds(int x, int y, int z)
     {
         if(x<0 || y<0 || z<0 || x>=map_width || y>=map_height || z>=map_depth) return false;
@@ -396,6 +405,27 @@ class World
     {
         if(!inWorldBounds(x, y, z)) return false;
         return Blocks[map[y][z][x]].solid;
+    }
+
+    void UpdateBlocksAndChunks(int x, int y, int z)
+    {
+        world.UpdateBlockFaces(x, y, z);
+        if(x > 0) world.UpdateBlockFaces(x-1, y, z);
+        if(x+1 < map_width) world.UpdateBlockFaces(x+1, y, z);
+        if(y > 0) world.UpdateBlockFaces(x, y-1, z);
+        if(y+1 < map_height) world.UpdateBlockFaces(x, y+1, z);
+        if(z > 0) world.UpdateBlockFaces(x, y, z-1);
+        if(z+1 < map_depth) world.UpdateBlockFaces(x, y, z+1);
+
+        Vec3f chunk_pos = Vec3f(int(x/chunk_width), int(y/chunk_height), int(z/chunk_depth));
+        {Chunk@ chunk = world.getChunk(chunk_pos.x, chunk_pos.y, chunk_pos.z);if(chunk !is null){chunk.rebuild = true;chunk.empty = false;}}
+
+        if(x % chunk_width == 0) {Chunk@ chunk = world.getChunk(chunk_pos.x-1, chunk_pos.y, chunk_pos.z); if(chunk !is null) {chunk.rebuild = true; chunk.empty = false;}}
+        else if(x % chunk_width == chunk_width-1) {Chunk@ chunk = world.getChunk(chunk_pos.x+1, chunk_pos.y, chunk_pos.z); if(chunk !is null) {chunk.rebuild = true; chunk.empty = false;}}
+        if(y % chunk_height == 0) {Chunk@ chunk = world.getChunk(chunk_pos.x, chunk_pos.y-1, chunk_pos.z); if(chunk !is null) {chunk.rebuild = true; chunk.empty = false;}}
+        else if(y % chunk_height == chunk_height-1) {Chunk@ chunk = world.getChunk(chunk_pos.x, chunk_pos.y+1, chunk_pos.z); if(chunk !is null) {chunk.rebuild = true; chunk.empty = false;}}
+        if(z % chunk_depth == 0) {Chunk@ chunk = world.getChunk(chunk_pos.x, chunk_pos.y, chunk_pos.z-1); if(chunk !is null) {chunk.rebuild = true; chunk.empty = false;}}
+        else if(z % chunk_depth == chunk_depth-1) {Chunk@ chunk = world.getChunk(chunk_pos.x, chunk_pos.y, chunk_pos.z+1); if(chunk !is null) {chunk.rebuild = true; chunk.empty = false;}}
     }
 }
 
@@ -616,3 +646,9 @@ const SColor left_scol = SColor(debug_alpha, left_col, left_col, left_col);
 const SColor right_scol = SColor(debug_alpha, right_col, right_col, right_col);
 const SColor front_scol = SColor(debug_alpha, front_col, front_col, front_col);
 const SColor back_scol = SColor(debug_alpha, back_col, back_col, back_col);
+
+void server_SetBlock(u8 block, Vec3f pos)
+{
+    world.map[pos.y][pos.z][pos.x] = block;
+    world.UpdateBlocksAndChunks(pos.x, pos.y, pos.z);
+}

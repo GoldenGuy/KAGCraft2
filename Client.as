@@ -7,6 +7,7 @@
 #include "Vec3f.as"
 #include "ClientLoading.as"
 #include "FrameTime.as"
+#include "Raycast.as"
 #include "Camera.as"
 #include "Player.as"
 
@@ -46,7 +47,7 @@ void onTick(CRules@ this)
 		// game here
 		player.Update();
 		tree.Check();
-		print("size: "+chunks_to_render.size());
+		//print("size: "+chunks_to_render.size());
 	}
 }
 
