@@ -43,6 +43,9 @@ class Camera
 		
 		pos = Vec3f();
 		next_pos = Vec3f();
+
+		Matrix::MakePerspective(projection, fov, f32(getDriver().getScreenWidth()) / f32(getDriver().getScreenHeight()), z_near, z_far);
+		updateFrustum();
 	}
 	
 	void move(Vec3f nextpos, bool instantly)
@@ -65,6 +68,7 @@ class Camera
 			dir_y = nextdir_y;
 			dir_z = nextdir_z;
 		}
+		updateFrustum();
 	}
 	
 	void render_update()
@@ -74,7 +78,7 @@ class Camera
 		interpolated_dir_z = Maths::Lerp(dir_z, next_dir_z, getInterFrameTime());
 		interpolated_pos = pos.Lerp(next_pos, getInterFrameTime());
 		
-		Matrix::MakePerspective(projection, fov, f32(getDriver().getScreenWidth()) / f32(getDriver().getScreenHeight()), z_near, z_far/*f32(render_distance)/2.0f*chunk_depth+5*/);
+		//Matrix::MakePerspective(projection, fov, f32(getDriver().getScreenWidth()) / f32(getDriver().getScreenHeight()), z_near, z_far);
 		makeMatrix();
 	}
 	
@@ -86,22 +90,28 @@ class Camera
 		pos = next_pos;
 		if(!hold_frustum) frustum_pos = next_pos;
 	}
-	
-	void makeMatrix()
+
+	void updateFrustum()
 	{
 		float[] temp_mat;
 		Matrix::MakeIdentity(temp_mat);
 		float[] another_temp_mat;
 		Matrix::MakeIdentity(another_temp_mat);
 		
-		Matrix::SetRotationDegrees(temp_mat, 0, interpolated_dir_x, 0);
-		Matrix::SetRotationDegrees(another_temp_mat, interpolated_dir_y, 0, 0);
+		Matrix::SetRotationDegrees(temp_mat, 0, next_dir_x, 0);
+		Matrix::SetRotationDegrees(another_temp_mat, next_dir_y, 0, 0);
 		temp_mat = Matrix_Multiply(temp_mat, another_temp_mat);
 		temp_mat = Matrix_Multiply(temp_mat, projection);
 
 		if(!hold_frustum) frustum.Update(temp_mat);
-		
+	}
+	
+	void makeMatrix()
+	{
+		//updateFrustum();
+		float[] temp_mat;
 		Matrix::MakeIdentity(temp_mat);
+		float[] another_temp_mat;
 		Matrix::MakeIdentity(another_temp_mat);
 		
 		Matrix::SetRotationDegrees(temp_mat, 0, interpolated_dir_x, 0);
