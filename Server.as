@@ -12,6 +12,8 @@ void onInit(CRules@ this)
 {
 	Debug("Server init");
 
+	players_to_send.clear();
+
 	InitBlocks();
 
 	World temp;
@@ -22,7 +24,33 @@ void onInit(CRules@ this)
 
 void onTick(CRules@ this)
 {
-	
+	if(players_to_send.size() > 0)
+	{
+		bool done = false;
+		if(players_to_send[0].player !is null)
+		{
+			//u16 netid = players_to_send[0].player.getNetworkID();
+			
+			CBitStream to_send;
+			world.Serialize(@to_send, players_to_send[0].packet_number);
+			this.SendCommand(this.getCommandID("S_SendMap"), to_send, players_to_send[0].player);
+			Debug("Sending map packet, "+(players_to_send[0].packet_number+1)+"/"+amount_of_packets+".", 3);
+
+			players_to_send[0].packet_number++;
+			if(players_to_send[0].packet_number >= 2)
+			{
+				done = true;
+			}
+		}
+		else
+		{
+			done = true;
+		}
+		if(done)
+		{
+			players_to_send.removeAt(0);
+		}
+	}
 }
 
 void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
@@ -39,9 +67,16 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 		else
 		{
 			//CPlayer@ sender = getNet().getActiveCommandPlayer();
-			CBitStream to_send;
-			world.Serialize(@to_send);
-			this.SendCommand(this.getCommandID("S_SendMap"), to_send, true);
+			u16 netid = params.read_netid();
+			CPlayer@ player = getPlayerByNetworkId(netid);
+			if(player !is null)
+			{
+				players_to_send.push_back(MapSender(player));
+			}
+
+			//CBitStream to_send;
+			//world.Serialize(@to_send);
+			//this.SendCommand(this.getCommandID("S_SendMap"), to_send, true);
 		}
 	}
 }

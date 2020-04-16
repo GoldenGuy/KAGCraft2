@@ -137,6 +137,14 @@ class World
         Debug("Map generated.");
     }
 
+    void ClientSetUp()
+    {
+        u8[][][] _map(map_height, u8[][](map_depth, u8[](map_width, 0)));
+        map = _map;
+
+        faces_bits = _map;
+    }
+
     void MakeTree(Vec3f pos)
 	{
 		u8 tree_type = block_log;
@@ -216,11 +224,6 @@ class World
 
     void GenerateBlockFaces()
     {
-        //faces_bits.clear();
-        //faces_bits.resize(map_size);
-        u8[][][] _faces_bits(map_height, u8[][](map_depth, u8[](map_width, 0)));
-        faces_bits = _faces_bits;
-
         for(int y = 0; y < map_height; y++)
         {
             for(int z = 0; z < map_depth; z++)
@@ -236,7 +239,7 @@ class World
 
     void UpdateBlockFaces(int x, int y, int z)
     {
-        u8 faces = 0;
+        u8 faces = 5;
 
         if(z > 0 && Blocks[map[y][z-1][x]].see_through) faces += 1;
         if(z < map_depth-1 && Blocks[map[y][z+1][x]].see_through) faces += 2;
@@ -259,108 +262,42 @@ class World
         return Vec3f(index % map_width, index / map_width_depth, (index / map_width) % map_depth);
     }
 
-    void Serialize(CBitStream@ to_send)
+    void Serialize(CBitStream@ to_send, u32 packet)
     {
-        u32 similars = 0;
-        u8 similar_block_id = 0;
-        u8 block_id = 0;
-        u32 index = 0;
-        /*for(u32 i = 0; i < map_size; i++)
-        {
-            if(i == 0)
-            {
-                similar_block_id = map[i];
-                block_id = similar_block_id;
-                similars++;
-                continue;
-            }
-            else
-            {
-                block_id = map[i];
-                if(similar_block_id == block_id)
-                {
-                    similars++;
-                    continue;
-                }
-                else
-                {
-                    to_send.write_u32(similars);
-                    to_send.write_u8(similar_block_id);
-                    similar_block_id = block_id;
-                    similars = 1;
-                    index++;
-                }
-            }
-            getNet().server_KeepConnectionsAlive();
-        }*/
+        u32 start = packet*ms_packet_size;
+        u32 end = start+ms_packet_size;
+        Vec3f pos;
+        u8 block_id;
 
-        for(int y = 0; y < map_height; y++)
+        for(u32 i = start; i < end; i++)
         {
-            for(int z = 0; z < map_depth; z++)
-            {
-                for(int x = 0; x < map_width; x++)
-                {
-                    if(x == 0 && z == 0 && y == 0)
-                    {
-                        similar_block_id = map[y][z][x];
-                        block_id = similar_block_id;
-                        similars++;
-                        continue;
-                    }
-                    else
-                    {
-                        block_id = map[y][z][x];
-                        if(similar_block_id == block_id)
-                        {
-                            similars++;
-                            continue;
-                        }
-                        else
-                        {
-                            to_send.write_u32(similars);
-                            to_send.write_u8(similar_block_id);
-                            similar_block_id = block_id;
-                            similars = 1;
-                            index++;
-                        }
-                    }
-                    getNet().server_KeepConnectionsAlive();
-                }
-            }
+            pos = getPosFromWorldIndex(i);
+            block_id = map[pos.y][pos.z][pos.x];
+
+            to_send.write_u8(block_id);
+            getNet().server_KeepConnectionsAlive();
         }
     }
 
-    void UnSerialize(CBitStream@ to_read)
+    void UnSerialize(CBitStream@ to_read, u32 packet)
     {
-        u8[][][] _map(map_height, u8[][](map_depth, u8[](map_width, 0)));
-        map = _map;
-        //map.clear();
-        //map.resize(map_size);
-        //map.resize(map_height);
-        //u32 map_x = 0;
-        //u32 map_z = 0;
-        u32 map_index = 0;
-        while(!to_read.isBufferEnd())
+        u32 start = packet*ms_packet_size;
+        u32 end = start+ms_packet_size;
+        Vec3f pos;
+        u8 block_id;
+
+        u32 nigga_balls = to_read.read_u32(); // i also need to ask you about this later...
+        nigga_balls = to_read.read_u32();
+        nigga_balls = to_read.read_u32();
+        nigga_balls = to_read.read_u32();
+
+        for(u32 i = start; i < end; i++)
         {
-            u32 amount = to_read.read_u32();
-            u8 block_id = to_read.read_u8();
-            for(u32 j = 0; j < amount; j++)
-            {
-                /*if(map_index >= map_size)
-                {
-                    Debug("MAP LIMIT: "+map_index+" >= "+map_size, 3);
-                    Debug("j: "+j+" amount: "+amount, 3);
-                    Debug("block_id: "+block_id, 3);
-                    Debug("If map looks like shit tell goldenguy and show him this message.", 3);
-                    return;
-                }*/
-                Vec3f pos = getPosFromWorldIndex(map_index);
-                //pos.Print();
-                if(pos.y >= map_height) return;
-                map[pos.y][pos.z][pos.x] = block_id;
-                map_index++;
-                getNet().server_KeepConnectionsAlive();
-            }
+            block_id = to_read.read_u8();
+            pos = getPosFromWorldIndex(i);
+            map[pos.y][pos.z][pos.x] = block_id;
+
+            getNet().server_KeepConnectionsAlive();
         }
     }
 
@@ -652,3 +589,27 @@ void server_SetBlock(u8 block, Vec3f pos)
     world.map[pos.y][pos.z][pos.x] = block;
     world.UpdateBlocksAndChunks(pos.x, pos.y, pos.z);
 }
+
+// map sending and receiving
+
+u32 amount_of_packets = 8;
+u32 ms_packet_size = map_size / amount_of_packets;
+
+// server
+
+MapSender[] players_to_send;
+class MapSender
+{
+    CPlayer@ player;
+    u8 packet_number = 0;
+
+    MapSender(CPlayer@ _player)
+    {
+        @player = @_player;
+        packet_number = 0;
+    }
+}
+
+// client
+
+CBitStream@[] map_packets;

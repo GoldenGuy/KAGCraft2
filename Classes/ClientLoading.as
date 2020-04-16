@@ -15,12 +15,28 @@ bool isLoading(CRules@ this)
 		if(ask_map_in == 15)
 		{
 			Debug("Asking for map.");
-			this.SendCommand(this.getCommandID("C_RequestMap"), CBitStream(), true);
+			CBitStream to_send;
+			to_send.write_netid(getLocalPlayer().getNetworkID());
+			this.SendCommand(this.getCommandID("C_RequestMap"), to_send, true);
 			ask_map = true;
 		}
 		return true;
 	}
-	if(!map_ready) return true;
+	if(!map_ready)
+	{
+		if(got_packets >= 2)
+		{
+			map_ready = true;
+		}
+		else if(map_packets.size() > 0)
+		{
+			CBitStream@ packet = @map_packets[0];
+			world.UnSerialize(@packet, got_packets);
+			map_packets.removeAt(0);
+			got_packets++;
+		}
+		return true;
+	}
 	else if(!map_renderable)
 	{
 		if(!faces_generated)

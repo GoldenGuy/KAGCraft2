@@ -23,6 +23,9 @@ void onInit(CRules@ this)
 	Texture::createFromFile("Default_Textures", "Textures/Blocks_Jenny.png");
 	InitBlocks();
 
+	got_packets = 0;
+	map_packets.clear();
+
 	if(this.exists("world"))
 	{
 		this.get("world", @world);
@@ -31,6 +34,7 @@ void onInit(CRules@ this)
 	{
 		World _world;
 		@world = @_world;
+		world.ClientSetUp();
 	}
 }
 
@@ -51,17 +55,21 @@ void onTick(CRules@ this)
 	}
 }
 
+u8 got_packets;
+
 void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 {
 	Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
 	if(cmd == this.getCommandID("S_SendMap"))
 	{
-		if(params.Length() > 90) world.UnSerialize(@params);
-		map_ready = true;
+		if(params.Length() > 40)
+		{
+			map_packets.push_back(@params);
+			//world.UnSerialize(@params, got_packets);
+			//got_packets++;
+		}
 	}
 }
-
-
 
 float[] model;
 
