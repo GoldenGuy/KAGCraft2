@@ -16,12 +16,14 @@ bool isLoading(CRules@ this)
 		{
 			ready_unser = false;
 			got_packets = 0;
+			gf_packet = 0;
 			//map_packets.clear();
 			Debug("Asking for map.");
 			CBitStream to_send;
 			to_send.write_netid(getLocalPlayer().getNetworkID());
 			this.SendCommand(this.getCommandID("C_RequestMap"), to_send, false);
 			ask_map = true;
+			ask_map_in = 0;
 		}
 		return true;
 	}
@@ -33,6 +35,8 @@ bool isLoading(CRules@ this)
 		}
 		else if(ready_unser)
 		{
+			ask_map_in++;
+			if(ask_map_in < 6) return true;
 			//CBitStream@ packet = @map_packets[0];
 			ready_unser = false;
 			world.UnSerialize(got_packets);
@@ -41,6 +45,7 @@ bool isLoading(CRules@ this)
 			CBitStream to_send;
 			to_send.write_netid(getLocalPlayer().getNetworkID());
 			this.SendCommand(this.getCommandID("C_ReceivedMap"), to_send, false);
+			ask_map_in = 0;
 		}
 		return true;
 	}
@@ -48,10 +53,18 @@ bool isLoading(CRules@ this)
 	{
 		if(!faces_generated)
 		{
-			Debug("Generating block faces.");
-			world.GenerateBlockFaces();
-			Debug("Done.");
-			faces_generated = true;
+			if(gf_packet == 0) Debug("Generating block faces.");
+			if(gf_packet < gf_amount_of_packets)
+			{
+				world.GenerateBlockFaces();
+				gf_packet++;
+				Debug(gf_packet+"/"+gf_amount_of_packets+".", 3);
+			}
+			else
+			{
+				Debug("Done.");
+				faces_generated = true;
+			}
 			return true;
 		}
 		else
