@@ -299,17 +299,10 @@ class World
 
     void UnSerialize(u32 packet)
     {
-        //CBitStream@ to_read = @map_packets[packet];
-
         u32 start = packet*ms_packet_size;
         u32 end = start+ms_packet_size;
         Vec3f pos;
         u8 block_id;
-
-        u32 nigga_balls = map_packet.read_u32(); // i also need to ask you about this later...
-        nigga_balls = map_packet.read_u32();
-        nigga_balls = map_packet.read_u32();
-        nigga_balls = map_packet.read_u32();
 
         for(u32 i = start; i < end; i++)
         {
@@ -612,7 +605,7 @@ void server_SetBlock(u8 block, Vec3f pos)
 
 // map sending and receiving
 
-u32 amount_of_packets = 192;
+u32 amount_of_packets = 64;
 u32 ms_packet_size = map_size / amount_of_packets;
 
 // server

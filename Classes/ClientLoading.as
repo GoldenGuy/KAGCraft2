@@ -35,8 +35,6 @@ bool isLoading(CRules@ this)
 		}
 		else if(ready_unser)
 		{
-			ask_map_in++;
-			if(ask_map_in < 6) return true;
 			//CBitStream@ packet = @map_packets[0];
 			ready_unser = false;
 			world.UnSerialize(got_packets);
