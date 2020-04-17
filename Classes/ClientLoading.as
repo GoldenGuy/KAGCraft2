@@ -14,26 +14,33 @@ bool isLoading(CRules@ this)
 		ask_map_in++;
 		if(ask_map_in == 15)
 		{
+			ready_unser = false;
+			got_packets = 0;
+			//map_packets.clear();
 			Debug("Asking for map.");
 			CBitStream to_send;
 			to_send.write_netid(getLocalPlayer().getNetworkID());
-			this.SendCommand(this.getCommandID("C_RequestMap"), to_send, true);
+			this.SendCommand(this.getCommandID("C_RequestMap"), to_send, false);
 			ask_map = true;
 		}
 		return true;
 	}
 	if(!map_ready)
 	{
-		if(got_packets >= 2)
+		if(got_packets >= amount_of_packets)
 		{
 			map_ready = true;
 		}
-		else if(map_packets.size() > 0)
+		else if(ready_unser)
 		{
-			CBitStream@ packet = @map_packets[0];
-			world.UnSerialize(@packet, got_packets);
-			map_packets.removeAt(0);
+			//CBitStream@ packet = @map_packets[0];
+			ready_unser = false;
+			world.UnSerialize(got_packets);
+			//map_packets.removeAt(0);
 			got_packets++;
+			CBitStream to_send;
+			to_send.write_netid(getLocalPlayer().getNetworkID());
+			this.SendCommand(this.getCommandID("C_ReceivedMap"), to_send, false);
 		}
 		return true;
 	}

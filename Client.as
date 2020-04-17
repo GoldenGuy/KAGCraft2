@@ -23,9 +23,6 @@ void onInit(CRules@ this)
 	Texture::createFromFile("Default_Textures", "Textures/Blocks_Jenny.png");
 	InitBlocks();
 
-	got_packets = 0;
-	map_packets.clear();
-
 	if(this.exists("world"))
 	{
 		this.get("world", @world);
@@ -55,8 +52,6 @@ void onTick(CRules@ this)
 	}
 }
 
-u8 got_packets;
-
 void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 {
 	Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
@@ -64,7 +59,12 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 	{
 		if(params.Length() > 40)
 		{
-			map_packets.push_back(@params);
+			//CBitStream temp;
+			//temp = params;
+			//print("temp len: "+temp.Length());
+			ready_unser = true;
+			@map_packet = @params;
+			//map_packets.push_back(params);
 			//world.UnSerialize(@params, got_packets);
 			//got_packets++;
 		}

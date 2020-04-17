@@ -1,9 +1,9 @@
 
 #include "Blocks.as"
 
-const u32 chunk_width = 6;
-const u32 chunk_depth = 6;
-const u32 chunk_height = 6;
+const u32 chunk_width = 12;
+const u32 chunk_depth = 12;
+const u32 chunk_height = 12;
 
 u32 world_width = 16;
 u32 world_depth = 16;
@@ -142,7 +142,8 @@ class World
         u8[][][] _map(map_height, u8[][](map_depth, u8[](map_width, 0)));
         map = _map;
 
-        faces_bits = _map;
+        u8[][][] _faces_bits(map_height, u8[][](map_depth, u8[](map_width, 0)));
+        faces_bits = _faces_bits;
     }
 
     void MakeTree(Vec3f pos)
@@ -239,7 +240,7 @@ class World
 
     void UpdateBlockFaces(int x, int y, int z)
     {
-        u8 faces = 5;
+        u8 faces = 0;
 
         if(z > 0 && Blocks[map[y][z-1][x]].see_through) faces += 1;
         if(z < map_depth-1 && Blocks[map[y][z+1][x]].see_through) faces += 2;
@@ -279,21 +280,23 @@ class World
         }
     }
 
-    void UnSerialize(CBitStream@ to_read, u32 packet)
+    void UnSerialize(u8 packet)
     {
+        //CBitStream@ to_read = @map_packets[packet];
+
         u32 start = packet*ms_packet_size;
         u32 end = start+ms_packet_size;
         Vec3f pos;
         u8 block_id;
 
-        u32 nigga_balls = to_read.read_u32(); // i also need to ask you about this later...
-        nigga_balls = to_read.read_u32();
-        nigga_balls = to_read.read_u32();
-        nigga_balls = to_read.read_u32();
+        /*u32 nigga_balls = map_packet.read_u32(); // i also need to ask you about this later...
+        nigga_balls = map_packet.read_u32();
+        nigga_balls = map_packet.read_u32();
+        nigga_balls = map_packet.read_u32();*/
 
         for(u32 i = start; i < end; i++)
         {
-            block_id = to_read.read_u8();
+            block_id = map_packet.read_u8();
             pos = getPosFromWorldIndex(i);
             map[pos.y][pos.z][pos.x] = block_id;
 
@@ -592,7 +595,7 @@ void server_SetBlock(u8 block, Vec3f pos)
 
 // map sending and receiving
 
-u32 amount_of_packets = 8;
+u32 amount_of_packets = 16;
 u32 ms_packet_size = map_size / amount_of_packets;
 
 // server
@@ -602,14 +605,18 @@ class MapSender
 {
     CPlayer@ player;
     u8 packet_number = 0;
+    bool ready;
 
     MapSender(CPlayer@ _player)
     {
         @player = @_player;
         packet_number = 0;
+        ready = true;
     }
 }
 
 // client
 
-CBitStream@[] map_packets;
+CBitStream@ map_packet;
+u8 got_packets;
+bool ready_unser;
