@@ -1,8 +1,8 @@
 
 #include "Blocks.as"
 
-const u32 chunk_width = 16;
-const u32 chunk_depth = 16;
+const u32 chunk_width = 14;
+const u32 chunk_depth = 14;
 const u32 chunk_height = 12;
 
 u32 world_width = 16;
@@ -303,6 +303,9 @@ class World
         u32 end = start+ms_packet_size;
         Vec3f pos;
         u8 block_id;
+
+        // skip 16 u8's
+        //map_packet.SetBitIndex(16*8*2);
 
         for(u32 i = start; i < end; i++)
         {
@@ -605,7 +608,7 @@ void server_SetBlock(u8 block, Vec3f pos)
 
 // map sending and receiving
 
-u32 amount_of_packets = 64;
+u32 amount_of_packets = chunk_depth*chunk_height;
 u32 ms_packet_size = map_size / amount_of_packets;
 
 // server

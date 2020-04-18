@@ -87,9 +87,9 @@ void Render(int id)
 
 	Vertex[] verts = {
 		Vertex(0, 0, 0, 0, 1, color_white),
-		Vertex(0, 0, map_width, 0, 0, color_white),
-		Vertex(map_depth,	0, map_width,	1, 0, color_white),
-		Vertex(map_depth,	0, 0, 1, 1, color_white)
+		Vertex(0, 0, map_depth, 0, 0, color_white),
+		Vertex(map_width,	0, map_depth,	1, 0, color_white),
+		Vertex(map_width,	0, 0, 1, 1, color_white)
 	};
 
 	Render::ClearZ();

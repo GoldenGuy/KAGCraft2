@@ -178,6 +178,8 @@ class Player
 
 		CollisionResponse(@pos, @vel);
 
+		pos = Vec3f(Maths::Clamp(pos.x, player_diameter/2.0f, map_width-player_diameter/2.0f), Maths::Clamp(pos.y, 0, map_height-player_height), Maths::Clamp(pos.z, player_diameter/2.0f, map_depth-player_diameter/2.0f));
+
 		onGround = false;
 
 		Vec3f[] floor_check = {	Vec3f(pos.x-(player_diameter/2.0f), pos.y-0.0002f, pos.z-(player_diameter/2.0f)),
