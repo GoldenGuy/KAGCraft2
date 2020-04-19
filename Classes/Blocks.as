@@ -100,10 +100,6 @@ void InitBlocks()
     AddBlock("Sand", true, false, 15);
     AddBlock("Water", true, false, 17);
     AddBlock("Deep water", true, false, 18);
-    for(int i = counter; i < 256; i++)
-    {
-        AddBlock("ERROR", false, false, 242);
-    }
     Debug("Blocks are created.");
 }
 

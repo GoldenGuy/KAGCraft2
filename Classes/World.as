@@ -212,7 +212,6 @@ class World
 
     void SetBlock(int x, int y, int z, u8 block_id)
     {
-        //u32 index = y*map_width_depth + z*map_width + x;
         if(inWorldBounds(x, y, z)) map[y][z][x] = block_id;
     }
 
@@ -225,22 +224,6 @@ class World
             chunks.push_back(@chunk);
         }
     }
-
-    /*void GenerateBlockFaces()
-    {
-        for(int y = 0; y < map_height; y++)
-        {
-            for(int z = 0; z < map_depth; z++)
-            {
-                for(int x = 0; x < map_width; x++)
-                {
-                    if(map[y][z][x] == block_air) continue;
-                    UpdateBlockFaces(x, y, z);
-                    getNet().server_KeepConnectionsAlive();
-                }
-            }
-        }
-    }*/
 
     void GenerateBlockFaces(u32 _gf_packet)
     {
@@ -314,14 +297,14 @@ class World
                 {
                     to_send.write_u32(similars);
                     to_send.write_u8(similar_block_id);
-                    //print("amount: "+similars);
-                    //print("block_id: "+similar_block_id);
                     similar_block_id = block_id;
                     similars = 1;
                 }
             }
             getNet().server_KeepConnectionsAlive();
         }
+        to_send.write_u32(similars);
+        to_send.write_u8(similar_block_id);
     }
 
     void UnSerialize(u32 packet)
@@ -333,14 +316,10 @@ class World
 
         u32 index = 0;
 
-        //map_packet.SetBitIndex(16*8*2);
-
         while(index < ms_packet_size)
         {
             u32 amount = map_packet.read_u32();
             u8 block_id = map_packet.read_u8();
-            //print("amount: "+amount);
-            //print("block_id: "+block_id);
             for(u32 j = 0; j < amount; j++)
             {
                 if(index == ms_packet_size)
@@ -434,6 +413,12 @@ class World
         return Blocks[map[y][z][x]].solid;
     }
 
+    bool isTileSolidOrOOB(int x, int y, int z)
+    {
+        if(!inWorldBounds(x, y, z)) return true;
+        return Blocks[map[y][z][x]].solid;
+    }
+
     void UpdateBlocksAndChunks(int x, int y, int z)
     {
         world.UpdateBlockFaces(x, y, z);
@@ -513,8 +498,6 @@ class Chunk
                     int faces = _world.faces_bits[_y][_z][_x];
 
                     if(faces == 0) continue;
-
-                    //print("faces "+faces);
 
                     u8 block = _world.map[_y][_z][_x];
 
@@ -682,7 +665,7 @@ void server_SetBlock(u8 block, Vec3f pos)
 
 // map sending and receiving
 
-u32 amount_of_packets = chunk_depth*chunk_height;
+u32 amount_of_packets = world_height * world_depth;
 u32 ms_packet_size = map_size / amount_of_packets;
 
 // server
@@ -708,6 +691,6 @@ CBitStream map_packet;
 u32 got_packets;
 bool ready_unser;
 
-u32 gf_amount_of_packets = 64;
+u32 gf_amount_of_packets = world_height * world_depth;
 u32 gf_packet_size = map_size / gf_amount_of_packets;
 u32 gf_packet;

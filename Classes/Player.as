@@ -178,7 +178,7 @@ class Player
 
 		CollisionResponse(@pos, @vel);
 
-		pos = Vec3f(Maths::Clamp(pos.x, player_diameter/2.0f, map_width-player_diameter/2.0f), Maths::Clamp(pos.y, 0, map_height-player_height), Maths::Clamp(pos.z, player_diameter/2.0f, map_depth-player_diameter/2.0f));
+		//pos = Vec3f(Maths::Clamp(pos.x, player_diameter/1.9f, map_width-player_diameter/1.9f), Maths::Clamp(pos.y, 0, map_height-player_height), Maths::Clamp(pos.z, player_diameter/1.9f, map_depth-player_diameter/1.9f));
 
 		onGround = false;
 
@@ -190,9 +190,10 @@ class Player
 		for(int i = 0; i < 4; i++)
 		{
 			Vec3f temp_pos = floor_check[i];
-			if(world.isTileSolid(temp_pos.x, temp_pos.y, temp_pos.z))
+			if(world.isTileSolid(temp_pos.x, temp_pos.y, temp_pos.z) || temp_pos.y <= 0)
 			{
 				onGround = true;
+				break;
 			}
 		}
 
@@ -208,8 +209,11 @@ class Player
     }
 }
 
+Vertex[] HitBoxes;
+
 void CollisionResponse(Vec3f @position, Vec3f @velocity)
 {
+	HitBoxes.clear();
 	//x collision
 	Vec3f xPosition(position.x + velocity.x, position.y, position.z);
 	if (isColliding(position, xPosition))
@@ -259,14 +263,51 @@ void CollisionResponse(Vec3f @position, Vec3f @velocity)
 	position.y += velocity.y;
 }
 
-bool isColliding(Vec3f position, Vec3f worldPos)
+bool isColliding(Vec3f position, Vec3f next_position)
 {
-	for (int x = worldPos.x - player_diameter / 2; x < worldPos.x + player_diameter / 2; x++)
+	float x_negative = next_position.x - player_radius; if(x_negative < 0) x_negative -= 1;
+	int x_end = next_position.x + player_radius;
+	float z_negative = next_position.z - player_radius; if(z_negative < 0) z_negative -= 1;
+	int z_end = next_position.z + player_radius;
+	float y_negative = next_position.y; if(y_negative < 0) y_negative -= 1;
+	int y_end = next_position.y + player_height;
+
+	for (int y = y_negative; y <= y_end; y++)
 	{
-		for (int y = worldPos.y; y < worldPos.y + player_height; y++) //origin point at feet
+		for (int z = z_negative; z <= z_end; z++)
 		{
-			for (int z = worldPos.z - player_diameter / 2; z < worldPos.z + player_diameter / 2; z++)
+			for (int x = x_negative; x <= x_end; x++)
 			{
+				HitBoxes.push_back(Vertex(x,	y,		z,		0,	1,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x,	y+1,	z,		1,	1,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x+1,	y+1,	z,		1,	0,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x+1,	y,		z,		0,	0,	0xAAFF0000));
+
+				HitBoxes.push_back(Vertex(x+1,	y,		z+1,	0,	1,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x+1,	y+1,	z+1,	1,	1,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x,	y+1,	z+1,	1,	0,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x,	y,		z+1,	0,	0,	0xAAFF0000));
+
+				HitBoxes.push_back(Vertex(x,	y,		z+1,	0,	1,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x,	y+1,	z+1,	1,	1,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x,	y+1,	z,		1,	0,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x,	y,		z,		0,	0,	0xAAFF0000));
+
+				HitBoxes.push_back(Vertex(x+1,	y,		z,		0,	1,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x+1,	y+1,	z,		1,	1,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x+1,	y+1,	z+1,	1,	0,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x+1,	y,		z+1,	0,	0,	0xAAFF0000));
+
+				HitBoxes.push_back(Vertex(x,	y+1,	z,		0,	1,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x,	y+1,	z+1,	1,	1,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x+1,	y+1,	z+1,	1,	0,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x+1,	y+1,	z,		0,	0,	0xAAFF0000));
+
+				HitBoxes.push_back(Vertex(x,	y,	z+1,	0,	1,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x,	y,	z,		1,	1,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x+1,	y,	z,		1,	0,	0xAAFF0000));
+				HitBoxes.push_back(Vertex(x+1,	y,	z+1,	0,	0,	0xAAFF0000));
+
 				if ( //ignore voxels the player is currently inside
 					x >= Maths::Floor(position.x - player_diameter / 2.0f) && x < Maths::Ceil(position.x + player_diameter / 2.0f) &&
 					y >= Maths::Floor(position.y) && y < Maths::Ceil(position.y + player_height) &&
@@ -276,7 +317,7 @@ bool isColliding(Vec3f position, Vec3f worldPos)
 					continue;
 				}
 
-				if (world.isTileSolid(x, y, z))
+				if (world.isTileSolidOrOOB(x, y, z))
 				{
 					return true;
 				}

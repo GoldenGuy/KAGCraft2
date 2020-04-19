@@ -17,7 +17,6 @@ bool isLoading(CRules@ this)
 			ready_unser = false;
 			got_packets = 0;
 			gf_packet = 0;
-			//map_packets.clear();
 			Debug("Asking for map.");
 			CBitStream to_send;
 			to_send.write_netid(getLocalPlayer().getNetworkID());
@@ -35,10 +34,8 @@ bool isLoading(CRules@ this)
 		}
 		else if(ready_unser)
 		{
-			//CBitStream@ packet = @map_packets[0];
 			ready_unser = false;
 			world.UnSerialize(got_packets);
-			//map_packets.removeAt(0);
 			got_packets++;
 			CBitStream to_send;
 			to_send.write_netid(getLocalPlayer().getNetworkID());
@@ -84,7 +81,7 @@ bool isLoading(CRules@ this)
         Camera _cam();
         @cam = @_cam;
         @player.cam = @cam;
-        player.pos = Vec3f(1,map_height-2,1);//Vec3f(map_width/2, map_height, map_depth/2);
+        player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
 		player.SetBlob(getLocalPlayerBlob());
         player_ready = true;
 		Render::addScript(Render::layer_background, "Client.as", "Render", 1);

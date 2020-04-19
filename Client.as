@@ -21,6 +21,7 @@ void onInit(CRules@ this)
 {
 	Debug("Client init");
 	Texture::createFromFile("Default_Textures", "Textures/Blocks_Jenny.png");
+	Texture::createFromFile("DEBUG", "Textures/Debug.png");
 	InitBlocks();
 
 	if(this.exists("world"))
@@ -59,28 +60,14 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 	Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
 	if(cmd == this.getCommandID("S_SendMap"))
 	{
-		if(params.Length() > 40)
-		{
-			//CBitStream temp;
-			//temp = params;
-			//print("temp len: "+temp.Length());
-			ready_unser = true;
-			map_packet.Clear();
-			map_packet = params;
-			//map_packets.push_back(params);
-			//world.UnSerialize(@params, got_packets);
-			//got_packets++;
-		}
-		else map_ready = true;
+		ready_unser = true;
+		map_packet.Clear();
+		map_packet = params;
+		map_packet.SetBitIndex(params.getBitIndex());
 	}
 	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_ReceivedMap"))
 	{
-		u16 netid = params.read_netid();
-		CPlayer@ player = getPlayerByNetworkId(netid);
-		if(player !is null)
-		{
-			print("player isnt null");
-		}
+		return;
 	}
 }
 
@@ -110,7 +97,7 @@ void Render(int id)
 	Render::SetAlphaBlend(false);
 	Render::SetBackfaceCull(true);
 
-	Render::RawQuads("Blocks.png", verts);
+	Render::RawQuads("Default_Textures", verts);
 
 	if(!getControls().isKeyPressed(KEY_KEY_Q))
 	{
@@ -132,6 +119,10 @@ void Render(int id)
 			}
 		}
 	}
+
+	Render::SetAlphaBlend(true);
+	Render::RawQuads("DEBUG", HitBoxes);
+	Render::SetAlphaBlend(false);
 
 	GUI::SetFont("menu");
 	GUI::DrawShadowedText("Pos: "+player.pos.IntString(), Vec2f(20,20), color_white);
