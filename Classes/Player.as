@@ -52,13 +52,16 @@ class Player
 			if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
 			if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
 
-			if(blob.isKeyPressed(key_action1))
 			{
 				Vec3f hit_pos;
-				u8 check = RaycastWorld(cam.pos, look_dir, 4, hit_pos);
+				u8 check = RaycastWorld(cam.pos, look_dir, 40, hit_pos);
 				if(check == Raycast::S_HIT)
 				{
-					server_SetBlock(block_air, hit_pos);
+					DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x880000FF);
+					if(blob.isKeyPressed(key_action1))
+					{
+						server_SetBlock(block_air, hit_pos);
+					}
 				}
 			}
 			
@@ -192,6 +195,7 @@ class Player
 			Vec3f temp_pos = floor_check[i];
 			if(world.isTileSolid(temp_pos.x, temp_pos.y, temp_pos.z) || temp_pos.y <= 0)
 			{
+				DrawHitbox(int(temp_pos.x), int(temp_pos.y), int(temp_pos.z), 0x8800FF00);
 				onGround = true;
 				break;
 			}
@@ -209,11 +213,8 @@ class Player
     }
 }
 
-Vertex[] HitBoxes;
-
 void CollisionResponse(Vec3f @position, Vec3f @velocity)
 {
-	HitBoxes.clear();
 	//x collision
 	Vec3f xPosition(position.x + velocity.x, position.y, position.z);
 	if (isColliding(position, xPosition))
@@ -278,36 +279,6 @@ bool isColliding(Vec3f position, Vec3f next_position)
 		{
 			for (int x = x_negative; x <= x_end; x++)
 			{
-				HitBoxes.push_back(Vertex(x,	y,		z,		0,	1,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x,	y+1,	z,		1,	1,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x+1,	y+1,	z,		1,	0,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x+1,	y,		z,		0,	0,	0xAAFF0000));
-
-				HitBoxes.push_back(Vertex(x+1,	y,		z+1,	0,	1,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x+1,	y+1,	z+1,	1,	1,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x,	y+1,	z+1,	1,	0,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x,	y,		z+1,	0,	0,	0xAAFF0000));
-
-				HitBoxes.push_back(Vertex(x,	y,		z+1,	0,	1,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x,	y+1,	z+1,	1,	1,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x,	y+1,	z,		1,	0,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x,	y,		z,		0,	0,	0xAAFF0000));
-
-				HitBoxes.push_back(Vertex(x+1,	y,		z,		0,	1,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x+1,	y+1,	z,		1,	1,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x+1,	y+1,	z+1,	1,	0,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x+1,	y,		z+1,	0,	0,	0xAAFF0000));
-
-				HitBoxes.push_back(Vertex(x,	y+1,	z,		0,	1,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x,	y+1,	z+1,	1,	1,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x+1,	y+1,	z+1,	1,	0,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x+1,	y+1,	z,		0,	0,	0xAAFF0000));
-
-				HitBoxes.push_back(Vertex(x,	y,	z+1,	0,	1,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x,	y,	z,		1,	1,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x+1,	y,	z,		1,	0,	0xAAFF0000));
-				HitBoxes.push_back(Vertex(x+1,	y,	z+1,	0,	0,	0xAAFF0000));
-
 				if ( //ignore voxels the player is currently inside
 					x >= Maths::Floor(position.x - player_diameter / 2.0f) && x < Maths::Ceil(position.x + player_diameter / 2.0f) &&
 					y >= Maths::Floor(position.y) && y < Maths::Ceil(position.y + player_height) &&
@@ -319,7 +290,12 @@ bool isColliding(Vec3f position, Vec3f next_position)
 
 				if (world.isTileSolidOrOOB(x, y, z))
 				{
+					DrawHitbox(x, y, z, 0x8800FF00);
 					return true;
+				}
+				else
+				{
+					DrawHitbox(x, y, z, 0x88FF0000);
 				}
 			}
 		}

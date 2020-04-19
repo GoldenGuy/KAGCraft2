@@ -40,6 +40,7 @@ void onInit(CRules@ this)
 
 void onTick(CRules@ this)
 {
+	HitBoxes.clear();
 	this.set_f32("interGameTime", getGameTime());
 	this.set_f32("interFrameTime", 0);
 	if(isLoading(this))
