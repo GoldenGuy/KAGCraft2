@@ -62,6 +62,7 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 	Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
 	if(cmd == this.getCommandID("C_RequestMap"))
 	{
+		u16 netid = params.read_netid();
 		if(isClient())
 		{
 			Debug("Localhost, ignore.");
@@ -71,7 +72,6 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 		else
 		{
 			//CPlayer@ sender = getNet().getActiveCommandPlayer();
-			u16 netid = params.read_netid();
 			CPlayer@ player = getPlayerByNetworkId(netid);
 			if(player !is null)
 			{

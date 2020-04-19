@@ -51,10 +51,14 @@ bool isLoading(CRules@ this)
 	{
 		if(!faces_generated)
 		{
-			if(gf_packet == 0) Debug("Generating block faces.");
+			if(gf_packet == 0)
+			{
+				Debug("Generating block faces.");
+				world.FacesSetUp();
+			}
 			if(gf_packet < gf_amount_of_packets)
 			{
-				world.GenerateBlockFaces();
+				world.GenerateBlockFaces(gf_packet);
 				gf_packet++;
 				Debug(gf_packet+"/"+gf_amount_of_packets+".", 3);
 			}

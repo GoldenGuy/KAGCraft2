@@ -1,9 +1,9 @@
 
 #include "Blocks.as"
 
-const u32 chunk_width = 14;
-const u32 chunk_depth = 14;
-const u32 chunk_height = 12;
+const u32 chunk_width = 6;
+const u32 chunk_depth = 6;
+const u32 chunk_height = 6;
 
 u32 world_width = 16;
 u32 world_depth = 16;
@@ -137,11 +137,14 @@ class World
         Debug("Map generated.");
     }
 
-    void ClientSetUp()
+    void ClientMapSetUp()
     {
         u8[][][] _map(map_height, u8[][](map_depth, u8[](map_width, 0)));
         map = _map;
-
+    }
+    
+    void FacesSetUp()
+    {
         u8[][][] _faces_bits(map_height, u8[][](map_depth, u8[](map_width, 0)));
         faces_bits = _faces_bits;
     }
@@ -239,9 +242,9 @@ class World
         }
     }*/
 
-    void GenerateBlockFaces()
+    void GenerateBlockFaces(u32 _gf_packet)
     {
-        u32 start = gf_packet*gf_packet_size;
+        u32 start = _gf_packet*gf_packet_size;
         u32 end = start+gf_packet_size;
         Vec3f pos;
         u8 block_id;
@@ -287,6 +290,77 @@ class World
         Vec3f pos;
         u8 block_id;
 
+        u32 similars = 0;
+        u8 similar_block_id = 0;
+
+        for(u32 i = start; i < end; i++)
+        {
+            pos = getPosFromWorldIndex(i);
+            block_id = map[pos.y][pos.z][pos.x];
+            if(i == start)
+            {
+                similar_block_id = block_id;
+                similars++;
+                continue;
+            }
+            else
+            {
+                if(similar_block_id == block_id)
+                {
+                    similars++;
+                    continue;
+                }
+                else
+                {
+                    to_send.write_u32(similars);
+                    to_send.write_u8(similar_block_id);
+                    //print("amount: "+similars);
+                    //print("block_id: "+similar_block_id);
+                    similar_block_id = block_id;
+                    similars = 1;
+                }
+            }
+            getNet().server_KeepConnectionsAlive();
+        }
+    }
+
+    void UnSerialize(u32 packet)
+    {
+        u32 start = packet*ms_packet_size;
+        u32 end = start+ms_packet_size;
+        Vec3f pos;
+        u8 block_id;
+
+        u32 index = 0;
+
+        map_packet.SetBitIndex(16*8*2);
+
+        while(index < ms_packet_size)
+        {
+            u32 amount = map_packet.read_u32();
+            u8 block_id = map_packet.read_u8();
+            //print("amount: "+amount);
+            //print("block_id: "+block_id);
+            for(u32 j = 0; j < amount; j++)
+            {
+                if(index == ms_packet_size)
+                {
+                    return;
+                }
+                pos = getPosFromWorldIndex(start+index);
+                map[pos.y][pos.z][pos.x] = block_id;
+                index++;
+            }
+        }
+    }
+
+    /*void Serialize(CBitStream@ to_send, u32 packet)
+    {
+        u32 start = packet*ms_packet_size;
+        u32 end = start+ms_packet_size;
+        Vec3f pos;
+        u8 block_id;
+
         for(u32 i = start; i < end; i++)
         {
             pos = getPosFromWorldIndex(i);
@@ -315,7 +389,7 @@ class World
 
             getNet().server_KeepConnectionsAlive();
         }
-    }
+    }*/
 
     Chunk@ getChunk(int x, int y, int z)
     {
@@ -630,10 +704,10 @@ class MapSender
 
 // client
 
-CBitStream@ map_packet;
+CBitStream map_packet;
 u32 got_packets;
 bool ready_unser;
 
-u32 gf_amount_of_packets = 256;
+u32 gf_amount_of_packets = 64;
 u32 gf_packet_size = map_size / gf_amount_of_packets;
 u32 gf_packet;

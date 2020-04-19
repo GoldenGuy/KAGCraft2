@@ -26,12 +26,14 @@ void onInit(CRules@ this)
 	if(this.exists("world"))
 	{
 		this.get("world", @world);
+		ask_map = true;
+		map_ready = true;
 	}
 	else
 	{
 		World _world;
 		@world = @_world;
-		world.ClientSetUp();
+		world.ClientMapSetUp();
 	}
 }
 
@@ -63,10 +65,21 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 			//temp = params;
 			//print("temp len: "+temp.Length());
 			ready_unser = true;
-			@map_packet = @params;
+			map_packet.Clear();
+			map_packet = params;
 			//map_packets.push_back(params);
 			//world.UnSerialize(@params, got_packets);
 			//got_packets++;
+		}
+		else map_ready = true;
+	}
+	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_ReceivedMap"))
+	{
+		u16 netid = params.read_netid();
+		CPlayer@ player = getPlayerByNetworkId(netid);
+		if(player !is null)
+		{
+			print("player isnt null");
 		}
 	}
 }
