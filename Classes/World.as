@@ -333,7 +333,7 @@ class World
 
         u32 index = 0;
 
-        map_packet.SetBitIndex(16*8*2);
+        //map_packet.SetBitIndex(16*8*2);
 
         while(index < ms_packet_size)
         {
