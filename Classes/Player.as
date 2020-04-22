@@ -57,7 +57,7 @@ class Player
 				u8 check = RaycastWorld(cam.pos, look_dir, 40, hit_pos);
 				if(check == Raycast::S_HIT)
 				{
-					DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x880000FF);
+					DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
 					if(blob.isKeyPressed(key_action1))
 					{
 						server_SetBlock(block_air, hit_pos);

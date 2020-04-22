@@ -117,6 +117,10 @@ void Render(int id)
 			//else
 			{
 				chunks_to_render[i].Render();
+				if(hold_frustum)
+				{
+					DrawHitbox(chunks_to_render[i].box, 0x880000FF);
+				}
 			}
 		}
 	}

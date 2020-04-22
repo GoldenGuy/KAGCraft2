@@ -1,9 +1,9 @@
 
 #include "Blocks.as"
 
-const u32 chunk_width = 6;
-const u32 chunk_depth = 6;
-const u32 chunk_height = 6;
+const u32 chunk_width = 18;
+const u32 chunk_depth = 18;
+const u32 chunk_height = 14;
 
 u32 world_width = 16;
 u32 world_depth = 16;
