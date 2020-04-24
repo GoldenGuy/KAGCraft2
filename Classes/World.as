@@ -5,9 +5,9 @@ const u32 chunk_width = 18;
 const u32 chunk_depth = 18;
 const u32 chunk_height = 14;
 
-u32 world_width = 16;
-u32 world_depth = 16;
-u32 world_height = 8;
+u32 world_width = 8;
+u32 world_depth = 8;
+u32 world_height = 4;
 u32 world_width_depth = world_width * world_depth;
 u32 world_size = world_width_depth * world_height;
 

@@ -9,21 +9,31 @@ const float player_radius = 0.35f;
 const float player_diameter = player_radius*2;
 bool fly = true;
 bool hold_frustum = false;
+float sensitivity = 0.16;
 
 class Player
 {
-    Vec3f pos, vel;
+    Vec3f pos, vel, old_pos;
 	CBlob@ blob;
+	CPlayer@ player;
     bool onGround = false;
 	bool Crouch = false;
+	bool Frozen = false;
     //Camera@ camera;
 	f32 dir_x = 0.01f;
 	f32 dir_y = 0.01f;
 	Vec3f look_dir;
 
+	Player(){}
+
 	void SetBlob(CBlob@ _blob)
 	{
 		@blob = @_blob;
+	}
+
+	void SetPlayer(CPlayer@ _player)
+	{
+		@player = @_player;
 	}
 
     void Update()
@@ -211,6 +221,28 @@ class Player
 		camera.turn(dir_x, dir_y, 0, false);
 		camera.tick_update();
     }
+
+	void Serialize(CBitStream@ to_send)
+	{
+		to_send.write_netid(player.getNetworkID());
+		to_send.write_f32(pos.x);
+		to_send.write_f32(pos.y);
+		to_send.write_f32(pos.z);
+		to_send.write_f32(dir_x);
+		to_send.write_f32(dir_y);
+		to_send.write_bool(Crouch);
+	}
+
+	void UnSerialize(CBitStream@ received)
+	{
+		old_pos = pos;
+		pos.x = received.read_f32();
+		pos.y = received.read_f32();
+		pos.z = received.read_f32();
+		dir_x = received.read_f32();
+		dir_y = received.read_f32();
+		Crouch = received.read_bool();
+	}
 }
 
 void CollisionResponse(Vec3f @position, Vec3f @velocity)

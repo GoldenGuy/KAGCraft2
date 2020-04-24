@@ -11,14 +11,12 @@
 #include "Camera.as"
 #include "Player.as"
 
-float sensitivity = 0.16;
-
 World@ world;
 
 Camera@ camera;
 
-Player my_player;
-Player[] other_players;
+Player@ my_player;
+Player@[] other_players;
 
 void onInit(CRules@ this)
 {
@@ -26,6 +24,9 @@ void onInit(CRules@ this)
 	Texture::createFromFile("Default_Textures", "Textures/Blocks_Jenny.png");
 	Texture::createFromFile("DEBUG", "Textures/Debug.png");
 	InitBlocks();
+
+	Camera _camera;
+	@camera = @_camera;
 
 	if(this.exists("world"))
 	{
@@ -54,6 +55,13 @@ void onTick(CRules@ this)
 	{
 		// game here
 		my_player.Update();
+		if(!isServer())
+		{
+			CBitStream to_send;
+			my_player.Serialize(@to_send);
+			this.SendCommand(this.getCommandID("C_PlayerUpdate"), to_send, false);
+		}
+
 		tree.Check();
 		//print("size: "+chunks_to_render.size());
 	}
@@ -68,6 +76,48 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 		map_packet.Clear();
 		map_packet = params;
 		map_packet.SetBitIndex(params.getBitIndex());
+	}
+	else if(cmd == this.getCommandID("S_PlayerUpdate"))
+	{
+		u16 size = params.read_u16();
+		for(int i = 0; i < size; i++)
+		{
+			u16 netid = params.read_netid();
+			CPlayer@ _player = getPlayerByNetworkId(netid);
+			if(_player !is null && _player !is getLocalPlayer())
+			{
+				bool exists = false;
+				for(int i = 0; i < other_players.size(); i++)
+				{
+					Player@ __player = other_players[i];
+					if(__player.player is _player)
+					{
+						__player.UnSerialize(params);
+						exists = true;
+						break;
+					}
+				}
+				// doesnt exists
+				if(!exists)
+				{
+					print("lol");
+					Player new_player();
+					new_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
+					new_player.SetPlayer(_player);
+					other_players.push_back(@new_player);
+				}
+				
+			}
+			else
+			{
+				f32 temp_float = params.read_f32();
+				temp_float = params.read_f32();
+				temp_float = params.read_f32();
+				temp_float = params.read_f32();
+				temp_float = params.read_f32();
+				bool temp_bool = params.read_bool();
+			}
+		}
 	}
 	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_ReceivedMapPacket"))
 	{
@@ -128,6 +178,13 @@ void Render(int id)
 		}
 	}
 
+	for(int i = 0; i < other_players.size(); i++)
+	{
+		Vec3f pos = other_players[i].pos;
+		AABB _box(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius));
+		DrawHitbox(_box, 0x88FFFFFF);
+	}
+
 	Render::SetAlphaBlend(true);
 	Render::RawQuads("DEBUG", HitBoxes);
 	Render::SetAlphaBlend(false);
@@ -141,3 +198,41 @@ void Render(int id)
 }
 
 int max_generate = 3;
+
+/*void onNewPlayerJoin(CRules@ this, CPlayer@ player)
+{
+	if(player is null || player is getLocalPlayer()) return;
+
+	for(int i = 0; i < other_players.size(); i++)
+	{
+		Player@ _player = other_players[i];
+		if(_player.player is player)
+		{
+			Debug("onNewPlayerJoin: Player already in list!", 3);
+			return;
+		}
+	}
+
+	Player new_player();
+	new_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
+	new_player.SetPlayer(player);
+	other_players.push_back(@new_player);
+}*/
+
+void onPlayerLeave(CRules@ this, CPlayer@ player)
+{
+	print("player left   "+other_players.size());
+	if(player is null) return;
+
+	for(int i = 0; i < other_players.size(); i++)
+	{
+		Player@ _player = other_players[i];
+		if(_player.player is player)
+		{
+			other_players.removeAt(i);
+			return;
+		}
+	}
+
+	Debug("onPlayerLeave: Player was not on the list!", 3);
+}

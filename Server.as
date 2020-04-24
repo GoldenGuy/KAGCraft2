@@ -5,8 +5,11 @@
 #include "AABB.as"
 #include "World.as"
 #include "Vec3f.as"
+#include "ServerPlayer.as"
 
 World@ world;
+
+ServerPlayer@[] players;
 
 void onInit(CRules@ this)
 {
@@ -24,6 +27,20 @@ void onInit(CRules@ this)
 
 void onTick(CRules@ this)
 {
+	if(!isClient())
+	{
+		u16 size = players.size();
+		if(size > 1)
+		{
+			CBitStream to_send;
+			to_send.write_u16(size);
+			for(int i = 0; i < size; i++)
+			{
+				players[i].Serialize(@to_send);
+			}
+			this.SendCommand(this.getCommandID("S_PlayerUpdate"), to_send, true);
+		}
+	}
 	if(players_to_send.size() > 0)
 	{
 		bool done = false;
@@ -83,7 +100,7 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 			//this.SendCommand(this.getCommandID("S_SendMapPacket"), to_send, true);
 		}
 	}
-	if(cmd == this.getCommandID("C_ReceivedMapPacket"))
+	else if(cmd == this.getCommandID("C_ReceivedMapPacket"))
 	{
 		u16 netid = params.read_netid();
 		CPlayer@ player = getPlayerByNetworkId(netid);
@@ -92,6 +109,23 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 			if(players_to_send[i].player is player)
 			{
 				players_to_send[i].ready = true;
+			}
+		}
+	}
+	else if(cmd == this.getCommandID("C_PlayerUpdate"))
+	{
+		u16 netid = params.read_netid();
+		CPlayer@ _player = getPlayerByNetworkId(netid);
+		if(_player !is null)
+		{
+			for(int i = 0; i < players.size(); i++)
+			{
+				ServerPlayer@ __player = players[i];
+				if(__player.player is _player)
+				{
+					__player.UnSerialize(params);
+					break;
+				}
 			}
 		}
 	}
@@ -105,6 +139,21 @@ void onNewPlayerJoin(CRules@ this, CPlayer@ player)
 		Debug("Creating player blob.");
 		blob.server_SetPlayer(player);
 	}
+
+	for(int i = 0; i < players.size(); i++)
+	{
+		ServerPlayer@ _player = players[i];
+		if(_player.player is player)
+		{
+			Debug("onNewPlayerJoin: Player already in list!", 3);
+			return;
+		}
+	}
+
+	ServerPlayer new_player();
+	new_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
+	new_player.SetPlayer(player);
+	players.push_back(@new_player);
 }
 
 void onPlayerLeave(CRules@ this, CPlayer@ player)
@@ -114,5 +163,15 @@ void onPlayerLeave(CRules@ this, CPlayer@ player)
 	{
 		Debug("Removing player blob.");
 		blob.server_Die();
+	}
+
+	for(int i = 0; i < players.size(); i++)
+	{
+		ServerPlayer@ _player = players[i];
+		if(_player.player is player)
+		{
+			players.removeAt(i);
+			return;
+		}
 	}
 }
