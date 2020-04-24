@@ -100,7 +100,7 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 				// doesnt exists
 				if(!exists)
 				{
-					print("lol");
+					//print("lol");
 					Player new_player();
 					new_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
 					new_player.SetPlayer(_player);

@@ -36,7 +36,7 @@ class World
         map.clear();
         Debug("map_size: "+map_size, 2);
 
-        u32 seed = XORRandom(2147483646);
+        u32 seed = (1147483646*Time_Local()) % 500000;
 
         Debug("map seed: "+seed, 2);
 
