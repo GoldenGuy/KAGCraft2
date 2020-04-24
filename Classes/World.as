@@ -1,8 +1,8 @@
 
 #include "Blocks.as"
 
-const u32 chunk_width = 18;
-const u32 chunk_depth = 18;
+const u32 chunk_width = 16;
+const u32 chunk_depth = 16;
 const u32 chunk_height = 14;
 
 u32 world_width = 8;
@@ -659,6 +659,17 @@ const SColor back_scol = SColor(debug_alpha, back_col, back_col, back_col);
 
 void server_SetBlock(u8 block, Vec3f pos)
 {
+    if(!isServer())
+    {
+        CBitStream to_send;
+        to_send.write_u8(block);
+        to_send.write_f32(pos.x);
+		to_send.write_f32(pos.y);
+		to_send.write_f32(pos.z);
+        getRules().SendCommand(getRules().getCommandID("C_ChangeBlock"), to_send, true);
+        return;
+    }
+    
     world.map[pos.y][pos.z][pos.x] = block;
     world.UpdateBlocksAndChunks(pos.x, pos.y, pos.z);
 }

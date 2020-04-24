@@ -55,7 +55,7 @@ void onTick(CRules@ this)
 	{
 		// game here
 		my_player.Update();
-		if(!isServer())
+		if(!isServer() && getPlayersCount() > 1)
 		{
 			CBitStream to_send;
 			my_player.Serialize(@to_send);
@@ -64,6 +64,13 @@ void onTick(CRules@ this)
 
 		tree.Check();
 		//print("size: "+chunks_to_render.size());
+
+		for(int i = 0; i < other_players.size(); i++)
+		{
+			Vec3f pos = other_players[i].pos;
+			AABB _box(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius));
+			DrawHitbox(_box, 0x88FFFFFF);
+		}
 	}
 }
 
@@ -118,6 +125,16 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 				bool temp_bool = params.read_bool();
 			}
 		}
+	}
+	else if(cmd == this.getCommandID("C_ChangeBlock"))
+	{
+		u8 block = params.read_u8();
+		f32 x = params.read_f32();
+		f32 y = params.read_f32();
+		f32 z = params.read_f32();
+
+		world.map[y][z][x] = block;
+    	world.UpdateBlocksAndChunks(x, y, z);
 	}
 	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_ReceivedMapPacket"))
 	{
@@ -178,13 +195,6 @@ void Render(int id)
 		}
 	}
 
-	for(int i = 0; i < other_players.size(); i++)
-	{
-		Vec3f pos = other_players[i].pos;
-		AABB _box(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius));
-		DrawHitbox(_box, 0x88FFFFFF);
-	}
-
 	Render::SetAlphaBlend(true);
 	Render::RawQuads("DEBUG", HitBoxes);
 	Render::SetAlphaBlend(false);
@@ -235,4 +245,20 @@ void onPlayerLeave(CRules@ this, CPlayer@ player)
 	}
 
 	Debug("onPlayerLeave: Player was not on the list!", 3);
+}
+
+void onRender(CRules@ this)
+{
+	if(getLocalPlayer() is null) return;
+	if(isLoading(this))
+	{
+		f32 percent = 0;
+		if(!ask_map) percent = 1;
+		else if(!map_ready) percent = f32(got_packets)/f32(amount_of_packets);
+		else if(!faces_generated) percent = f32(gf_packet)/f32(gf_amount_of_packets);
+		else percent = 1;
+
+		GUI::DrawProgressBar(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-20), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+20), percent);
+		GUI::DrawTextCentered(loading_string, Vec2f(getScreenWidth()/2, getScreenHeight()/2), color_white);
+	}
 }

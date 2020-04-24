@@ -7,7 +7,7 @@ const float eye_height = 1.7f;
 const float player_height = 1.85f;
 const float player_radius = 0.35f;
 const float player_diameter = player_radius*2;
-bool fly = true;
+bool fly = false;
 bool hold_frustum = false;
 float sensitivity = 0.16;
 

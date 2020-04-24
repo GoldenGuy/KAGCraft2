@@ -129,6 +129,15 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 			}
 		}
 	}
+	else if(cmd == this.getCommandID("C_ChangeBlock"))
+	{
+		u8 block = params.read_u8();
+		f32 x = params.read_f32();
+		f32 y = params.read_f32();
+		f32 z = params.read_f32();
+
+		world.map[y][z][x] = block;
+	}
 }
 
 void onNewPlayerJoin(CRules@ this, CPlayer@ player)

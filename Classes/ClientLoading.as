@@ -7,6 +7,8 @@ bool player_ready = false;
 int intro = 0; // later...
 int ask_map_in = 0;
 
+string loading_string;
+
 bool isLoading(CRules@ this)
 {
     if(!ask_map)
@@ -18,6 +20,7 @@ bool isLoading(CRules@ this)
 			got_packets = 0;
 			gf_packet = 0;
 			Debug("Asking for map.");
+			loading_string = "Asking for map.";
 			CBitStream to_send;
 			to_send.write_netid(getLocalPlayer().getNetworkID());
 			this.SendCommand(this.getCommandID("C_RequestMap"), to_send, false);
@@ -37,6 +40,7 @@ bool isLoading(CRules@ this)
 			ready_unser = false;
 			world.UnSerialize(got_packets);
 			got_packets++;
+			loading_string = "Unserializing map packet. "+got_packets+"/"+amount_of_packets;
 			CBitStream to_send;
 			to_send.write_netid(getLocalPlayer().getNetworkID());
 			this.SendCommand(this.getCommandID("C_ReceivedMapPacket"), to_send, false);
@@ -51,6 +55,7 @@ bool isLoading(CRules@ this)
 			if(gf_packet == 0)
 			{
 				Debug("Generating block faces.");
+				loading_string = "Generating block faces.";
 				world.FacesSetUp();
 			}
 			if(gf_packet < gf_amount_of_packets)
@@ -58,10 +63,12 @@ bool isLoading(CRules@ this)
 				world.GenerateBlockFaces(gf_packet);
 				gf_packet++;
 				Debug(gf_packet+"/"+gf_amount_of_packets+".", 3);
+				loading_string = "Generating faces. "+gf_packet+"/"+gf_amount_of_packets;
 			}
 			else
 			{
 				Debug("Done.");
+				loading_string = "Done.";
 				faces_generated = true;
 			}
 			return true;
@@ -69,8 +76,10 @@ bool isLoading(CRules@ this)
 		else
 		{
 			Debug("Setting up chunks.");
+			loading_string = "Setting up chunks.";
             world.SetUpChunks();
             Debug("Done.");
+			loading_string = "Done.";
 			SetUpTree();
 			map_renderable = true;
 			return true;
