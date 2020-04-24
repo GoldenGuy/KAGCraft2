@@ -39,7 +39,7 @@ bool isLoading(CRules@ this)
 			got_packets++;
 			CBitStream to_send;
 			to_send.write_netid(getLocalPlayer().getNetworkID());
-			this.SendCommand(this.getCommandID("C_ReceivedMap"), to_send, false);
+			this.SendCommand(this.getCommandID("C_ReceivedMapPacket"), to_send, false);
 			ask_map_in = 0;
 		}
 		return true;
@@ -78,11 +78,11 @@ bool isLoading(CRules@ this)
 	}
     else if(!player_ready)
     {
-        Camera _cam();
-        @cam = @_cam;
-        @player.cam = @cam;
-        player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
-		player.SetBlob(getLocalPlayerBlob());
+        //Camera _cam();
+        //@cam = @_cam;
+        //@my_player.cam = @cam;
+        my_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
+		my_player.SetBlob(getLocalPlayerBlob());
         player_ready = true;
 		Render::addScript(Render::layer_background, "Client.as", "Render", 1);
     }

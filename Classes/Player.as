@@ -16,7 +16,7 @@ class Player
 	CBlob@ blob;
     bool onGround = false;
 	bool Crouch = false;
-    Camera@ cam;
+    //Camera@ camera;
 	f32 dir_x = 0.01f;
 	f32 dir_y = 0.01f;
 	Vec3f look_dir;
@@ -54,7 +54,7 @@ class Player
 
 			{
 				Vec3f hit_pos;
-				u8 check = RaycastWorld(cam.pos, look_dir, 40, hit_pos);
+				u8 check = RaycastWorld(camera.pos, look_dir, 40, hit_pos);
 				if(check == Raycast::S_HIT)
 				{
 					DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
@@ -207,9 +207,9 @@ class Player
 		if(vel.y < 0.0001f && vel.y > -0.0001f) vel.y = 0;
 		if(vel.z < 0.0001f && vel.z > -0.0001f) vel.z = 0;
 		
-		cam.move(pos+Vec3f(0,eye_height,0), false);
-		cam.turn(dir_x, dir_y, 0, false);
-		cam.tick_update();
+		camera.move(pos+Vec3f(0,eye_height,0), false);
+		camera.turn(dir_x, dir_y, 0, false);
+		camera.tick_update();
     }
 }
 

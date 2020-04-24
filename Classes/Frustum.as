@@ -88,7 +88,7 @@ class Frustum
 
 	bool ContainsSphere(Vec3f point, f32 radius)
 	{
-		if (plane1.DistanceToPoint(point)*cam.z_far*10 < -radius) // -0.005
+		if (plane1.DistanceToPoint(point)*camera.z_far*10 < -radius) // -0.005
 			return false;
 		//if (plane0.DistanceToPoint(point) < -radius)
 		//	return false;

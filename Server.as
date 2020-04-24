@@ -36,7 +36,7 @@ void onTick(CRules@ this)
 				players_to_send[0].ready = false;
 				CBitStream to_send;
 				world.Serialize(@to_send, players_to_send[0].packet_number);
-				this.SendCommand(this.getCommandID("S_SendMap"), to_send, players_to_send[0].player);
+				this.SendCommand(this.getCommandID("S_SendMapPacket"), to_send, players_to_send[0].player);
 				Debug("Sending map packet, "+(players_to_send[0].packet_number+1)+"/"+amount_of_packets+".", 3);
 
 				players_to_send[0].packet_number++;
@@ -66,7 +66,7 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 		if(isClient())
 		{
 			Debug("Localhost, ignore.");
-			this.SendCommand(this.getCommandID("S_SendMap"), CBitStream(), true);
+			this.SendCommand(this.getCommandID("S_SendMapPacket"), CBitStream(), true);
 			return;
 		}
 		else
@@ -80,10 +80,10 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 
 			//CBitStream to_send;
 			//world.Serialize(@to_send);
-			//this.SendCommand(this.getCommandID("S_SendMap"), to_send, true);
+			//this.SendCommand(this.getCommandID("S_SendMapPacket"), to_send, true);
 		}
 	}
-	if(cmd == this.getCommandID("C_ReceivedMap"))
+	if(cmd == this.getCommandID("C_ReceivedMapPacket"))
 	{
 		u16 netid = params.read_netid();
 		CPlayer@ player = getPlayerByNetworkId(netid);

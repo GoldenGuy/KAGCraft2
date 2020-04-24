@@ -2,14 +2,13 @@
 void onInit(CRules@ this)
 {
 	this.addCommandID("error1"); // reserverd for something in engine, crashes game on call
-	this.addCommandID("error2");
-	this.addCommandID("error3");
-	this.addCommandID("error4");
-	this.addCommandID("error5");
 	this.addCommandID("C_RequestMap");
-	this.addCommandID("S_SendMap");
-	this.addCommandID("C_ReceivedMap");
+	this.addCommandID("S_SendMapPacket");
+	this.addCommandID("C_ReceivedMapPacket");
 	this.addCommandID("C_ChangeBlock");
+	this.addCommandID("S_ChangeBlock");
+	this.addCommandID("C_PlayerUpdate");
+	this.addCommandID("S_PlayerUpdate");
 
 	CMap@ map = getMap();
 	map.topBorder = map.bottomBorder = map.leftBorder = map.rightBorder = map.legacyTileVariations = map.legacyTileEffects = map.legacyTileDestroy = map.legacyTileMinimap = false;
