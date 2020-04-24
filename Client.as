@@ -31,6 +31,7 @@ void onInit(CRules@ this)
 	if(this.exists("world"))
 	{
 		this.get("world", @world);
+		world.SetUpMaterial();
 		ask_map = true;
 		map_ready = true;
 	}
@@ -38,6 +39,7 @@ void onInit(CRules@ this)
 	{
 		World _world;
 		@world = @_world;
+		world.SetUpMaterial();
 		world.ClientMapSetUp();
 	}
 }
@@ -151,7 +153,9 @@ void Render(int id)
 	Render::SetAlphaBlend(false);
 	Render::SetBackfaceCull(true);
 
-	Render::RawQuads("Default_Textures", verts);
+	//Render::RawQuads("Default_Textures", verts);
+
+	world.mapMaterial.SetVideoMaterial();
 
 	if(!getControls().isKeyPressed(KEY_KEY_Q))
 	{

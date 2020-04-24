@@ -5,9 +5,9 @@ const u32 chunk_width = 18;
 const u32 chunk_depth = 18;
 const u32 chunk_height = 14;
 
-u32 world_width = 8;
-u32 world_depth = 8;
-u32 world_height = 4;
+u32 world_width = 16;
+u32 world_depth = 16;
+u32 world_height = 8;
 u32 world_width_depth = world_width * world_depth;
 u32 world_size = world_width_depth * world_height;
 
@@ -29,6 +29,7 @@ class World
     u8[][][] faces_bits;
     Chunk@[] chunks;
     bool poop = true;
+    SMaterial@ mapMaterial;
 
     void GenerateMap()
     {
@@ -141,6 +142,25 @@ class World
     {
         u8[][][] _map(map_height, u8[][](map_depth, u8[](map_width, 0)));
         map = _map;
+    }
+
+    void SetUpMaterial()
+    {
+        SMaterial@ _mapMaterial = SMaterial();
+        @mapMaterial = @_mapMaterial;
+        mapMaterial.AddTexture("Default_Textures");
+        mapMaterial.DisableAllFlag();
+        mapMaterial.SetFlag(Material::COLOR_MASK, true);
+        mapMaterial.SetFlag(Material::ZBUFFER, true);
+        mapMaterial.SetFlag(Material::ZWRITE_ENABLE, true);
+        mapMaterial.SetFlag(Material::BACK_FACE_CULLING, true);
+        mapMaterial.SetFlag(Material::BLEND_OPERATION, true);
+        mapMaterial.SetMaterialFlag(MaterialType::TRANSPARENT_ALPHA_CHANNEL_REF);
+
+        //mapMaterial.SetFlag(Material::ANTI_ALIASING, true);
+        //mapMaterial.SetAntiAliasing(AntiAliasing::OFF);
+
+        //mapMaterial.SetFlag(Material::ANISOTROPIC_FILTER, true);
     }
     
     void FacesSetUp()
@@ -447,8 +467,10 @@ class Chunk
     int x, y, z, world_x, world_y, world_z, world_x_bounds, world_y_bounds, world_z_bounds;
     int index, world_index;
     bool visible, rebuild, empty;
-    Vertex[] mesh;
+    Vertex[] verts;
+    u16[] faces;
     AABB box;
+    SMesh@ mesh;
 
     Chunk(){}
 
@@ -462,6 +484,11 @@ class Chunk
         box = AABB(Vec3f(world_x, world_y, world_z), Vec3f(world_x_bounds, world_y_bounds, world_z_bounds));
         visible = false;
         rebuild = true;
+
+        SMesh@ _mesh = SMesh();
+        @mesh = @_mesh;
+        mesh.AddNewMaterial(_world.mapMaterial);
+        mesh.SetHardwareMapping(HardwareMapping::STATIC);
 
         for (int _y = world_y; _y < world_y_bounds; _y++)
 		{
@@ -485,7 +512,8 @@ class Chunk
     void GenerateMesh()
     {
         rebuild = false;
-        mesh.clear();
+        verts.clear();
+        faces.clear();
 
         for (int _y = world_y; _y < world_y_bounds; _y++)
 		{
@@ -506,9 +534,18 @@ class Chunk
                 }
             }
         }
-        if(mesh.size() == 0)
+        if(verts.size() == 0)
         {
             empty = true;
+        }
+        else
+        {
+            mesh.SetVertex(verts);
+            mesh.SetIndices(faces);
+            mesh.BuildMesh();
+            mesh.SetDirty(BufferType::VERTEX_INDEX);
+            //mesh.AddNewMaterial(_world.mapMaterial);
+            //mesh.SetHardwareMapping(HardwareMapping::STATIC);
         }
     }
 
@@ -590,55 +627,73 @@ class Chunk
 	
 	void addFrontFace(Block@ b, Vec3f pos)
 	{
-		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z,	b.sides_start_u,	b.sides_start_v,	front_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,	b.sides_end_u,	    b.sides_start_v,	front_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z,	b.sides_end_u,	    b.sides_end_v,	    front_scol));
-		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z,	b.sides_start_u,	b.sides_end_v,	    front_scol));
+		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z,	b.sides_start_u,	b.sides_start_v,	front_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,	b.sides_end_u,	    b.sides_start_v,	front_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z,	b.sides_end_u,	    b.sides_end_v,	    front_scol));
+		verts.push_back(Vertex(pos.x,	pos.y,		pos.z,	b.sides_start_u,	b.sides_end_v,	    front_scol));
+        addIndices();
 	}
 	
 	void addBackFace(Block@ b, Vec3f pos)
 	{
-		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.sides_start_u,	b.sides_start_v,	back_scol));
-		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.sides_end_u,	    b.sides_start_v,	back_scol));
-		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.sides_end_u,	    b.sides_end_v,		back_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.sides_start_u,	b.sides_end_v,		back_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.sides_start_u,	b.sides_start_v,	back_scol));
+		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.sides_end_u,	    b.sides_start_v,	back_scol));
+		verts.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.sides_end_u,	    b.sides_end_v,		back_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.sides_start_u,	b.sides_end_v,		back_scol));
+        addIndices();
 	}
 	
 	void addUpFace(Block@ b, Vec3f pos)
 	{
-		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.top_start_u,	b.top_start_v,	top_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.top_end_u,    b.top_start_v,	top_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		b.top_end_u,    b.top_end_v,    top_scol));
-		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		b.top_start_u,	b.top_end_v,    top_scol));
+		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.top_start_u,	b.top_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.top_end_u,    b.top_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		b.top_end_u,    b.top_end_v,    top_scol));
+		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		b.top_start_u,	b.top_end_v,    top_scol));
+        addIndices();
 	}
 	
 	void addDownFace(Block@ b, Vec3f pos)
 	{
-		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z,		b.bottom_start_u,	b.bottom_start_v,	bottom_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		b.bottom_end_u,	    b.bottom_start_v,	bottom_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.bottom_end_u,	    b.bottom_end_v,		bottom_scol));
-		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.bottom_start_u,	b.bottom_end_v,		bottom_scol));
+		verts.push_back(Vertex(pos.x,	pos.y,		pos.z,		b.bottom_start_u,	b.bottom_start_v,	bottom_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		b.bottom_end_u,	    b.bottom_start_v,	bottom_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.bottom_end_u,	    b.bottom_end_v,		bottom_scol));
+		verts.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.bottom_start_u,	b.bottom_end_v,		bottom_scol));
+        addIndices();
 	}
 	
 	void addRightFace(Block@ b, Vec3f pos)
 	{
-		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		b.sides_start_u,	b.sides_start_v,	right_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.sides_end_u,	    b.sides_start_v,	right_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.sides_end_u,	    b.sides_end_v,		right_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		b.sides_start_u,	b.sides_end_v,		right_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		b.sides_start_u,	b.sides_start_v,	right_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.sides_end_u,	    b.sides_start_v,	right_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.sides_end_u,	    b.sides_end_v,		right_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		b.sides_start_u,	b.sides_end_v,		right_scol));
+        addIndices();
 	}
 	
 	void addLeftFace(Block@ b, Vec3f pos)
 	{
-		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.sides_start_u,	b.sides_start_v,	left_scol));
-        mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		b.sides_end_u,	    b.sides_start_v,	left_scol));
-        mesh.push_back(Vertex(pos.x,	pos.y,		pos.z,		b.sides_end_u,	    b.sides_end_v,		left_scol));
-        mesh.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.sides_start_u,	b.sides_end_v,		left_scol));
+		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.sides_start_u,	b.sides_start_v,	left_scol));
+        verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		b.sides_end_u,	    b.sides_start_v,	left_scol));
+        verts.push_back(Vertex(pos.x,	pos.y,		pos.z,		b.sides_end_u,	    b.sides_end_v,		left_scol));
+        verts.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.sides_start_u,	b.sides_end_v,		left_scol));
+        addIndices();
 	}
+
+    void addIndices()
+    {
+        u32 size = verts.size()-1;
+        faces.push_back(size-3);
+        faces.push_back(size-2);
+        faces.push_back(size-1);
+        faces.push_back(size-3);
+        faces.push_back(size-1);
+        faces.push_back(size);
+    }
 
     void Render()
     {
-        Render::RawQuads("Default_Textures", mesh);
+        //Render::RawQuads("Default_Textures", mesh);
+        mesh.RenderMesh();
     }
 }
 
