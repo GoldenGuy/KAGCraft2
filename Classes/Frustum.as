@@ -102,4 +102,61 @@ class Frustum
 			return false;
 		return true;
 	}
+
+	// stolen from irrlicht
+	Vec3f getFarLeftUp()
+	{
+		Vec3f p;
+		plane1.getIntersectionWithPlanes(plane4, plane2, p);
+		return p;
+	}
+
+	Vec3f getFarLeftDown()
+	{
+		Vec3f p;
+		plane1.getIntersectionWithPlanes(plane5, plane2, p);
+		return p;
+	}
+
+	Vec3f getFarRightUp()
+	{
+		Vec3f p;
+		plane1.getIntersectionWithPlanes(plane4, plane3, p);
+		return p;
+	}
+
+	Vec3f getFarRightDown()
+	{
+		Vec3f p;
+		plane1.getIntersectionWithPlanes(plane5, plane3, p);
+		return p;
+	}
+
+	Vec3f getNearLeftUp()
+	{
+		Vec3f p;
+		plane0.getIntersectionWithPlanes(plane4, plane2, p);
+		return p;
+	}
+
+	Vec3f getNearLeftDown()
+	{
+		Vec3f p;
+		plane0.getIntersectionWithPlanes(plane5, plane2, p);
+		return p;
+	}
+
+	Vec3f getNearRightUp()
+	{
+		Vec3f p;
+		plane0.getIntersectionWithPlanes(plane4,plane3, p);
+		return p;
+	}
+
+	Vec3f getNearRightDown()
+	{
+		Vec3f p;
+		plane0.getIntersectionWithPlanes(plane5, plane3, p);
+		return p;
+	}
 }

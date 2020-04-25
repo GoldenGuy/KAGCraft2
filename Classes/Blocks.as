@@ -2,6 +2,9 @@
 const f32 u_step = 1.0f/16.0f;
 const f32 v_step = 1.0f/16.0f;
 
+const f32 u_step_sub = 0;//u_step/16.0f;
+const f32 v_step_sub = 0;//v_step/16.0f;
+
 enum block_id
 {
     block_air = 0,
@@ -130,20 +133,20 @@ class Block
 
     void MakeUVs(int sides, int top, int bottom)
     {
-        sides_start_u = f32(sides % 16) / 16.0f;
-        sides_start_v = f32(sides / 16) / 16.0f;
-        sides_end_u = sides_start_u + u_step;
-        sides_end_v = sides_start_v + v_step;
+        sides_start_u = f32(sides % 16) / 16.0f + u_step_sub;
+        sides_start_v = f32(sides / 16) / 16.0f + v_step_sub;
+        sides_end_u = sides_start_u + u_step - u_step_sub*2.0f;
+        sides_end_v = sides_start_v + v_step - v_step_sub*2.0f;
 
-        top_start_u = f32(top % 16) / 16.0f;
-        top_start_v = f32(top / 16) / 16.0f;
-        top_end_u = top_start_u + u_step;
-        top_end_v = top_start_v + v_step;
+        top_start_u = f32(top % 16) / 16.0f + u_step_sub;
+        top_start_v = f32(top / 16) / 16.0f + v_step_sub;
+        top_end_u = top_start_u + u_step - u_step_sub*2.0f;
+        top_end_v = top_start_v + v_step - v_step_sub*2.0f;
 
-        bottom_start_u = f32(bottom % 16) / 16.0f;
-        bottom_start_v = f32(bottom / 16) / 16.0f;
-        bottom_end_u = bottom_start_u + u_step;
-        bottom_end_v = bottom_start_v + v_step;
+        bottom_start_u = f32(bottom % 16) / 16.0f + u_step_sub;
+        bottom_start_v = f32(bottom / 16) / 16.0f + v_step_sub;
+        bottom_end_u = bottom_start_u + u_step - u_step_sub*2.0f;
+        bottom_end_v = bottom_start_v + v_step - v_step_sub*2.0f;
     }
 }
 

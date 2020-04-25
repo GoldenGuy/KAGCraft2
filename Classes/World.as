@@ -149,24 +149,28 @@ class World
         SMaterial@ _mapMaterial = SMaterial();
         @mapMaterial = @_mapMaterial;
         mapMaterial.AddTexture("Default_Textures", 0);
-        mapMaterial.DisableAllFlag();
+        //mapMaterial.AddTexture("detail_map", 1);
+        //mapMaterial.AddTexture("nm", 1);
+        mapMaterial.DisableAllFlags();
         mapMaterial.SetFlag(SMaterial::COLOR_MASK, true);
         mapMaterial.SetFlag(SMaterial::ZBUFFER, true);
         mapMaterial.SetFlag(SMaterial::ZWRITE_ENABLE, true);
         mapMaterial.SetFlag(SMaterial::BACK_FACE_CULLING, true);
-        mapMaterial.SetFlag(SMaterial::BLEND_OPERATION, true);
-        mapMaterial.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
+        mapMaterial.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF); //TRANSPARENT_ALPHA_CHANNEL_REF
         mapMaterial.SetFlag(SMaterial::FOG_ENABLE, true);
+
+        //mapMaterial.SetFlag(SMaterial::GOURAUD_SHADING, true);
 
         //mapMaterial.SetFlag(SMaterial::LIGHTING, true);
 
-        //mapMaterial.RegenMipMap(0);
+        //mapMaterial.SetLayerAnisotropicFilter(0, 0);
+        //mapMaterial.SetFlag(SMaterial::ANISOTROPIC_FILTER, true);
+        //mapMaterial.SetLayerLODBias(0, 1);
         //mapMaterial.SetFlag(SMaterial::USE_MIP_MAPS, true);
+        //mapMaterial.RegenMipMap(0);
 
         //mapMaterial.SetFlag(SMaterial::ANTI_ALIASING, true);
         //mapMaterial.SetAntiAliasing(AntiAliasing::OFF);
-
-        //mapMaterial.SetFlag(SMaterial::ANISOTROPIC_FILTER, true);
     }
     
     void FacesSetUp()
@@ -499,7 +503,7 @@ class Chunk
         SMesh@ _mesh = SMesh();
         @mesh = @_mesh;
         mesh.SetMaterial(_world.mapMaterial);
-        mesh.SetHardwareMapping(SMesh::STATIC);
+        mesh.SetHardwareMapping(SMesh::DYNAMIC);
 
         for (int _y = world_y; _y < world_y_bounds; _y++)
 		{
@@ -545,7 +549,6 @@ class Chunk
                 }
             }
         }
-        print("verts.size(): "+verts.size());
         if(verts.size() == 0)
         {
             empty = true;

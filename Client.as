@@ -22,9 +22,12 @@ void onInit(CRules@ this)
 {
 	Debug("Client init");
 	Texture::createFromFile("Default_Textures", "Textures/Blocks_Jenny.png");
+	Texture::createFromFile("detail_map", "Textures/Blocks_Minecraft.png");
 	Texture::createFromFile("MC_Textures", "Textures/Blocks_Minecraft.png");
+	Texture::createFromFile("nm", "Textures/NormalMap.png");
 	Texture::createFromFile("DEBUG", "Textures/Debug.png");
 	Texture::createFromFile("refl", "Textures/refl.png");
+	Texture::createFromFile("pixl", "pixel.png");
 	InitBlocks();
 
 	Camera _camera;
@@ -50,9 +53,9 @@ void onInit(CRules@ this)
 	grobber.LoadObjIntoMesh("BluGrobber.obj");
 	grobber.SetHardwareMapping(SMesh::STATIC);
 	SMaterial@ grobberMaterial = grobber.GetMaterial();
-	grobberMaterial.DisableAllFlag();
-	grobberMaterial.SetFlag(SMaterial::LIGHTING, true);
-	grobberMaterial.SetFlag(SMaterial::COLOR_MASK, true);
+	//grobberMaterial.DisableAllFlags();
+	grobberMaterial.SetFlag(SMaterial::LIGHTING, false);
+	/*grobberMaterial.SetFlag(SMaterial::COLOR_MASK, true);
 	grobberMaterial.SetFlag(SMaterial::ZBUFFER, true);
 	grobberMaterial.SetFlag(SMaterial::ZWRITE_ENABLE, true);
 	grobberMaterial.SetFlag(SMaterial::BACK_FACE_CULLING, true);
@@ -60,13 +63,16 @@ void onInit(CRules@ this)
 	grobberMaterial.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
 	grobberMaterial.RegenMipMap(0);
 	grobberMaterial.SetFlag(SMaterial::USE_MIP_MAPS, true);
-	grobberMaterial.SetFlag(SMaterial::FOG_ENABLE, true);
+	grobberMaterial.SetFlag(SMaterial::FOG_ENABLE, true);*/
 	grobber.BuildMesh();
 	
-	Render::SetFog(0xFFA5BDC8, SMesh::LINEAR, camera.z_far*0.7f, camera.z_far, 0.01, true, true);
+	//Render::SetFog(color_black, SMesh::LINEAR, 0.1, camera.z_far, 0.01, true, true); // 0xFFA5BDC8
+	Render::SetFog(0xFFA5BDC8, SMesh::LINEAR, camera.z_far*0.7f, camera.z_far, 0.01, true, true); // 0xFFA5BDC8
 
 	//Render::SetAmbientLight(0xFFAABB11);
 }
+
+Vertex[] frustum_shape;
 
 void onTick(CRules@ this)
 {
@@ -87,6 +93,40 @@ void onTick(CRules@ this)
 			my_player.Serialize(@to_send);
 			this.SendCommand(this.getCommandID("C_PlayerUpdate"), to_send, false);
 		}
+
+		//DrawHitbox(AABB(camera.frustum.plane0.normal, camera.frustum.plane1.normal), 0x88FF00AA);
+
+		Vec3f FLU = camera.frustum.getFarLeftUp();
+		Vec3f FLD = camera.frustum.getFarLeftDown();
+		Vec3f FRU = camera.frustum.getFarRightUp();
+		Vec3f FRD = camera.frustum.getFarRightDown();
+		Vec3f NLU = camera.frustum.getNearLeftUp();
+		Vec3f NLD = camera.frustum.getNearLeftDown();
+		Vec3f NRU = camera.frustum.getNearRightUp();
+		Vec3f NRD = camera.frustum.getNearRightDown();
+
+		FLU *= 10000;
+		FLD *= 10000;
+		FRU *= 10000;
+		FRD *= 10000;
+		NLU *= 10000;
+		NLD *= 10000;
+		NRU *= 10000;
+		NRD *= 10000;
+
+		DrawHitbox(AABB(NLD, FRU), 0x88FF00AA);
+
+		frustum_shape.clear();
+
+		frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 0, 0, 0x88FF00AA));
+		frustum_shape.push_back(Vertex(FLD.x, FLU.y, FLD.z, 1, 0, 0x88FF00AA));
+		frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z,	1, 1, 0x88FF00AA));
+		frustum_shape.push_back(Vertex(FLU.x, FLD.y, FLU.z, 0, 1, 0x88FF00AA));
+
+		frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 0, 0, 0x88FF00AA));
+		frustum_shape.push_back(Vertex(FLD.x, FLU.y, FLD.z, 1, 0, 0x88FF00AA));
+		frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z,	1, 1, 0x88FF00AA));
+		frustum_shape.push_back(Vertex(FLU.x, FLD.y, FLU.z, 0, 1, 0x88FF00AA));
 
 		tree.Check();
 		//print("size: "+chunks_to_render.size());
@@ -161,12 +201,6 @@ void Render(int id)
 	rules.set_f32("interFrameTime", Maths::Clamp01(rules.get_f32("interFrameTime")+getRenderApproximateCorrectionFactor()));
 	rules.add_f32("interGameTime", getRenderApproximateCorrectionFactor());
 
-	Render::SetTransformWorldspace();
-	
-	camera.render_update();
-	Matrix::MakeIdentity(model);
-	Render::SetTransform(model, camera.view, camera.projection);
-
 	Vertex[] verts = {
 		Vertex(0, 0, 0, 0, 1, color_white),
 		Vertex(0, 0, map_depth, 0, 0, color_white),
@@ -174,10 +208,29 @@ void Render(int id)
 		Vertex(map_width,	0, 0, 1, 1, color_white)
 	};
 
+	Vertex[] sky_verts = {
+		Vertex(0, 0, 10, 0, 0, color_black),
+		Vertex(getScreenWidth(), 0, 10, 1, 0, color_black),
+		Vertex(getScreenWidth(), getScreenHeight(), 10,	1, 1, color_black),
+		Vertex(0, getScreenHeight(), 10, 0, 1, color_black)
+	};
+
 	Render::ClearZ();
-	Render::SetZBuffer(true, true);
 	Render::SetAlphaBlend(false);
 	Render::SetBackfaceCull(true);
+	//Render::SetZBuffer(false, false);
+
+	//Render::SetTransformScreenspace();
+
+	//Render::RawQuads("pixl", sky_verts);
+
+	Render::SetTransformWorldspace();
+	
+	camera.render_update();
+	Matrix::MakeIdentity(model);
+	Render::SetTransform(model, camera.view, camera.projection);
+
+	Render::SetZBuffer(true, true);
 
 	//Render::RawQuads("Default_Textures", verts);
 
@@ -218,7 +271,9 @@ void Render(int id)
 	}
 
 	Render::SetAlphaBlend(true);
+	Render::SetBackfaceCull(false);
 	Render::RawQuads("DEBUG", HitBoxes);
+	Render::RawQuads("DEBUG", frustum_shape);
 	Render::SetAlphaBlend(false);
 
 	GUI::SetFont("menu");
