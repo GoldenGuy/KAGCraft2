@@ -22,7 +22,9 @@ void onInit(CRules@ this)
 {
 	Debug("Client init");
 	Texture::createFromFile("Default_Textures", "Textures/Blocks_Jenny.png");
+	Texture::createFromFile("MC_Textures", "Textures/Blocks_Minecraft.png");
 	Texture::createFromFile("DEBUG", "Textures/Debug.png");
+	Texture::createFromFile("refl", "Textures/refl.png");
 	InitBlocks();
 
 	Camera _camera;
@@ -42,6 +44,28 @@ void onInit(CRules@ this)
 		world.SetUpMaterial();
 		world.ClientMapSetUp();
 	}
+
+	SMesh@ _grobber = SMesh();
+    @grobber = @_grobber;
+	grobber.LoadObjIntoMesh("BluGrobber.obj");
+	grobber.SetHardwareMapping(SMesh::STATIC);
+	SMaterial@ grobberMaterial = grobber.GetMaterial();
+	grobberMaterial.DisableAllFlag();
+	grobberMaterial.SetFlag(SMaterial::LIGHTING, true);
+	grobberMaterial.SetFlag(SMaterial::COLOR_MASK, true);
+	grobberMaterial.SetFlag(SMaterial::ZBUFFER, true);
+	grobberMaterial.SetFlag(SMaterial::ZWRITE_ENABLE, true);
+	grobberMaterial.SetFlag(SMaterial::BACK_FACE_CULLING, true);
+	grobberMaterial.SetFlag(SMaterial::BLEND_OPERATION, true);
+	grobberMaterial.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
+	grobberMaterial.RegenMipMap(0);
+	grobberMaterial.SetFlag(SMaterial::USE_MIP_MAPS, true);
+	grobberMaterial.SetFlag(SMaterial::FOG_ENABLE, true);
+	grobber.BuildMesh();
+	
+	Render::SetFog(0xFFA5BDC8, SMesh::LINEAR, camera.z_far*0.7f, camera.z_far, 0.01, true, true);
+
+	//Render::SetAmbientLight(0xFFAABB11);
 }
 
 void onTick(CRules@ this)
@@ -71,7 +95,7 @@ void onTick(CRules@ this)
 
 void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 {
-	Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
+	//Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
 	if(cmd == this.getCommandID("S_SendMapPacket"))
 	{
 		ready_unser = true;
@@ -129,6 +153,8 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 
 float[] model;
 
+SMesh@ grobber;
+
 void Render(int id)
 {
 	CRules@ rules = getRules();
@@ -155,6 +181,8 @@ void Render(int id)
 
 	//Render::RawQuads("Default_Textures", verts);
 
+	grobber.RenderMeshWithMaterial();
+
 	world.mapMaterial.SetVideoMaterial();
 
 	if(!getControls().isKeyPressed(KEY_KEY_Q))
@@ -171,7 +199,7 @@ void Render(int id)
 					generated++;
 				}
 			}
-			//else
+			if(!chunk.empty)
 			{
 				chunks_to_render[i].Render();
 				if(hold_frustum)
@@ -201,7 +229,7 @@ void Render(int id)
 	GUI::DrawShadowedText("dir_x: "+my_player.dir_x, Vec2f(20,80), color_white);
 }
 
-int max_generate = 3;
+int max_generate = 2;
 
 /*void onNewPlayerJoin(CRules@ this, CPlayer@ player)
 {

@@ -1,13 +1,13 @@
 
 #include "Blocks.as"
 
-const u32 chunk_width = 18;
-const u32 chunk_depth = 18;
+const u32 chunk_width = 16;
+const u32 chunk_depth = 16;
 const u32 chunk_height = 14;
 
-u32 world_width = 16;
-u32 world_depth = 16;
-u32 world_height = 8;
+u32 world_width = 8;
+u32 world_depth = 8;
+u32 world_height = 4;
 u32 world_width_depth = world_width * world_depth;
 u32 world_size = world_width_depth * world_height;
 
@@ -148,19 +148,25 @@ class World
     {
         SMaterial@ _mapMaterial = SMaterial();
         @mapMaterial = @_mapMaterial;
-        mapMaterial.AddTexture("Default_Textures");
+        mapMaterial.AddTexture("Default_Textures", 0);
         mapMaterial.DisableAllFlag();
-        mapMaterial.SetFlag(Material::COLOR_MASK, true);
-        mapMaterial.SetFlag(Material::ZBUFFER, true);
-        mapMaterial.SetFlag(Material::ZWRITE_ENABLE, true);
-        mapMaterial.SetFlag(Material::BACK_FACE_CULLING, true);
-        mapMaterial.SetFlag(Material::BLEND_OPERATION, true);
-        mapMaterial.SetMaterialFlag(MaterialType::TRANSPARENT_ALPHA_CHANNEL_REF);
+        mapMaterial.SetFlag(SMaterial::COLOR_MASK, true);
+        mapMaterial.SetFlag(SMaterial::ZBUFFER, true);
+        mapMaterial.SetFlag(SMaterial::ZWRITE_ENABLE, true);
+        mapMaterial.SetFlag(SMaterial::BACK_FACE_CULLING, true);
+        mapMaterial.SetFlag(SMaterial::BLEND_OPERATION, true);
+        mapMaterial.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
+        mapMaterial.SetFlag(SMaterial::FOG_ENABLE, true);
 
-        //mapMaterial.SetFlag(Material::ANTI_ALIASING, true);
+        //mapMaterial.SetFlag(SMaterial::LIGHTING, true);
+
+        //mapMaterial.RegenMipMap(0);
+        //mapMaterial.SetFlag(SMaterial::USE_MIP_MAPS, true);
+
+        //mapMaterial.SetFlag(SMaterial::ANTI_ALIASING, true);
         //mapMaterial.SetAntiAliasing(AntiAliasing::OFF);
 
-        //mapMaterial.SetFlag(Material::ANISOTROPIC_FILTER, true);
+        //mapMaterial.SetFlag(SMaterial::ANISOTROPIC_FILTER, true);
     }
     
     void FacesSetUp()
@@ -255,7 +261,6 @@ class World
         for(u32 i = start; i < end; i++)
         {
             pos = getPosFromWorldIndex(i);
-            if(map[pos.y][pos.z][pos.x] == block_air) continue;
             UpdateBlockFaces(pos.x, pos.y, pos.z);
             getNet().server_KeepConnectionsAlive();
         }
@@ -263,6 +268,12 @@ class World
 
     void UpdateBlockFaces(int x, int y, int z)
     {
+        if(map[y][z][x] == block_air)
+        {
+            faces_bits[y][z][x] = 0;
+            return;
+        }
+        
         u8 faces = 0;
 
         if(z > 0 && Blocks[map[y][z-1][x]].see_through) faces += 1;
@@ -487,8 +498,8 @@ class Chunk
 
         SMesh@ _mesh = SMesh();
         @mesh = @_mesh;
-        mesh.AddNewMaterial(_world.mapMaterial);
-        mesh.SetHardwareMapping(HardwareMapping::STATIC);
+        mesh.SetMaterial(_world.mapMaterial);
+        mesh.SetHardwareMapping(SMesh::STATIC);
 
         for (int _y = world_y; _y < world_y_bounds; _y++)
 		{
@@ -534,6 +545,7 @@ class Chunk
                 }
             }
         }
+        print("verts.size(): "+verts.size());
         if(verts.size() == 0)
         {
             empty = true;
@@ -543,7 +555,7 @@ class Chunk
             mesh.SetVertex(verts);
             mesh.SetIndices(faces);
             mesh.BuildMesh();
-            mesh.SetDirty(BufferType::VERTEX_INDEX);
+            mesh.SetDirty(SMesh::VERTEX_INDEX);
             //mesh.AddNewMaterial(_world.mapMaterial);
             //mesh.SetHardwareMapping(HardwareMapping::STATIC);
         }
