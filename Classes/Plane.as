@@ -46,44 +46,58 @@ class Plane
 		distance_to_origin = scalar / length;
 	}
 
+	void Normalize()
+	{
+		float length = normal.Length();
+
+		normal /= length;
+		distance_to_origin /= length;
+	}
+
 	// stolen from irrlicht
-	bool getIntersectionWithPlane(Plane other, Vec3f outLinePoint, Vec3f outLineVect)
+	bool getIntersectionWithPlane(Plane other, Vec3f&out LinePoint, Vec3f&out LineVect)
 	{
 		float fn00 = normal.Length();
 		float fn01 = DotProduct(normal, other.normal);
 		float fn11 = other.normal.Length();
 		float det = fn00*fn11 - fn01*fn01;
 
-		if (Maths::Abs(det) < 0.000001f)
+		if (Maths::Abs(det) < 0.0000001f)
 			return false;
 
 		float invdet = 1.0 / det;
 		float fc0 = (fn11*-distance_to_origin + fn01*other.distance_to_origin) * invdet;
 		float fc1 = (fn00*-other.distance_to_origin + fn01*distance_to_origin) * invdet;
 
-		outLineVect = CrossProduct(normal, other.normal);
-		outLinePoint = normal*fc0 + other.normal*fc1;
+		LineVect = CrossProduct(normal, other.normal);
+		LinePoint = normal*fc0 + other.normal*fc1;
 		return true;
 	}
 
-	bool getIntersectionWithPlanes(Plane o1, Plane o2, Vec3f outPoint)
+	bool getIntersectionWithPlanes(Plane o1, Plane o2, Vec3f&out Point)
 	{
 		Vec3f linePoint, lineVect;
 		if (getIntersectionWithPlane(o1, linePoint, lineVect))
-			return o2.getIntersectionWithLine(linePoint, lineVect, outPoint);
+		{
+			//print("inter with 2 planes");
+			return o2.getIntersectionWithLine(linePoint, lineVect, Point);
+		}
+			
 
 		return false;
 	}
 
-	bool getIntersectionWithLine(Vec3f linePoint, Vec3f lineVect, Vec3f outIntersection)
+	bool getIntersectionWithLine(Vec3f linePoint, Vec3f lineVect, Vec3f&out Intersection)
 	{
 		float t2 = DotProduct(normal, lineVect);
+		//print("normal: "+normal.FloatString());
+		//print("normal: "+lineVect.FloatString());
 
 		if (t2 == 0)
 			return false;
 
 		float t =- (DotProduct(normal, linePoint) + distance_to_origin) / t2;
-		outIntersection = linePoint + (lineVect * t);
+		Intersection = linePoint + (lineVect * t);
 		return true;
 	}
 }

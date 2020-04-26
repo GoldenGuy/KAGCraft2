@@ -26,6 +26,7 @@ void onInit(CRules@ this)
 	Texture::createFromFile("MC_Textures", "Textures/Blocks_Minecraft.png");
 	Texture::createFromFile("nm", "Textures/NormalMap.png");
 	Texture::createFromFile("DEBUG", "Textures/Debug.png");
+	Texture::createFromFile("LINES", "Textures/Lines.png");
 	Texture::createFromFile("refl", "Textures/refl.png");
 	Texture::createFromFile("pixl", "pixel.png");
 	InitBlocks();
@@ -67,7 +68,7 @@ void onInit(CRules@ this)
 	grobber.BuildMesh();
 	
 	//Render::SetFog(color_black, SMesh::LINEAR, 0.1, camera.z_far, 0.01, true, true); // 0xFFA5BDC8
-	Render::SetFog(0xFFA5BDC8, SMesh::LINEAR, camera.z_far*0.7f, camera.z_far, 0.01, true, true); // 0xFFA5BDC8
+	//Render::SetFog(0xFFA5BDC8, SMesh::LINEAR, camera.z_far*0.7f, camera.z_far, 0.01, true, true); // 0xFFA5BDC8
 
 	//Render::SetAmbientLight(0xFFAABB11);
 }
@@ -94,7 +95,7 @@ void onTick(CRules@ this)
 			this.SendCommand(this.getCommandID("C_PlayerUpdate"), to_send, false);
 		}
 
-		//DrawHitbox(AABB(camera.frustum.plane0.normal, camera.frustum.plane1.normal), 0x88FF00AA);
+		//DrawHitbox(AABB(camera.frustum.plane0.normal, camera.frustum.plane1.normal), 0x70FF00AA);
 
 		Vec3f FLU = camera.frustum.getFarLeftUp();
 		Vec3f FLD = camera.frustum.getFarLeftDown();
@@ -105,28 +106,57 @@ void onTick(CRules@ this)
 		Vec3f NRU = camera.frustum.getNearRightUp();
 		Vec3f NRD = camera.frustum.getNearRightDown();
 
-		FLU *= 10000;
+		/*FLU *= 10000;
 		FLD *= 10000;
 		FRU *= 10000;
 		FRD *= 10000;
 		NLU *= 10000;
 		NLD *= 10000;
 		NRU *= 10000;
-		NRD *= 10000;
+		NRD *= 10000;*/
 
-		DrawHitbox(AABB(NLD, FRU), 0x88FF00AA);
+		//DrawHitbox(AABB(Vec3f(-1), NLU), 0x8800FFAA);
+		//NLU.Print();
+
+		//camera.frustum.plane1.normal.Print();
+		/*DrawHitbox(AABB(camera.frustum.plane0.normal, camera.frustum.plane0.normal+Vec3f(0.2)), 0x70FF00AA);
+		DrawHitbox(AABB(camera.frustum.plane1.normal, camera.frustum.plane1.normal+Vec3f(0.2)), 0x88FF0000);
+		DrawHitbox(AABB(camera.frustum.plane2.normal, camera.frustum.plane2.normal+Vec3f(0.2)), 0x8800FF00);
+		DrawHitbox(AABB(camera.frustum.plane3.normal, camera.frustum.plane3.normal+Vec3f(0.2)), 0x70FF00AA);
+		DrawHitbox(AABB(camera.frustum.plane4.normal, camera.frustum.plane4.normal+Vec3f(0.2)), 0x70FF00AA);
+		DrawHitbox(AABB(camera.frustum.plane5.normal, camera.frustum.plane5.normal+Vec3f(0.2)), 0x70FF00AA);*/
 
 		frustum_shape.clear();
 
-		frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 0, 0, 0x88FF00AA));
-		frustum_shape.push_back(Vertex(FLD.x, FLU.y, FLD.z, 1, 0, 0x88FF00AA));
-		frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z,	1, 1, 0x88FF00AA));
-		frustum_shape.push_back(Vertex(FLU.x, FLD.y, FLU.z, 0, 1, 0x88FF00AA));
+		frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 0, 0, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(FRU.x, FRU.y, FRU.z, 1, 0, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(FRD.x, FRD.y, FRD.z,	1, 1, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z, 0, 1, 0x70FF00AA));
 
-		frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 0, 0, 0x88FF00AA));
-		frustum_shape.push_back(Vertex(FLD.x, FLU.y, FLD.z, 1, 0, 0x88FF00AA));
-		frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z,	1, 1, 0x88FF00AA));
-		frustum_shape.push_back(Vertex(FLU.x, FLD.y, FLU.z, 0, 1, 0x88FF00AA));
+		frustum_shape.push_back(Vertex(NLU.x, NLU.y, NLU.z, 0, 0, 0x70FF0000));
+		frustum_shape.push_back(Vertex(NRU.x, NRU.y, NRU.z, 1, 0, 0x70FF0000));
+		frustum_shape.push_back(Vertex(NRD.x, NRD.y, NRD.z,	1, 1, 0x70FF0000));
+		frustum_shape.push_back(Vertex(NLD.x, NLD.y, NLD.z, 0, 1, 0x70FF0000));
+
+		frustum_shape.push_back(Vertex(NLU.x, NLU.y, NLU.z, 0, 0, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 1, 0, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z,	1, 1, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(NLD.x, NLD.y, NLD.z, 0, 1, 0x70FF00AA));
+
+		frustum_shape.push_back(Vertex(FRU.x, FRU.y, FRU.z, 0, 0, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(NRU.x, NRU.y, NRU.z, 1, 0, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(NRD.x, NRD.y, NRD.z,	1, 1, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(FRD.x, FRD.y, FRD.z, 0, 1, 0x70FF00AA));
+
+		frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z, 0, 0, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(FRD.x, FRD.y, FRD.z, 1, 0, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(NRD.x, NRD.y, NRD.z,	1, 1, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(NLD.x, NLD.y, NLD.z, 0, 1, 0x70FF00AA));
+
+		frustum_shape.push_back(Vertex(NLU.x, NLU.y, NLU.z, 0, 0, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(NRU.x, NRU.y, NRU.z, 1, 0, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(FRU.x, FRU.y, FRU.z,	1, 1, 0x70FF00AA));
+		frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 0, 1, 0x70FF00AA));
 
 		tree.Check();
 		//print("size: "+chunks_to_render.size());
@@ -254,10 +284,11 @@ void Render(int id)
 			}
 			if(!chunk.empty)
 			{
+				//Render::SetFog(SColor(0,XORRandom(255),XORRandom(255),XORRandom(255)), SMesh::LINEAR, 0, 0, 0.01, true, true);
 				chunks_to_render[i].Render();
 				if(hold_frustum)
 				{
-					DrawHitbox(chunks_to_render[i].box, 0x880000FF);
+					DrawHitbox(chunks_to_render[i].box, 0x700000FF);
 				}
 			}
 		}
@@ -273,7 +304,10 @@ void Render(int id)
 	Render::SetAlphaBlend(true);
 	Render::SetBackfaceCull(false);
 	Render::RawQuads("DEBUG", HitBoxes);
-	Render::RawQuads("DEBUG", frustum_shape);
+	Matrix::MakeIdentity(model);
+	Matrix::SetTranslation(model, camera.frustum_pos.x, camera.frustum_pos.y, camera.frustum_pos.z);
+	Render::SetModelTransform(model);
+	Render::RawQuads("LINES", frustum_shape);
 	Render::SetAlphaBlend(false);
 
 	GUI::SetFont("menu");

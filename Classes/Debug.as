@@ -11,7 +11,7 @@ void Debug(string text, int color = 0)
 
 void DrawHitbox(float x, float y, float z, uint color)
 {
-	//return; // uncomment when release
+	return; // uncomment when release
     HitBoxes.push_back(Vertex(x,	y,		z,		0,	1,	color));
 	HitBoxes.push_back(Vertex(x,	y+1,	z,		1,	1,	color));
 	HitBoxes.push_back(Vertex(x+1,	y+1,	z,		1,	0,	color));

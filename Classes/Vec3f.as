@@ -11,6 +11,13 @@ class Vec3f
 		y = 0;
 		z = 0;
 	}
+
+	Vec3f(float all)
+	{
+		x = all;
+		y = all;
+		z = all;
+	}
 	
 	Vec3f(float _x, float _y, float _z)
 	{

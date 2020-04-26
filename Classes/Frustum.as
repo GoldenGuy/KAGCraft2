@@ -15,6 +15,7 @@ class Frustum
 	
 	void Update(float[] proj_view)
 	{
+		/*
 		// near
 		plane0.normal.x	= proj_view[12] + proj_view[8];
 		plane0.normal.y	= proj_view[13] + proj_view[9];
@@ -49,7 +50,51 @@ class Frustum
 		plane5.normal.x	= proj_view[12] + proj_view[4];
 		plane5.normal.y	= proj_view[13] + proj_view[5];
 		plane5.normal.z	= proj_view[14] + proj_view[6];
-		plane5.distance_to_origin = proj_view[15] + proj_view[7];
+		plane5.distance_to_origin = proj_view[15] + proj_view[7];*/
+
+
+		// left clipping plane
+		plane2.normal.x = proj_view[3] + proj_view[0];
+		plane2.normal.y = proj_view[7] + proj_view[4];
+		plane2.normal.z = proj_view[11] + proj_view[8];
+		plane2.distance_to_origin =	proj_view[15] + proj_view[12];
+
+		// right clipping plane
+		plane3.normal.x = proj_view[3] - proj_view[0];
+		plane3.normal.y = proj_view[7] - proj_view[4];
+		plane3.normal.z = proj_view[11] - proj_view[8];
+		plane3.distance_to_origin =	proj_view[15] - proj_view[12];
+
+		// top clipping plane
+		plane4.normal.x = proj_view[3] - proj_view[1];
+		plane4.normal.y = proj_view[7] - proj_view[5];
+		plane4.normal.z = proj_view[11] - proj_view[9];
+		plane4.distance_to_origin =	proj_view[15] - proj_view[13];
+
+		// bottom clipping plane
+		plane5.normal.x = proj_view[3] + proj_view[1];
+		plane5.normal.y = proj_view[7] + proj_view[5];
+		plane5.normal.z = proj_view[11] + proj_view[9];
+		plane5.distance_to_origin =	proj_view[15] + proj_view[13];
+
+		// far clipping plane
+		plane1.normal.x = proj_view[3] - proj_view[2];
+		plane1.normal.y = proj_view[7] - proj_view[6];
+		plane1.normal.z = proj_view[11] - proj_view[10];
+		plane1.distance_to_origin =	proj_view[15] - proj_view[14];
+
+		// near clipping plane
+		plane0.normal.x = proj_view[2];
+		plane0.normal.y = proj_view[6];
+		plane0.normal.z = proj_view[10];
+		plane0.distance_to_origin =	proj_view[14];
+
+		plane0.Normalize();
+		plane1.Normalize();
+		plane2.Normalize();
+		plane3.Normalize();
+		plane4.Normalize();
+		plane5.Normalize();
 	}
 	
 	bool ContainsAABB(AABB box)
@@ -88,7 +133,7 @@ class Frustum
 
 	bool ContainsSphere(Vec3f point, f32 radius)
 	{
-		if (plane1.DistanceToPoint(point)*camera.z_far*10 < -radius) // -0.005
+		if (plane1.DistanceToPoint(point) < -radius) // -0.005
 			return false;
 		//if (plane0.DistanceToPoint(point) < -radius)
 		//	return false;
@@ -107,7 +152,7 @@ class Frustum
 	Vec3f getFarLeftUp()
 	{
 		Vec3f p;
-		plane1.getIntersectionWithPlanes(plane4, plane2, p);
+		plane1.getIntersectionWithPlanes(plane4, plane2, p);// print("intersects!");
 		return p;
 	}
 
