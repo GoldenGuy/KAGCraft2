@@ -246,7 +246,7 @@ void Render(int id)
 
 	world.mapMaterial.SetVideoMaterial();
 
-	if(!getControls().isKeyPressed(KEY_KEY_Q))
+	if(!getControls().isKeyPressed(KEY_KEY_I))
 	{
 		int generated = 0;
 		for(int i = 0; i < chunks_to_render.size(); i++)
