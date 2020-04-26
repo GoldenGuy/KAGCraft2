@@ -95,8 +95,6 @@ void onTick(CRules@ this)
 			this.SendCommand(this.getCommandID("C_PlayerUpdate"), to_send, false);
 		}
 
-		//DrawHitbox(AABB(camera.frustum.plane0.normal, camera.frustum.plane1.normal), 0x70FF00AA);
-
 		Vec3f FLU = camera.frustum.getFarLeftUp();
 		Vec3f FLD = camera.frustum.getFarLeftDown();
 		Vec3f FRU = camera.frustum.getFarRightUp();
@@ -105,26 +103,6 @@ void onTick(CRules@ this)
 		Vec3f NLD = camera.frustum.getNearLeftDown();
 		Vec3f NRU = camera.frustum.getNearRightUp();
 		Vec3f NRD = camera.frustum.getNearRightDown();
-
-		/*FLU *= 10000;
-		FLD *= 10000;
-		FRU *= 10000;
-		FRD *= 10000;
-		NLU *= 10000;
-		NLD *= 10000;
-		NRU *= 10000;
-		NRD *= 10000;*/
-
-		//DrawHitbox(AABB(Vec3f(-1), NLU), 0x8800FFAA);
-		//NLU.Print();
-
-		//camera.frustum.plane1.normal.Print();
-		/*DrawHitbox(AABB(camera.frustum.plane0.normal, camera.frustum.plane0.normal+Vec3f(0.2)), 0x70FF00AA);
-		DrawHitbox(AABB(camera.frustum.plane1.normal, camera.frustum.plane1.normal+Vec3f(0.2)), 0x88FF0000);
-		DrawHitbox(AABB(camera.frustum.plane2.normal, camera.frustum.plane2.normal+Vec3f(0.2)), 0x8800FF00);
-		DrawHitbox(AABB(camera.frustum.plane3.normal, camera.frustum.plane3.normal+Vec3f(0.2)), 0x70FF00AA);
-		DrawHitbox(AABB(camera.frustum.plane4.normal, camera.frustum.plane4.normal+Vec3f(0.2)), 0x70FF00AA);
-		DrawHitbox(AABB(camera.frustum.plane5.normal, camera.frustum.plane5.normal+Vec3f(0.2)), 0x70FF00AA);*/
 
 		frustum_shape.clear();
 
@@ -305,9 +283,13 @@ void Render(int id)
 	Render::SetBackfaceCull(false);
 	Render::RawQuads("DEBUG", HitBoxes);
 	Matrix::MakeIdentity(model);
-	Matrix::SetTranslation(model, camera.frustum_pos.x, camera.frustum_pos.y, camera.frustum_pos.z);
-	Render::SetModelTransform(model);
-	Render::RawQuads("LINES", frustum_shape);
+	if(hold_frustum)
+	{
+		Matrix::SetTranslation(model, camera.frustum_pos.x, camera.frustum_pos.y, camera.frustum_pos.z);
+		Render::SetModelTransform(model);
+		Render::RawQuads("LINES", frustum_shape);
+	}
+	
 	Render::SetAlphaBlend(false);
 
 	GUI::SetFont("menu");

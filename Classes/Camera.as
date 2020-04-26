@@ -37,7 +37,7 @@ class Camera
 		next_dir_y = 0;
 		next_dir_z = 0;
 		
-		fov = Maths::Pi/2.0000f;
+		fov = Maths::Pi/2.5000f;
 		z_near = 0.1f;
 		z_far = 80.0f;
 		

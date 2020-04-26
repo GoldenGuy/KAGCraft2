@@ -3,7 +3,7 @@
 
 const u32 chunk_width = 16;
 const u32 chunk_depth = 16;
-const u32 chunk_height = 14;
+const u32 chunk_height = 16;
 
 u32 world_width = 8;
 u32 world_depth = 8;
