@@ -3,6 +3,8 @@ bool ask_map = false;
 bool map_ready = false;
 bool map_renderable = false;
 bool faces_generated = false;
+bool chunks_set_up = false;
+bool tree_set_up = false;
 bool player_ready = false;
 int intro = 0; // later...
 int ask_map_in = 0;
@@ -35,16 +37,25 @@ bool isLoading(CRules@ this)
 		{
 			map_ready = true;
 		}
-		else if(ready_unser)
+		if(ready_unser)
 		{
 			ready_unser = false;
 			world.UnSerialize(got_packets);
 			got_packets++;
 			loading_string = "Unserializing map packet. "+got_packets+"/"+amount_of_packets;
-			CBitStream to_send;
-			to_send.write_netid(getLocalPlayer().getNetworkID());
-			this.SendCommand(this.getCommandID("C_ReceivedMapPacket"), to_send, false);
-			ask_map_in = 0;
+			if(got_packets >= amount_of_packets)
+			{
+				loading_string = "Generating block faces.";
+				map_ready = true;
+				return true;
+			}
+			else
+			{
+				CBitStream to_send;
+				to_send.write_netid(getLocalPlayer().getNetworkID());
+				to_send.write_u32(got_packets);
+				this.SendCommand(this.getCommandID("C_RequestMapPacket"), to_send, false);
+			}
 		}
 		return true;
 	}
@@ -68,21 +79,32 @@ bool isLoading(CRules@ this)
 			else
 			{
 				Debug("Done.");
-				loading_string = "Done.";
+				loading_string = "Setting up chunks.";
 				faces_generated = true;
 			}
 			return true;
 		}
 		else
 		{
-			Debug("Setting up chunks.");
-			loading_string = "Setting up chunks.";
-            world.SetUpChunks();
-            Debug("Done.");
-			loading_string = "Done.";
-			SetUpTree();
-			map_renderable = true;
-			return true;
+			if(!chunks_set_up)
+			{
+				Debug("Setting up chunks.");
+				world.SetUpChunks();
+				loading_string = "Setting up tree.";
+				Debug("Done.");
+				chunks_set_up = true;
+				return true;
+			}
+			else if(!tree_set_up)
+			{
+				Debug("Setting up tree.");
+				SetUpTree();
+				Debug("Done.");
+				loading_string = "Done.";
+				tree_set_up = true;
+				map_renderable = true;
+				return true;
+			}
 		}
 	}
     else if(!player_ready)
@@ -95,6 +117,7 @@ bool isLoading(CRules@ this)
 		my_player.SetPlayer(getLocalPlayer());
         player_ready = true;
 		Render::addScript(Render::layer_background, "Client.as", "Render", 1);
+		return true;
     }
     return false;
 }

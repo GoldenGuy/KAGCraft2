@@ -29,7 +29,7 @@ void onTick(CRules@ this)
 {
 	if(!isClient())
 	{
-		u16 size = players.size();
+		uint16 size = players.size();
 		if(size > 1)
 		{
 			CBitStream to_send;
@@ -43,43 +43,27 @@ void onTick(CRules@ this)
 	}
 	if(players_to_send.size() > 0)
 	{
-		bool done = false;
 		if(players_to_send[0].player !is null)
 		{
-			//u16 netid = players_to_send[0].player.getNetworkID();
-			
-			if(players_to_send[0].ready)
-			{
-				players_to_send[0].ready = false;
-				CBitStream to_send;
-				world.Serialize(@to_send, players_to_send[0].packet_number);
-				this.SendCommand(this.getCommandID("S_SendMapPacket"), to_send, players_to_send[0].player);
-				Debug("Sending map packet, "+(players_to_send[0].packet_number+1)+"/"+amount_of_packets+".", 3);
-
-				players_to_send[0].packet_number++;
-				if(players_to_send[0].packet_number >= amount_of_packets)
-				{
-					done = true;
-				}
-			}
+			CBitStream to_send;
+			world.Serialize(@to_send, players_to_send[0].packet_number);
+			this.SendCommand(this.getCommandID("S_SendMapPacket"), to_send, players_to_send[0].player);
+			Debug("Sending map packet, "+(players_to_send[0].packet_number+1)+"/"+amount_of_packets+".", 3);
+			players_to_send.removeAt(0);
 		}
 		else
-		{
-			done = true;
-		}
-		if(done)
 		{
 			players_to_send.removeAt(0);
 		}
 	}
 }
 
-void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
+void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 {
 	Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
 	if(cmd == this.getCommandID("C_RequestMap"))
 	{
-		u16 netid = params.read_netid();
+		uint16 netid = params.read_netid();
 		if(isClient())
 		{
 			Debug("Localhost, ignore.");
@@ -90,31 +74,19 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 		{
 			//CPlayer@ sender = getNet().getActiveCommandPlayer();
 			CPlayer@ player = getPlayerByNetworkId(netid);
-			if(player !is null)
-			{
-				players_to_send.push_back(MapSender(player));
-			}
-
-			//CBitStream to_send;
-			//world.Serialize(@to_send);
-			//this.SendCommand(this.getCommandID("S_SendMapPacket"), to_send, true);
+			players_to_send.push_back(MapSender(player, 0));
 		}
 	}
-	else if(cmd == this.getCommandID("C_ReceivedMapPacket"))
+	else if(cmd == this.getCommandID("C_RequestMapPacket"))
 	{
-		u16 netid = params.read_netid();
+		uint16 netid = params.read_netid();
+		uint32 packet_number = params.read_u32();
 		CPlayer@ player = getPlayerByNetworkId(netid);
-		for(int i = 0; i < players_to_send.size(); i++)
-		{
-			if(players_to_send[i].player is player)
-			{
-				players_to_send[i].ready = true;
-			}
-		}
+		players_to_send.push_back(MapSender(player, packet_number));
 	}
 	else if(cmd == this.getCommandID("C_PlayerUpdate"))
 	{
-		u16 netid = params.read_netid();
+		uint16 netid = params.read_netid();
 		CPlayer@ _player = getPlayerByNetworkId(netid);
 		if(_player !is null)
 		{
@@ -131,10 +103,10 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 	}
 	else if(cmd == this.getCommandID("C_ChangeBlock"))
 	{
-		u8 block = params.read_u8();
-		f32 x = params.read_f32();
-		f32 y = params.read_f32();
-		f32 z = params.read_f32();
+		uint8 block = params.read_u8();
+		float x = params.read_f32();
+		float y = params.read_f32();
+		float z = params.read_f32();
 
 		world.map[y][z][x] = block;
 	}

@@ -101,7 +101,7 @@ class Camera
 		Matrix::SetRotationDegrees(temp_mat, 0, next_dir_x, 0);
 		Matrix::SetRotationDegrees(another_temp_mat, next_dir_y, 0, 0);
 		temp_mat = Matrix_Multiply(temp_mat, another_temp_mat);
-		temp_mat = Matrix_Multiply(temp_mat, projection);
+		temp_mat = Matrix_Multiply(projection, temp_mat);
 
 		if(!hold_frustum) frustum.Update(temp_mat);
 	}
