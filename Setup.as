@@ -4,7 +4,7 @@ void onInit(CRules@ this)
 	this.addCommandID("error1"); // reserverd for something in engine, crashes game on call
 	this.addCommandID("C_RequestMap");
 	this.addCommandID("S_SendMapPacket");
-	this.addCommandID("C_RequestMapPacket");
+	this.addCommandID("C_ReceivedMapPacket");
 	this.addCommandID("C_ChangeBlock");
 	this.addCommandID("S_ChangeBlock");
 	this.addCommandID("C_PlayerUpdate");

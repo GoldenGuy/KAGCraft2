@@ -21,8 +21,7 @@ Player@[] other_players;
 void onInit(CRules@ this)
 {
 	Debug("Client init");
-	this.set_bool("ClientLoading", true);
-	Texture::createFromFile("Block_Textures", "Textures/Blocks_Jenny.png");
+	Texture::createFromFile("Default_Textures", "Textures/Blocks_Jenny.png");
 	Texture::createFromFile("DEBUG", "Textures/Debug.png");
 	InitBlocks();
 
@@ -50,15 +49,10 @@ void onTick(CRules@ this)
 	this.set_f32("interFrameTime", 0);
 	if(isLoading(this))
 	{
-		this.set_bool("ClientLoading", true);
 		return;
 	}
 	else
 	{
-		if(this.get_bool("ClientLoading"))
-		{
-			this.set_bool("ClientLoading", false);
-		}
 		// game here
 		my_player.Update();
 		if(!isServer() && getPlayersCount() > 1)
@@ -110,9 +104,10 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 						break;
 					}
 				}
-				// doesnt exists yet
+				// doesnt exists
 				if(!exists)
 				{
+					//print("lol");
 					Player new_player();
 					new_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
 					new_player.SetPlayer(_player);
@@ -141,7 +136,7 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 		world.map[y][z][x] = block;
     	world.UpdateBlocksAndChunks(x, y, z);
 	}
-	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_RequestMapPacket"))
+	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_ReceivedMapPacket"))
 	{
 		return;
 	}
@@ -173,7 +168,7 @@ void Render(int id)
 	Render::SetAlphaBlend(false);
 	Render::SetBackfaceCull(true);
 
-	Render::RawQuads("Block_Textures", verts);
+	Render::RawQuads("Default_Textures", verts);
 
 	if(!getControls().isKeyPressed(KEY_KEY_Q))
 	{
@@ -214,8 +209,6 @@ void Render(int id)
 
 int max_generate = 3;
 
-// hook doesnt work
-
 /*void onNewPlayerJoin(CRules@ this, CPlayer@ player)
 {
 	if(player is null || player is getLocalPlayer()) return;
@@ -238,6 +231,7 @@ int max_generate = 3;
 
 void onPlayerLeave(CRules@ this, CPlayer@ player)
 {
+	print("player left   "+other_players.size());
 	if(player is null) return;
 
 	for(int i = 0; i < other_players.size(); i++)
@@ -249,6 +243,8 @@ void onPlayerLeave(CRules@ this, CPlayer@ player)
 			return;
 		}
 	}
+
+	Debug("onPlayerLeave: Player was not on the list!", 3);
 }
 
 void onRender(CRules@ this)
@@ -262,8 +258,7 @@ void onRender(CRules@ this)
 		else if(!faces_generated) percent = float(gf_packet)/float(gf_amount_of_packets);
 		else percent = 1;
 
-		GUI::DrawProgressBar(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-16), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+16), percent);
-		GUI::SetFont("menu");
+		GUI::DrawProgressBar(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-20), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+20), percent);
 		GUI::DrawTextCentered(loading_string, Vec2f(getScreenWidth()/2, getScreenHeight()/2), color_white);
 	}
 }

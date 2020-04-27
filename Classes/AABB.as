@@ -9,10 +9,10 @@ class AABB
 	
 	AABB()
 	{
-		min = Vec3f(0, 0, 0);
-		max = Vec3f(0, 0, 0);
-		center = Vec3f(0, 0, 0);
-		dim = Vec3f(0, 0, 0);
+		min = Vec3f(0,0,0);
+		max = Vec3f(0,0,0);
+		center = Vec3f(0,0,0);
+		dim = Vec3f(0,0,0);
 	}
 	
 	AABB(const Vec3f&in _min, const Vec3f&in _max)
@@ -40,7 +40,7 @@ class AABB
 
 		center = dim / 2.0f + min;
 
-		corner = Maths::Pow( Maths::Pow(dim.x, 3) + Maths::Pow(dim.y, 3) + Maths::Pow(dim.z, 3), 1.0f / 3.0f) * 0.6f;
+		corner = Maths::Pow( Maths::Pow(dim.x, 3) + Maths::Pow(dim.y, 3) + Maths::Pow(dim.z, 3), 1.0f / 3.0f) * 0.55f;
 	}
 }
 

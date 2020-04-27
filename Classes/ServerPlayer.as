@@ -3,8 +3,8 @@ class ServerPlayer
 {
     CPlayer@ player;
     Vec3f pos;
-    float dir_x = 0.01f;
-	float dir_y = 0.01f;
+    f32 dir_x = 0.01f;
+	f32 dir_y = 0.01f;
 	bool Crouch = false;
     bool Frozen = false;
 
