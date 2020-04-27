@@ -48,16 +48,13 @@ class World
         Vec3f[] trees;
         trees.clear();
         
-        //map.resize(map_height);
         uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
         map = _map;
         for(float y = 0.0f; y < map_height; y += 1.0f)
         {
-            //map[y].resize(map_depth);
             float h_diff = y/float(map_height);
             for(float z = 0.0f; z < map_depth; z += 1.0f)
             {
-                //map[y][z].resize(map_width);
                 for(float x = 0.0f; x < map_width; x += 1.0f)
                 {
                     //uint32 index = y*map_width_depth + z*map_width + x;
@@ -235,7 +232,6 @@ class World
         for(uint32 i = start; i < end; i++)
         {
             pos = getPosFromWorldIndex(i);
-            if(map[pos.y][pos.z][pos.x] == block_air) continue;
             UpdateBlockFaces(pos.x, pos.y, pos.z);
             getNet().server_KeepConnectionsAlive();
         }
@@ -243,6 +239,12 @@ class World
 
     void UpdateBlockFaces(int x, int y, int z)
     {
+        if(map[y][z][x] == block_air)
+        {
+            faces_bits[y][z][x] = 0;
+            return;
+        }
+        
         uint8 faces = 0;
 
         if(z > 0 && Blocks[map[y][z-1][x]].see_through) faces += 1;
@@ -332,6 +334,8 @@ class World
             }
         }
     }
+
+    // old and slow way of map sending
 
     /*void Serialize(CBitStream@ to_send, uint32 packet)
     {
@@ -638,7 +642,7 @@ class Chunk
 
     void Render()
     {
-        Render::RawQuads("Default_Textures", mesh);
+        Render::RawQuads("Block_Textures", mesh);
     }
 }
 
@@ -676,8 +680,8 @@ void server_SetBlock(uint8 block, const Vec3f&in pos)
 
 // map sending and receiving
 
-uint32 amount_of_packets = world_height * world_depth;
-uint32 ms_packet_size = map_size / amount_of_packets;
+uint32 ms_packet_size = chunk_width*chunk_depth*chunk_height*8; // eight chunks per packet
+uint32 amount_of_packets = map_size / ms_packet_size;
 
 // server
 
@@ -686,13 +690,11 @@ class MapSender
 {
     CPlayer@ player;
     uint32 packet_number = 0;
-    bool ready;
 
-    MapSender(CPlayer@ _player)
+    MapSender(CPlayer@ _player, uint32 _packet_number)
     {
         @player = @_player;
-        packet_number = 0;
-        ready = true;
+        packet_number = _packet_number;
     }
 }
 
@@ -702,6 +704,6 @@ CBitStream map_packet;
 uint32 got_packets;
 bool ready_unser;
 
-uint32 gf_amount_of_packets = world_height * world_depth;
+uint32 gf_amount_of_packets = amount_of_packets;
 uint32 gf_packet_size = map_size / gf_amount_of_packets;
 uint32 gf_packet;
