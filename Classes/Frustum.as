@@ -13,7 +13,7 @@ class Frustum
 	
 	Frustum(){}
 	
-	void Update(float[] proj_view)
+	void Update(const float[]&in proj_view)
 	{
 		// left clipping plane
 		plane2.normal.x = proj_view[3] + proj_view[0];
@@ -59,7 +59,7 @@ class Frustum
 		plane5.Normalize();
 	}
 	
-	bool ContainsAABB(AABB box)
+	bool ContainsAABB(const AABB&in box)
 	{
 		if (!plane0.Intersects(box))
 			return false;
@@ -76,7 +76,7 @@ class Frustum
 		return true;
 	}
 	
-	bool ContainsPoint(Vec3f point)
+	bool ContainsPoint(const Vec3f&in point)
 	{
 		if (plane0.DistanceToPoint(point) < 0)
 			return false;
@@ -93,7 +93,7 @@ class Frustum
 		return true;
 	}
 
-	bool ContainsSphere(Vec3f point, f32 radius)
+	bool ContainsSphere(const Vec3f&in point, f32 radius)
 	{
 		if (plane1.DistanceToPoint(point) < -radius)
 			return false;
