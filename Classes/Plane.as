@@ -78,7 +78,7 @@ class Plane
 		return false;
 	}
 
-	bool getIntersectionWithLine(const Vec3f&in linePoint, const Vec3f&in lineVect, Vec3f&out Intersection)
+	bool getIntersectionWithLine(const Vec3f&in linePoint, const Vec3f&in lineVect, Vec3f&out Intersection) const
 	{
 		float t2 = DotProduct(normal, lineVect);
 

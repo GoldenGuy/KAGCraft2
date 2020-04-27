@@ -15,22 +15,22 @@ class AABB
 		dim = Vec3f(0,0,0);
 	}
 	
-	AABB(Vec3f _min, Vec3f _max)
+	AABB(const Vec3f&in _min, const Vec3f&in _max)
 	{
 		min = _min;
 		max = _max;
 		UpdateAttributes();
 	}
 	
-	AABB(Vec3f middle, f32 range)
+	AABB(const Vec3f&in middle, float range)
 	{
 		min = middle-range;
 		max = middle+range;
 		UpdateAttributes();
 	}
 
-	AABB opAdd(const Vec3f &in oof) { return AABB(min + oof, max + oof); }
-	AABB opSub(const Vec3f &in oof) { return AABB(min - oof, max - oof); }
+	AABB opAdd(const Vec3f&in oof) { return AABB(min + oof, max + oof); }
+	AABB opSub(const Vec3f&in oof) { return AABB(min - oof, max - oof); }
 	
 	void UpdateAttributes()
 	{
@@ -40,11 +40,11 @@ class AABB
 
 		center = dim / 2.0f + min;
 
-		corner = Maths::Pow( Maths::Pow(dim.x, 3) + Maths::Pow(dim.y, 3) + Maths::Pow(dim.z, 3), 1.0f / 3.0f) * 0.86f;
+		corner = Maths::Pow( Maths::Pow(dim.x, 3) + Maths::Pow(dim.y, 3) + Maths::Pow(dim.z, 3), 1.0f / 3.0f) * 0.55f;
 	}
 }
 
-bool testAABBAABB(AABB a, AABB b)
+bool testAABBAABB(const AABB&in a, const AABB&in b)
 {
     if ( a.min.x > b.max.x || a.max.x < b.min.x ) {return false;}
     if ( a.min.y > b.max.y || a.max.y < b.min.y ) {return false;}

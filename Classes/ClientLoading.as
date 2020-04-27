@@ -87,11 +87,9 @@ bool isLoading(CRules@ this)
 	}
     else if(!player_ready)
     {
-        //Camera _cam();
-        //@cam = @_cam;
-        //@my_player.cam = @cam;
-		Player _my_player();
+        Player _my_player();
         @my_player = @_my_player;
+		
         my_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
 		my_player.SetBlob(getLocalPlayerBlob());
 		my_player.SetPlayer(getLocalPlayer());

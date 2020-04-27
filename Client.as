@@ -74,7 +74,7 @@ void onTick(CRules@ this)
 	}
 }
 
-void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
+void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 {
 	Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
 	if(cmd == this.getCommandID("S_SendMapPacket"))
@@ -117,7 +117,7 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 			}
 			else
 			{
-				f32 temp_float = params.read_f32();
+				float temp_float = params.read_f32();
 				temp_float = params.read_f32();
 				temp_float = params.read_f32();
 				temp_float = params.read_f32();
@@ -128,10 +128,10 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 	}
 	else if(cmd == this.getCommandID("C_ChangeBlock"))
 	{
-		u8 block = params.read_u8();
-		f32 x = params.read_f32();
-		f32 y = params.read_f32();
-		f32 z = params.read_f32();
+		uint8 block = params.read_u8();
+		float x = params.read_f32();
+		float y = params.read_f32();
+		float z = params.read_f32();
 
 		world.map[y][z][x] = block;
     	world.UpdateBlocksAndChunks(x, y, z);
@@ -252,10 +252,10 @@ void onRender(CRules@ this)
 	if(getLocalPlayer() is null) return;
 	if(isLoading(this))
 	{
-		f32 percent = 0;
+		float percent = 0;
 		if(!ask_map) percent = 1;
-		else if(!map_ready) percent = f32(got_packets)/f32(amount_of_packets);
-		else if(!faces_generated) percent = f32(gf_packet)/f32(gf_amount_of_packets);
+		else if(!map_ready) percent = float(got_packets)/float(amount_of_packets);
+		else if(!faces_generated) percent = float(gf_packet)/float(gf_amount_of_packets);
 		else percent = 1;
 
 		GUI::DrawProgressBar(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-20), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+20), percent);

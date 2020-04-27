@@ -20,8 +20,8 @@ class Player
 	bool Crouch = false;
 	bool Frozen = false;
     //Camera@ camera;
-	f32 dir_x = 0.01f;
-	f32 dir_y = 0.01f;
+	float dir_x = 0.01f;
+	float dir_y = 0.01f;
 	Vec3f look_dir;
 
 	Player(){}
@@ -38,13 +38,13 @@ class Player
 
     void Update()
     {
-        f32 temp_friction = friction;
+        float temp_friction = friction;
 		
 		CControls@ c = getControls();
 		Driver@ d = getDriver();
 		if(blob !is null && d !is null && c !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null)
 		{
-			Vec2f ScrMid = Vec2f(f32(getScreenWidth()) / 2.0f, f32(getScreenHeight()) / 2.0f);
+			Vec2f ScrMid = Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f);
 			Vec2f dir = (c.getMouseScreenPos() - ScrMid);
 			
 			dir_x += dir.x*sensitivity;
@@ -64,7 +64,7 @@ class Player
 
 			{
 				Vec3f hit_pos;
-				u8 check = RaycastWorld(camera.pos, look_dir, 40, hit_pos);
+				uint8 check = RaycastWorld(camera.pos, look_dir, 40, hit_pos);
 				if(check == Raycast::S_HIT)
 				{
 					DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
@@ -96,7 +96,7 @@ class Player
 					vel_dir.x += 1;
 				}
 
-				f32 temp_acceleration = acceleration*6.0f;
+				float temp_acceleration = acceleration*6.0f;
 
 				vel_dir.RotateXZ(-dir_x);
 				vel_dir.Normalize();
@@ -134,7 +134,7 @@ class Player
 					vel_dir.x += 1;
 				}
 
-				f32 temp_acceleration = acceleration;
+				float temp_acceleration = acceleration;
 
 				Crouch = false;
 
@@ -189,7 +189,7 @@ class Player
 			}
 		}
 
-		CollisionResponse(@pos, @vel);
+		CollisionResponse(pos, vel);
 
 		//pos = Vec3f(Maths::Clamp(pos.x, player_diameter/1.9f, map_width-player_diameter/1.9f), Maths::Clamp(pos.y, 0, map_height-player_height), Maths::Clamp(pos.z, player_diameter/1.9f, map_depth-player_diameter/1.9f));
 
@@ -211,7 +211,7 @@ class Player
 			}
 		}
 
-		f32 vel_len = vel.Length();
+		float vel_len = vel.Length();
 
 		if(vel.x < 0.0001f && vel.x > -0.0001f) vel.x = 0;
 		if(vel.y < 0.0001f && vel.y > -0.0001f) vel.y = 0;
@@ -245,7 +245,7 @@ class Player
 	}
 }
 
-void CollisionResponse(Vec3f @position, Vec3f @velocity)
+void CollisionResponse(Vec3f&inout position, Vec3f&inout velocity)
 {
 	//x collision
 	Vec3f xPosition(position.x + velocity.x, position.y, position.z);
@@ -296,7 +296,7 @@ void CollisionResponse(Vec3f @position, Vec3f @velocity)
 	position.y += velocity.y;
 }
 
-bool isColliding(Vec3f position, Vec3f next_position)
+bool isColliding(const Vec3f&in position, const Vec3f&in next_position)
 {
 	float x_negative = next_position.x - player_radius; if(x_negative < 0) x_negative -= 1;
 	int x_end = next_position.x + player_radius;

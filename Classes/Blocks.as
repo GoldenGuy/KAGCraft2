@@ -147,7 +147,7 @@ class Block
     }
 }
 
-void AddBlock(string name, bool solid, bool see_through, int allsides)
+void AddBlock(const string&in name, bool solid, bool see_through, int allsides)
 {
     Debug("name: "+name, 2);
     Block newblock;
@@ -162,7 +162,7 @@ void AddBlock(string name, bool solid, bool see_through, int allsides)
     counter++;
 }
 
-void AddBlock(string name, bool solid, bool see_through, int sides, int top_and_bottom)
+void AddBlock(const string&in name, bool solid, bool see_through, int sides, int top_and_bottom)
 {
     Debug("name: "+name, 2);
     Block newblock;
@@ -177,7 +177,7 @@ void AddBlock(string name, bool solid, bool see_through, int sides, int top_and_
     counter++;
 }
 
-void AddBlock(string name, bool solid, bool see_through, int sides, int top, int bottom)
+void AddBlock(const string&in name, bool solid, bool see_through, int sides, int top, int bottom)
 {
     Debug("name: "+name, 2);
     Block newblock;
@@ -192,7 +192,7 @@ void AddBlock(string name, bool solid, bool see_through, int sides, int top, int
     counter++;
 }
 
-void AddPlantBlock(string name, int sides)
+void AddPlantBlock(const string&in name, int sides)
 {
     Block newblock;
     newblock.id = counter;

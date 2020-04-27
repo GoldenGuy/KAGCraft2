@@ -113,41 +113,57 @@ class Frustum
 	// stolen from irrlicht :)
 	Vec3f getFarLeftUp()
 	{
-		return plane1.getIntersectionWithPlanes(plane4, plane2, p);
+		Vec3f p;
+		plane1.getIntersectionWithPlanes(plane4, plane2, p);
+		return p;
 	}
 
 	Vec3f getFarLeftDown()
 	{
-		return plane1.getIntersectionWithPlanes(plane5, plane2, p);
+		Vec3f p;
+		plane1.getIntersectionWithPlanes(plane5, plane2, p);
+		return p;
 	}
 
 	Vec3f getFarRightUp()
 	{
-		return plane1.getIntersectionWithPlanes(plane4, plane3, p);
+		Vec3f p;
+		plane1.getIntersectionWithPlanes(plane4, plane3, p);
+		return p;
 	}
 
 	Vec3f getFarRightDown()
 	{
-		return plane1.getIntersectionWithPlanes(plane5, plane3, p);
+		Vec3f p;
+		plane1.getIntersectionWithPlanes(plane5, plane3, p);
+		return p;
 	}
 
 	Vec3f getNearLeftUp()
 	{
-		return plane0.getIntersectionWithPlanes(plane4, plane2, p);
+		Vec3f p;
+		plane0.getIntersectionWithPlanes(plane4, plane2, p);
+		return p;
 	}
 
 	Vec3f getNearLeftDown()
 	{
-		return plane0.getIntersectionWithPlanes(plane5, plane2, p);
+		Vec3f p;
+		plane0.getIntersectionWithPlanes(plane5, plane2, p);
+		return p;
 	}
 
 	Vec3f getNearRightUp()
 	{
-		return plane0.getIntersectionWithPlanes(plane4,plane3, p);
+		Vec3f p;
+		plane0.getIntersectionWithPlanes(plane4,plane3, p);
+		return p;
 	}
 
 	Vec3f getNearRightDown()
 	{
-		return plane0.getIntersectionWithPlanes(plane5, plane3, p);
+		Vec3f p;
+		plane0.getIntersectionWithPlanes(plane5, plane3, p);
+		return p;
 	}
 }

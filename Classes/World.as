@@ -1,21 +1,21 @@
 
 #include "Blocks.as"
 
-const u32 chunk_width = 16;
-const u32 chunk_depth = 16;
-const u32 chunk_height = 14;
+const uint32 chunk_width = 16;
+const uint32 chunk_depth = 16;
+const uint32 chunk_height = 14;
 
-u32 world_width = 8;
-u32 world_depth = 8;
-u32 world_height = 4;
-u32 world_width_depth = world_width * world_depth;
-u32 world_size = world_width_depth * world_height;
+uint32 world_width = 8;
+uint32 world_depth = 8;
+uint32 world_height = 4;
+uint32 world_width_depth = world_width * world_depth;
+uint32 world_size = world_width_depth * world_height;
 
-u32 map_width = world_width * chunk_width;
-u32 map_depth = world_depth * chunk_depth;
-u32 map_height = world_height * chunk_height;
-u32 map_width_depth = map_width * map_depth;
-u32 map_size = map_width_depth * map_height;
+uint32 map_width = world_width * chunk_width;
+uint32 map_depth = world_depth * chunk_depth;
+uint32 map_height = world_height * chunk_height;
+uint32 map_width_depth = map_width * map_depth;
+uint32 map_size = map_width_depth * map_height;
 
 float sample_frequency = 0.02f;
 float fractal_frequency = 0.02f;
@@ -25,8 +25,8 @@ float dirt_start = 0.16f;
 class World
 {
     // y z x
-    u8[][][] map;
-    u8[][][] faces_bits;
+    uint8[][][] map;
+    uint8[][][] faces_bits;
     Chunk@[] chunks;
     bool poop = true;
 
@@ -36,7 +36,7 @@ class World
         map.clear();
         Debug("map_size: "+map_size, 2);
 
-        u32 seed = (1147483646*Time_Local()) % 500000;
+        uint32 seed = (1147483646*Time_Local()) % 500000;
 
         Debug("map seed: "+seed, 2);
 
@@ -49,7 +49,7 @@ class World
         trees.clear();
         
         //map.resize(map_height);
-        u8[][][] _map(map_height, u8[][](map_depth, u8[](map_width, 0)));
+        uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
         map = _map;
         for(float y = 0.0f; y < map_height; y += 1.0f)
         {
@@ -60,18 +60,18 @@ class World
                 //map[y][z].resize(map_width);
                 for(float x = 0.0f; x < map_width; x += 1.0f)
                 {
-                    //u32 index = y*map_width_depth + z*map_width + x;
+                    //uint32 index = y*map_width_depth + z*map_width + x;
 
-                    u32 tree_rand = rand.NextRanged(200);
+                    uint32 tree_rand = rand.NextRanged(200);
                     bool make_tree = tree_rand == 1;
                     
-                    /*u32 grass_rand = rand.NextRanged(8);
+                    /*uint32 grass_rand = rand.NextRanged(8);
                     bool make_grass = grass_rand == 1;
                     
-                    u32 flower_rand = rand.NextRanged(20);
+                    uint32 flower_rand = rand.NextRanged(20);
                     bool make_flower = flower_rand == 1;
                 
-                    u32 flower_type_rand = rand.NextRanged(2);
+                    uint32 flower_type_rand = rand.NextRanged(2);
                     bool flower_type = flower_type_rand == 1;*/
                     
                     float h = noise.Sample(x * sample_frequency, z * sample_frequency) * (noise.Fractal(x * fractal_frequency, z * fractal_frequency)/2) + add_height;//+Maths::Pow(y / float(map_height), 1.1024f)-0.5;
@@ -139,19 +139,19 @@ class World
 
     void ClientMapSetUp()
     {
-        u8[][][] _map(map_height, u8[][](map_depth, u8[](map_width, 0)));
+        uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
         map = _map;
     }
     
     void FacesSetUp()
     {
-        u8[][][] _faces_bits(map_height, u8[][](map_depth, u8[](map_width, 0)));
+        uint8[][][] _faces_bits(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
         faces_bits = _faces_bits;
     }
 
     void MakeTree(Vec3f pos)
 	{
-		u8 tree_type = block_log;
+		uint8 tree_type = block_log;
 		if(XORRandom(3) == 0)
 			tree_type = block_log_birch;
 		if(inWorldBounds(pos.x, pos.y, pos.z))
@@ -210,7 +210,7 @@ class World
 		getNet().server_KeepConnectionsAlive();
 	}
 
-    void SetBlock(int x, int y, int z, u8 block_id)
+    void SetBlock(int x, int y, int z, uint8 block_id)
     {
         if(inWorldBounds(x, y, z)) map[y][z][x] = block_id;
     }
@@ -225,14 +225,14 @@ class World
         }
     }
 
-    void GenerateBlockFaces(u32 _gf_packet)
+    void GenerateBlockFaces(uint32 _gf_packet)
     {
-        u32 start = _gf_packet*gf_packet_size;
-        u32 end = start+gf_packet_size;
+        uint32 start = _gf_packet*gf_packet_size;
+        uint32 end = start+gf_packet_size;
         Vec3f pos;
-        u8 block_id;
+        uint8 block_id;
 
-        for(u32 i = start; i < end; i++)
+        for(uint32 i = start; i < end; i++)
         {
             pos = getPosFromWorldIndex(i);
             if(map[pos.y][pos.z][pos.x] == block_air) continue;
@@ -243,7 +243,7 @@ class World
 
     void UpdateBlockFaces(int x, int y, int z)
     {
-        u8 faces = 0;
+        uint8 faces = 0;
 
         if(z > 0 && Blocks[map[y][z-1][x]].see_through) faces += 1;
         if(z < map_depth-1 && Blocks[map[y][z+1][x]].see_through) faces += 2;
@@ -266,17 +266,17 @@ class World
         return Vec3f(index % map_width, index / map_width_depth, (index / map_width) % map_depth);
     }
 
-    void Serialize(CBitStream@ to_send, u32 packet)
+    void Serialize(CBitStream@ to_send, uint32 packet)
     {
-        u32 start = packet*ms_packet_size;
-        u32 end = start+ms_packet_size;
+        uint32 start = packet*ms_packet_size;
+        uint32 end = start+ms_packet_size;
         Vec3f pos;
-        u8 block_id;
+        uint8 block_id;
 
-        u32 similars = 0;
-        u8 similar_block_id = 0;
+        uint32 similars = 0;
+        uint8 similar_block_id = 0;
 
-        for(u32 i = start; i < end; i++)
+        for(uint32 i = start; i < end; i++)
         {
             pos = getPosFromWorldIndex(i);
             block_id = map[pos.y][pos.z][pos.x];
@@ -307,20 +307,20 @@ class World
         to_send.write_u8(similar_block_id);
     }
 
-    void UnSerialize(u32 packet)
+    void UnSerialize(uint32 packet)
     {
-        u32 start = packet*ms_packet_size;
-        u32 end = start+ms_packet_size;
+        uint32 start = packet*ms_packet_size;
+        uint32 end = start+ms_packet_size;
         Vec3f pos;
-        u8 block_id;
+        uint8 block_id;
 
-        u32 index = 0;
+        uint32 index = 0;
 
         while(index < ms_packet_size)
         {
-            u32 amount = map_packet.read_u32();
-            u8 block_id = map_packet.read_u8();
-            for(u32 j = 0; j < amount; j++)
+            uint32 amount = map_packet.read_u32();
+            uint8 block_id = map_packet.read_u8();
+            for(uint32 j = 0; j < amount; j++)
             {
                 if(index == ms_packet_size)
                 {
@@ -333,14 +333,14 @@ class World
         }
     }
 
-    /*void Serialize(CBitStream@ to_send, u32 packet)
+    /*void Serialize(CBitStream@ to_send, uint32 packet)
     {
-        u32 start = packet*ms_packet_size;
-        u32 end = start+ms_packet_size;
+        uint32 start = packet*ms_packet_size;
+        uint32 end = start+ms_packet_size;
         Vec3f pos;
-        u8 block_id;
+        uint8 block_id;
 
-        for(u32 i = start; i < end; i++)
+        for(uint32 i = start; i < end; i++)
         {
             pos = getPosFromWorldIndex(i);
             block_id = map[pos.y][pos.z][pos.x];
@@ -350,19 +350,19 @@ class World
         }
     }
 
-    void UnSerialize(u32 packet)
+    void UnSerialize(uint32 packet)
     {
-        u32 start = packet*ms_packet_size;
-        u32 end = start+ms_packet_size;
+        uint32 start = packet*ms_packet_size;
+        uint32 end = start+ms_packet_size;
         Vec3f pos;
-        u8 block_id;
+        uint8 block_id;
 
-        // skip 16 u8's
+        // skip 16 uint8's
         //map_packet.SetBitIndex(16*8*2);
 
-        for(u32 i = start; i < end; i++)
+        for(uint32 i = start; i < end; i++)
         {
-            block_id = map_packet.read_u8();
+            block_id = map_packet.read_uint8();
             pos = getPosFromWorldIndex(i);
             map[pos.y][pos.z][pos.x] = block_id;
 
@@ -499,7 +499,7 @@ class Chunk
 
                     if(faces == 0) continue;
 
-                    u8 block = _world.map[_y][_z][_x];
+                    uint8 block = _world.map[_y][_z][_x];
 
                     Block@ b = Blocks[block];
                     addFaces(@b, faces, Vec3f(_x,_y,_z));
@@ -517,7 +517,7 @@ class Chunk
         visible = true;
     }
 
-    void addFaces(Block@ b, u8 face_info, Vec3f pos)
+    void addFaces(Block@ b, uint8 face_info, const Vec3f&in pos)
 	{
 		switch(face_info)
 		{
@@ -588,7 +588,7 @@ class Chunk
 		}
 	}
 	
-	void addFrontFace(Block@ b, Vec3f pos)
+	void addFrontFace(Block@ b, const Vec3f&in pos)
 	{
 		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z,	b.sides_start_u,	b.sides_start_v,	front_scol));
 		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,	b.sides_end_u,	    b.sides_start_v,	front_scol));
@@ -596,7 +596,7 @@ class Chunk
 		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z,	b.sides_start_u,	b.sides_end_v,	    front_scol));
 	}
 	
-	void addBackFace(Block@ b, Vec3f pos)
+	void addBackFace(Block@ b, const Vec3f&in pos)
 	{
 		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.sides_start_u,	b.sides_start_v,	back_scol));
 		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.sides_end_u,	    b.sides_start_v,	back_scol));
@@ -604,7 +604,7 @@ class Chunk
 		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.sides_start_u,	b.sides_end_v,		back_scol));
 	}
 	
-	void addUpFace(Block@ b, Vec3f pos)
+	void addUpFace(Block@ b, const Vec3f&in pos)
 	{
 		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.top_start_u,	b.top_start_v,	top_scol));
 		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.top_end_u,    b.top_start_v,	top_scol));
@@ -612,7 +612,7 @@ class Chunk
 		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		b.top_start_u,	b.top_end_v,    top_scol));
 	}
 	
-	void addDownFace(Block@ b, Vec3f pos)
+	void addDownFace(Block@ b, const Vec3f&in pos)
 	{
 		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z,		b.bottom_start_u,	b.bottom_start_v,	bottom_scol));
 		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		b.bottom_end_u,	    b.bottom_start_v,	bottom_scol));
@@ -620,7 +620,7 @@ class Chunk
 		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.bottom_start_u,	b.bottom_end_v,		bottom_scol));
 	}
 	
-	void addRightFace(Block@ b, Vec3f pos)
+	void addRightFace(Block@ b, const Vec3f&in pos)
 	{
 		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		b.sides_start_u,	b.sides_start_v,	right_scol));
 		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.sides_end_u,	    b.sides_start_v,	right_scol));
@@ -628,7 +628,7 @@ class Chunk
 		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		b.sides_start_u,	b.sides_end_v,		right_scol));
 	}
 	
-	void addLeftFace(Block@ b, Vec3f pos)
+	void addLeftFace(Block@ b, const Vec3f&in pos)
 	{
 		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.sides_start_u,	b.sides_start_v,	left_scol));
         mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		b.sides_end_u,	    b.sides_start_v,	left_scol));
@@ -642,13 +642,13 @@ class Chunk
     }
 }
 
-const u8 debug_alpha =	255;
-const u8 top_col =		255;
-const u8 bottom_col =	166;
-const u8 left_col =		191;
-const u8 right_col =	191;
-const u8 front_col =	230;
-const u8 back_col =		230;
+const uint8 debug_alpha =	255;
+const uint8 top_col =		255;
+const uint8 bottom_col =	166;
+const uint8 left_col =		191;
+const uint8 right_col =	    191;
+const uint8 front_col =	    230;
+const uint8 back_col =		230;
 
 const SColor top_scol = SColor(debug_alpha, top_col, top_col, top_col);
 const SColor bottom_scol = SColor(debug_alpha, bottom_col, bottom_col, bottom_col);
@@ -657,7 +657,7 @@ const SColor right_scol = SColor(debug_alpha, right_col, right_col, right_col);
 const SColor front_scol = SColor(debug_alpha, front_col, front_col, front_col);
 const SColor back_scol = SColor(debug_alpha, back_col, back_col, back_col);
 
-void server_SetBlock(u8 block, Vec3f pos)
+void server_SetBlock(uint8 block, const Vec3f&in pos)
 {
     if(!isServer())
     {
@@ -676,8 +676,8 @@ void server_SetBlock(u8 block, Vec3f pos)
 
 // map sending and receiving
 
-u32 amount_of_packets = world_height * world_depth;
-u32 ms_packet_size = map_size / amount_of_packets;
+uint32 amount_of_packets = world_height * world_depth;
+uint32 ms_packet_size = map_size / amount_of_packets;
 
 // server
 
@@ -685,7 +685,7 @@ MapSender[] players_to_send;
 class MapSender
 {
     CPlayer@ player;
-    u32 packet_number = 0;
+    uint32 packet_number = 0;
     bool ready;
 
     MapSender(CPlayer@ _player)
@@ -699,9 +699,9 @@ class MapSender
 // client
 
 CBitStream map_packet;
-u32 got_packets;
+uint32 got_packets;
 bool ready_unser;
 
-u32 gf_amount_of_packets = world_height * world_depth;
-u32 gf_packet_size = map_size / gf_amount_of_packets;
-u32 gf_packet;
+uint32 gf_amount_of_packets = world_height * world_depth;
+uint32 gf_packet_size = map_size / gf_amount_of_packets;
+uint32 gf_packet;

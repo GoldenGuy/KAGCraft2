@@ -13,7 +13,7 @@ namespace Raycast
 	}
 }
 	
-u8 RaycastPrecise(Vec3f ray_pos, Vec3f ray_dir, int max_dist, Vec3f &out hit_pos, bool ignore_nonsolid)
+uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, int max_dist, Vec3f&out hit_pos, bool ignore_nonsolid)
 {
 	Vec3f ray_world_pos(int(ray_pos.x), int(ray_pos.y), int(ray_pos.z));
 	Vec3f delta_dist(
@@ -53,8 +53,8 @@ u8 RaycastPrecise(Vec3f ray_pos, Vec3f ray_dir, int max_dist, Vec3f &out hit_pos
 		step.z = 1;
 		side_dist.z = (ray_world_pos.z + 1.0f - ray_pos.z) * delta_dist.z;
 	}
-	u8 side = 0;
-	while(max_dist > (ray_world_pos-ray_pos+Vec3f(0.5,0.5,0.5)).Length())
+	uint8 side = 0;
+	while(max_dist > (ray_world_pos-ray_pos+Vec3f(0.5f, 0.5f, 0.5f)).Length())
 	{
 		if(side_dist.x < side_dist.y)
 		{
@@ -102,7 +102,7 @@ u8 RaycastPrecise(Vec3f ray_pos, Vec3f ray_dir, int max_dist, Vec3f &out hit_pos
 				side = 2;
 			}
 		}
-		u8 check = world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
+		uint8 check = world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
 		if((ignore_nonsolid && Blocks[check].solid) || (!ignore_nonsolid && check != block_air))
 		{
 			if(side == 0)
@@ -123,7 +123,7 @@ u8 RaycastPrecise(Vec3f ray_pos, Vec3f ray_dir, int max_dist, Vec3f &out hit_pos
 	return Raycast::S_TOOFAR;
 }
 
-u8 RaycastWorld_Previous(Vec3f ray_pos, Vec3f ray_dir, int max_dist, Vec3f &out hit_pos)
+uint8 RaycastWorld_Previous(const Vec3f&in ray_pos, const Vec3f&in ray_dir, int max_dist, Vec3f&out hit_pos)
 {
 	Vec3f ray_world_pos(int(ray_pos.x), int(ray_pos.y), int(ray_pos.z));
 	Vec3f delta_dist(
@@ -163,7 +163,7 @@ u8 RaycastWorld_Previous(Vec3f ray_pos, Vec3f ray_dir, int max_dist, Vec3f &out 
 		step.z = 1;
 		side_dist.z = (ray_world_pos.z + 1.0f - ray_pos.z) * delta_dist.z;
 	}
-	while(max_dist > (ray_world_pos-ray_pos+Vec3f(0.5,0.5,0.5)).Length())
+	while(max_dist > (ray_world_pos-ray_pos+Vec3f(0.5f, 0.5f, 0.5)).Length())
 	{
 		hit_pos = ray_world_pos;
 		if(side_dist.x < side_dist.y)
@@ -208,7 +208,7 @@ u8 RaycastWorld_Previous(Vec3f ray_pos, Vec3f ray_dir, int max_dist, Vec3f &out 
 				}
 			}
 		}
-		u8 check = world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
+		uint8 check = world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
 		if(check != block_air)
 		{
 			return Raycast::S_HIT;
@@ -217,7 +217,7 @@ u8 RaycastWorld_Previous(Vec3f ray_pos, Vec3f ray_dir, int max_dist, Vec3f &out 
 	return Raycast::S_TOOFAR;
 }
 
-u8 RaycastWorld(Vec3f ray_pos, Vec3f ray_dir, int max_dist, Vec3f &out hit_pos)
+uint8 RaycastWorld(const Vec3f&in ray_pos, const Vec3f&in ray_dir, int max_dist, Vec3f&out hit_pos)
 {
 	Vec3f ray_world_pos(int(ray_pos.x), int(ray_pos.y), int(ray_pos.z));
 	Vec3f delta_dist(
@@ -257,7 +257,7 @@ u8 RaycastWorld(Vec3f ray_pos, Vec3f ray_dir, int max_dist, Vec3f &out hit_pos)
 		step.z = 1;
 		side_dist.z = (ray_world_pos.z + 1.0f - ray_pos.z) * delta_dist.z;
 	}
-	while(max_dist > (ray_world_pos-ray_pos+Vec3f(0.5,0.5,0.5)).Length())
+	while(max_dist > (ray_world_pos-ray_pos+Vec3f(0.5f, 0.5f, 0.5f)).Length())
 	{
 		if(side_dist.x < side_dist.y)
 		{
@@ -301,7 +301,7 @@ u8 RaycastWorld(Vec3f ray_pos, Vec3f ray_dir, int max_dist, Vec3f &out hit_pos)
 				}
 			}
 		}
-		u8 check = world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
+		uint8 check = world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
 		if(check != block_air)
 		{
 			hit_pos = ray_world_pos;

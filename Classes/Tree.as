@@ -19,7 +19,7 @@ class Root
 
     void Init()
     {
-        box = AABB(Vec3f(0,0,0), Vec3f(map_width, map_height, map_depth));
+        box = AABB(Vec3f(0, 0, 0), Vec3f(map_width, map_height, map_depth));
 
         Branch _BRxz(Vec3f(0, 0, 0),                      Vec3f(map_width/2, map_height, map_depth/2));
         Branch _BRx1z(Vec3f(map_width/2, 0, 0),            Vec3f(map_width, map_height, map_depth/2));
@@ -69,7 +69,7 @@ class Branch
 
     Branch(){}
 
-    Branch(Vec3f pos_start, Vec3f pos_end)
+    Branch(const Vec3f&in pos_start, const Vec3f&in pos_end)
     {
         box = AABB(pos_start, pos_end);
 

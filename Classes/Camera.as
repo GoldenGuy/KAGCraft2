@@ -6,23 +6,23 @@ class Camera
 	float[] view;
 	float[] projection;
 	
-	f32 dir_x;
-	f32 dir_y;
-	f32 dir_z;
-	f32 next_dir_x;
-	f32 next_dir_y;
-	f32 next_dir_z;
-	f32 interpolated_dir_x;
-	f32 interpolated_dir_y;
-	f32 interpolated_dir_z;
+	float dir_x;
+	float dir_y;
+	float dir_z;
+	float next_dir_x;
+	float next_dir_y;
+	float next_dir_z;
+	float interpolated_dir_x;
+	float interpolated_dir_y;
+	float interpolated_dir_z;
 	Vec3f pos;
 	Vec3f next_pos;
 	Vec3f interpolated_pos;
 	Vec3f frustum_pos;
 	
-	f32 fov;
-	f32 z_near;
-	f32 z_far;
+	float fov;
+	float z_near;
+	float z_far;
 	
 	Frustum frustum;
 	
@@ -44,11 +44,11 @@ class Camera
 		pos = Vec3f();
 		next_pos = Vec3f();
 
-		Matrix::MakePerspective(projection, fov, f32(getDriver().getScreenWidth()) / f32(getDriver().getScreenHeight()), z_near, z_far);
+		Matrix::MakePerspective(projection, fov, float(getDriver().getScreenWidth()) / float(getDriver().getScreenHeight()), z_near, z_far);
 		updateFrustum();
 	}
 	
-	void move(Vec3f nextpos, bool instantly)
+	void move(const Vec3f&in nextpos, bool instantly)
 	{
 		next_pos = nextpos;
 		if(instantly)
@@ -57,7 +57,7 @@ class Camera
 		}
 	}
 	
-	void turn(f32 nextdir_x, f32 nextdir_y, f32 nextdir_z, bool instantly)
+	void turn(float nextdir_x, float nextdir_y, float nextdir_z, bool instantly)
 	{
 		next_dir_x = nextdir_x;
 		next_dir_y = nextdir_y;
@@ -78,7 +78,7 @@ class Camera
 		interpolated_dir_z = Maths::Lerp(dir_z, next_dir_z, getInterFrameTime());
 		interpolated_pos = pos.Lerp(next_pos, getInterFrameTime());
 		
-		//Matrix::MakePerspective(projection, fov, f32(getDriver().getScreenWidth()) / f32(getDriver().getScreenHeight()), z_near, z_far);
+		//Matrix::MakePerspective(projection, fov, float(getDriver().getScreenWidth()) / float(getDriver().getScreenHeight()), z_near, z_far);
 		makeMatrix();
 	}
 	
@@ -128,21 +128,4 @@ class Camera
 	{
 		return interpolated_pos;
 	}
-	
-	void getInterpolatedAngle(f32 &out temp_dir_x, f32 &out temp_dir_y, f32 &out temp_dir_z)
-	{
-		temp_dir_x = interpolated_dir_x;
-		temp_dir_y = interpolated_dir_y;
-		temp_dir_z = interpolated_dir_z;
-	}
-}
-
-float[] Matrix_Multiply(float[] first, float[] second) // inbuilt function is retarded
-{
-	float[] new(16);
-	for(int i = 0; i < 4; i++)
-		for(int j = 0; j < 4; j++)
-			for(int k = 0; k < 4; k++)
-				new[i+j*4] += first[i+k*4] * second[j+k*4];
-	return new;
 }
