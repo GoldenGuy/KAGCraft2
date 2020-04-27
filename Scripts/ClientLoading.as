@@ -117,7 +117,33 @@ bool isLoading(CRules@ this)
 		my_player.SetPlayer(getLocalPlayer());
         player_ready = true;
 		Render::addScript(Render::layer_background, "Client.as", "Render", 1);
+
+		for(int i = 0; i < block_queue.size(); i++)
+		{
+			Vec3f pos = block_queue[i].pos;
+			uint8 block = block_queue[i].block;
+			world.map[pos.y][pos.z][pos.x] = block;
+    		world.UpdateBlocksAndChunks(pos.x, pos.y, pos.z);
+		}
+		block_queue.clear();
+
 		return true;
     }
     return false;
+}
+
+BlockToPlace[] block_queue;
+
+class BlockToPlace
+{
+	Vec3f pos;
+	uint8 block;
+
+	BlockToPlace(){}
+
+	BlockToPlace(const Vec3f&in _pos, uint8 _block)
+	{
+		pos = _pos;
+		block = _block;
+	}
 }

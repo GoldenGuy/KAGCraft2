@@ -5,9 +5,9 @@ const uint32 chunk_width = 16;
 const uint32 chunk_depth = 16;
 const uint32 chunk_height = 14;
 
-uint32 world_width = 8;
-uint32 world_depth = 8;
-uint32 world_height = 4;
+uint32 world_width = 16;
+uint32 world_depth = 16;
+uint32 world_height = 8;
 uint32 world_width_depth = world_width * world_depth;
 uint32 world_size = world_width_depth * world_height;
 
@@ -21,6 +21,8 @@ float sample_frequency = 0.02f;
 float fractal_frequency = 0.02f;
 float add_height = 0.16f;
 float dirt_start = 0.16f;
+float tree_frequency = 0.06f;
+float grass_frequency = 0.04f;
 
 class World
 {
@@ -59,8 +61,16 @@ class World
                 {
                     //uint32 index = y*map_width_depth + z*map_width + x;
 
-                    uint32 tree_rand = rand.NextRanged(200);
-                    bool make_tree = tree_rand == 1;
+                    //uint32 tree_rand = rand.NextRanged(200);
+                    //float tree_rand = noise.Sample(x*tree_frequency, z*tree_frequency);
+                    //print("tree_rand: "+tree_rand);
+                    bool make_tree = noise.Sample((map_width+x)*tree_frequency, z*tree_frequency) > 0.7;//tree_rand == 1;
+                    if(make_tree && rand.NextRanged(50) > 2) make_tree = false;
+
+                    bool make_grass = noise.Sample(x*grass_frequency, (map_depth+z)*grass_frequency) > 0.5;//tree_rand == 1;
+                    if(make_grass && rand.NextRanged(50) > 40) make_grass = false;
+                    bool make_flower = rand.NextRanged(24) == 1;
+                    bool flower_type = rand.NextRanged(4) >= 2;
                     
                     /*uint32 grass_rand = rand.NextRanged(8);
                     bool make_grass = grass_rand == 1;
@@ -71,7 +81,7 @@ class World
                     uint32 flower_type_rand = rand.NextRanged(2);
                     bool flower_type = flower_type_rand == 1;*/
                     
-                    float h = noise.Sample(x * sample_frequency, z * sample_frequency) * (noise.Fractal(x * fractal_frequency, z * fractal_frequency)/2) + add_height;//+Maths::Pow(y / float(map_height), 1.1024f)-0.5;
+                    float h = noise.Sample(x * sample_frequency, z * sample_frequency) * (noise.Fractal(x * fractal_frequency, z * fractal_frequency)/2.0f) + add_height;//+Maths::Pow(y / float(map_height), 1.1024f)-0.5;
                     if(y == 0)
                     {
                         map[y][z][x] = block_bedrock;
@@ -89,24 +99,25 @@ class World
                                     trees.push_back(Vec3f(x,y+1,z));
                                     map[y][z][x] = block_dirt;
                                 }
-                                /*else if(make_grass)
+                                else if(make_grass)
                                 {
                                     if(make_flower)
                                     {
                                         if(flower_type)
                                         {
-                                            set_block(int(x), int(y+1), int(z), block_tulip);
+                                            map[y+1][z][x] = block_tulip;
                                         }
                                         else
                                         {
-                                            set_block(int(x), int(y+1), int(z), block_tdelweiss);
+                                            map[y+1][z][x] = block_edelweiss;
                                         }
                                     }
                                     else
                                     {
-                                        set_block(int(x), int(y+1), int(z), block_grass);
+                                        map[y+1][z][x] = block_grass;
                                     }
-                                }*/
+                                    map[y][z][x] = block_grass_dirt;
+                                }
                                 else map[y][z][x] = block_grass_dirt;
                             }
                         }
@@ -239,9 +250,9 @@ class World
 
     void UpdateBlockFaces(int x, int y, int z)
     {
-        if(map[y][z][x] == block_air)
+        if(map[y][z][x] == block_air || Blocks[map[y][z][x]].plant)
         {
-            faces_bits[y][z][x] = 0;
+            faces_bits[y][z][x] = 64;
             return;
         }
         
@@ -451,7 +462,7 @@ class Chunk
     int x, y, z, world_x, world_y, world_z, world_x_bounds, world_y_bounds, world_z_bounds;
     int index, world_index;
     bool visible, rebuild, empty;
-    Vertex[] mesh;
+    Vertex[] verts;
     AABB box;
 
     Chunk(){}
@@ -489,7 +500,7 @@ class Chunk
     void GenerateMesh()
     {
         rebuild = false;
-        mesh.clear();
+        verts.clear();
 
         for (int _y = world_y; _y < world_y_bounds; _y++)
 		{
@@ -499,18 +510,27 @@ class Chunk
 				{
                     //int index = _world.getIndex(_x, _y, _z);
 
+                    uint8 block = _world.map[_y][_z][_x];
+
+                    if(block == block_air) continue;
+
                     int faces = _world.faces_bits[_y][_z][_x];
 
                     if(faces == 0) continue;
 
-                    uint8 block = _world.map[_y][_z][_x];
-
                     Block@ b = Blocks[block];
-                    addFaces(@b, faces, Vec3f(_x,_y,_z));
+                    if(b.plant)
+                    {
+                        addPlantFaces(@b, Vec3f(_x,_y,_z));
+                    }
+                    else
+                    {
+                        addFaces(@b, faces, Vec3f(_x,_y,_z));
+                    }
                 }
             }
         }
-        if(mesh.size() == 0)
+        if(verts.size() == 0)
         {
             empty = true;
         }
@@ -594,55 +614,78 @@ class Chunk
 	
 	void addFrontFace(Block@ b, const Vec3f&in pos)
 	{
-		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z,	b.sides_start_u,	b.sides_start_v,	front_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,	b.sides_end_u,	    b.sides_start_v,	front_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z,	b.sides_end_u,	    b.sides_end_v,	    front_scol));
-		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z,	b.sides_start_u,	b.sides_end_v,	    front_scol));
+		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z,	b.sides_start_u,	b.sides_start_v,	front_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,	b.sides_end_u,	    b.sides_start_v,	front_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z,	b.sides_end_u,	    b.sides_end_v,	    front_scol));
+		verts.push_back(Vertex(pos.x,	pos.y,		pos.z,	b.sides_start_u,	b.sides_end_v,	    front_scol));
 	}
 	
 	void addBackFace(Block@ b, const Vec3f&in pos)
 	{
-		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.sides_start_u,	b.sides_start_v,	back_scol));
-		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.sides_end_u,	    b.sides_start_v,	back_scol));
-		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.sides_end_u,	    b.sides_end_v,		back_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.sides_start_u,	b.sides_end_v,		back_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.sides_start_u,	b.sides_start_v,	back_scol));
+		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.sides_end_u,	    b.sides_start_v,	back_scol));
+		verts.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.sides_end_u,	    b.sides_end_v,		back_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.sides_start_u,	b.sides_end_v,		back_scol));
 	}
 	
 	void addUpFace(Block@ b, const Vec3f&in pos)
 	{
-		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.top_start_u,	b.top_start_v,	top_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.top_end_u,    b.top_start_v,	top_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		b.top_end_u,    b.top_end_v,    top_scol));
-		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		b.top_start_u,	b.top_end_v,    top_scol));
+		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.top_start_u,	b.top_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.top_end_u,    b.top_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		b.top_end_u,    b.top_end_v,    top_scol));
+		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		b.top_start_u,	b.top_end_v,    top_scol));
 	}
 	
 	void addDownFace(Block@ b, const Vec3f&in pos)
 	{
-		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z,		b.bottom_start_u,	b.bottom_start_v,	bottom_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		b.bottom_end_u,	    b.bottom_start_v,	bottom_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.bottom_end_u,	    b.bottom_end_v,		bottom_scol));
-		mesh.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.bottom_start_u,	b.bottom_end_v,		bottom_scol));
+		verts.push_back(Vertex(pos.x,	pos.y,		pos.z,		b.bottom_start_u,	b.bottom_start_v,	bottom_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		b.bottom_end_u,	    b.bottom_start_v,	bottom_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.bottom_end_u,	    b.bottom_end_v,		bottom_scol));
+		verts.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.bottom_start_u,	b.bottom_end_v,		bottom_scol));
 	}
 	
 	void addRightFace(Block@ b, const Vec3f&in pos)
 	{
-		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		b.sides_start_u,	b.sides_start_v,	right_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.sides_end_u,	    b.sides_start_v,	right_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.sides_end_u,	    b.sides_end_v,		right_scol));
-		mesh.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		b.sides_start_u,	b.sides_end_v,		right_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		b.sides_start_u,	b.sides_start_v,	right_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	b.sides_end_u,	    b.sides_start_v,	right_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	b.sides_end_u,	    b.sides_end_v,		right_scol));
+		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		b.sides_start_u,	b.sides_end_v,		right_scol));
 	}
 	
 	void addLeftFace(Block@ b, const Vec3f&in pos)
 	{
-		mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.sides_start_u,	b.sides_start_v,	left_scol));
-        mesh.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		b.sides_end_u,	    b.sides_start_v,	left_scol));
-        mesh.push_back(Vertex(pos.x,	pos.y,		pos.z,		b.sides_end_u,	    b.sides_end_v,		left_scol));
-        mesh.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.sides_start_u,	b.sides_end_v,		left_scol));
+		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	b.sides_start_u,	b.sides_start_v,	left_scol));
+        verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		b.sides_end_u,	    b.sides_start_v,	left_scol));
+        verts.push_back(Vertex(pos.x,	pos.y,		pos.z,		b.sides_end_u,	    b.sides_end_v,		left_scol));
+        verts.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	b.sides_start_u,	b.sides_end_v,		left_scol));
+	}
+
+    void addPlantFaces(Block@ b, const Vec3f&in pos)
+	{
+		verts.push_back(Vertex(pos.x+0.84f,	pos.y+1,	pos.z+0.84f,	b.sides_start_u,	b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.16f,	pos.y+1,	pos.z+0.16f,	b.sides_end_u,	    b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.16f,	pos.y,		pos.z+0.16f,	b.sides_end_u,	    b.sides_end_v,		top_scol));
+		verts.push_back(Vertex(pos.x+0.84f,	pos.y,		pos.z+0.84f,	b.sides_start_u,	b.sides_end_v,		top_scol));
+
+		verts.push_back(Vertex(pos.x+0.84f,	pos.y+1,	pos.z+0.16f,	b.sides_start_u,	b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.16f,	pos.y+1,	pos.z+0.84f,	b.sides_end_u,	    b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.16f,	pos.y,		pos.z+0.84f,	b.sides_end_u,	    b.sides_end_v,		top_scol));
+		verts.push_back(Vertex(pos.x+0.84f,	pos.y,		pos.z+0.16f,	b.sides_start_u,	b.sides_end_v,		top_scol));
+
+		verts.push_back(Vertex(pos.x+0.16f,	pos.y+1,	pos.z+0.16f,	b.sides_start_u,	b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.84f,	pos.y+1,	pos.z+0.84f,	b.sides_end_u,	    b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.84f,	pos.y,		pos.z+0.84f,	b.sides_end_u,	    b.sides_end_v,		top_scol));
+		verts.push_back(Vertex(pos.x+0.16f,	pos.y,		pos.z+0.16f,	b.sides_start_u,	b.sides_end_v,		top_scol));
+
+		verts.push_back(Vertex(pos.x+0.16f,	pos.y+1,	pos.z+0.84f,	b.sides_start_u,	b.sides_start_v,    top_scol));
+		verts.push_back(Vertex(pos.x+0.84f,	pos.y+1,	pos.z+0.16f,	b.sides_end_u,	    b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.84f,	pos.y,		pos.z+0.16f,	b.sides_end_u,	    b.sides_end_v,		top_scol));
+		verts.push_back(Vertex(pos.x+0.16f,	pos.y,		pos.z+0.84f,	b.sides_start_u,	b.sides_end_v,		top_scol));
 	}
 
     void Render()
     {
-        Render::RawQuads("Block_Textures", mesh);
+        Render::RawQuads("Block_Textures", verts);
     }
 }
 
@@ -680,7 +723,7 @@ void server_SetBlock(uint8 block, const Vec3f&in pos)
 
 // map sending and receiving
 
-uint32 ms_packet_size = chunk_width*chunk_depth*chunk_height*8; // eight chunks per packet
+uint32 ms_packet_size = chunk_width*chunk_depth*chunk_height*16; // 16 chunks per packet
 uint32 amount_of_packets = map_size / ms_packet_size;
 
 // server

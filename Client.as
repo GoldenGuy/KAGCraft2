@@ -22,9 +22,12 @@ void onInit(CRules@ this)
 {
 	Debug("Client init");
 	this.set_bool("ClientLoading", true);
+	block_queue.clear();
+
 	Texture::createFromFile("Block_Textures", "Textures/Blocks_Jenny.png");
 	Texture::createFromFile("Sky_Texture", "Textures/SkyBox.png");
 	Texture::createFromFile("DEBUG", "Textures/Debug.png");
+	Texture::createFromFile("SOLID", "Sprites/pixel.png");
 	InitBlocks();
 
 	Camera _camera;
@@ -82,6 +85,47 @@ void onTick(CRules@ this)
 
 			if(hold_frustum)
 			{
+				Vec3f FLU = camera.frustum.getFarLeftUp();
+				Vec3f FLD = camera.frustum.getFarLeftDown();
+				Vec3f FRU = camera.frustum.getFarRightUp();
+				Vec3f FRD = camera.frustum.getFarRightDown();
+				Vec3f NLU = camera.frustum.getNearLeftUp();
+				Vec3f NLD = camera.frustum.getNearLeftDown();
+				Vec3f NRU = camera.frustum.getNearRightUp();
+				Vec3f NRD = camera.frustum.getNearRightDown();
+
+				frustum_shape.clear();
+
+				frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 0, 0, 0x45AA00AA));
+				frustum_shape.push_back(Vertex(FRU.x, FRU.y, FRU.z, 1, 0, 0x45AA00AA));
+				frustum_shape.push_back(Vertex(FRD.x, FRD.y, FRD.z,	1, 1, 0x45AA00AA));
+				frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z, 0, 1, 0x45AA00AA));
+
+				frustum_shape.push_back(Vertex(NLU.x, NLU.y, NLU.z, 0, 0, 0x45AA00AA));
+				frustum_shape.push_back(Vertex(NRU.x, NRU.y, NRU.z, 1, 0, 0x45AA00AA));
+				frustum_shape.push_back(Vertex(NRD.x, NRD.y, NRD.z,	1, 1, 0x45AA00AA));
+				frustum_shape.push_back(Vertex(NLD.x, NLD.y, NLD.z, 0, 1, 0x45AA00AA));
+
+				frustum_shape.push_back(Vertex(NLU.x, NLU.y, NLU.z, 0, 0, 0x4500AAAA));
+				frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 1, 0, 0x4500AAAA));
+				frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z,	1, 1, 0x4500AAAA));
+				frustum_shape.push_back(Vertex(NLD.x, NLD.y, NLD.z, 0, 1, 0x4500AAAA));
+
+				frustum_shape.push_back(Vertex(FRU.x, FRU.y, FRU.z, 0, 0, 0x4500AAAA));
+				frustum_shape.push_back(Vertex(NRU.x, NRU.y, NRU.z, 1, 0, 0x4500AAAA));
+				frustum_shape.push_back(Vertex(NRD.x, NRD.y, NRD.z,	1, 1, 0x4500AAAA));
+				frustum_shape.push_back(Vertex(FRD.x, FRD.y, FRD.z, 0, 1, 0x4500AAAA));
+
+				frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z, 0, 0, 0x45FF00AA));
+				frustum_shape.push_back(Vertex(FRD.x, FRD.y, FRD.z, 1, 0, 0x45FF00AA));
+				frustum_shape.push_back(Vertex(NRD.x, NRD.y, NRD.z,	1, 1, 0x45FF00AA));
+				frustum_shape.push_back(Vertex(NLD.x, NLD.y, NLD.z, 0, 1, 0x45FF00AA));
+
+				frustum_shape.push_back(Vertex(NLU.x, NLU.y, NLU.z, 0, 0, 0x45FF00AA));
+				frustum_shape.push_back(Vertex(NRU.x, NRU.y, NRU.z, 1, 0, 0x45FF00AA));
+				frustum_shape.push_back(Vertex(FRU.x, FRU.y, FRU.z,	1, 1, 0x45FF00AA));
+				frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 0, 1, 0x45FF00AA));
+				
 				for(int i = 0; i < chunks_to_render.size(); i++)
 				{
 					Chunk@ chunk = chunks_to_render[i];
@@ -150,8 +194,15 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 		float y = params.read_f32();
 		float z = params.read_f32();
 
-		world.map[y][z][x] = block;
-    	world.UpdateBlocksAndChunks(x, y, z);
+		if(this.get_bool("ClientLoading"))
+		{
+			block_queue.push_back(BlockToPlace(Vec3f(x,y,z), block));
+		}
+		else
+		{
+			world.map[y][z][x] = block;
+    		world.UpdateBlocksAndChunks(x, y, z);
+		}
 	}
 	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_RequestMapPacket"))
 	{
@@ -169,7 +220,6 @@ void Render(int id)
 
 	Render::SetTransformWorldspace();
 
-	Render::ClearZ();
 	Render::SetZBuffer(false, false);
 	Render::SetAlphaBlend(false);
 	Render::SetBackfaceCull(true);
@@ -182,6 +232,7 @@ void Render(int id)
 	Matrix::MakeIdentity(model);
 	Render::SetModelTransform(model);
 
+	Render::ClearZ();
 	Render::SetZBuffer(true, true);
 
 	if(!getControls().isKeyPressed(KEY_KEY_K))
@@ -204,6 +255,17 @@ void Render(int id)
 
 	Render::SetAlphaBlend(true);
 	Render::RawQuads("DEBUG", HitBoxes);
+	if(hold_frustum)
+	{
+		Render::SetBackfaceCull(false);
+		Matrix::MakeIdentity(model);
+		Matrix::SetTranslation(model, camera.frustum_pos.x, camera.frustum_pos.y, camera.frustum_pos.z);
+		Render::SetModelTransform(model);
+		Render::RawQuads("SOLID", frustum_shape);
+		Matrix::MakeIdentity(model);
+		Render::SetModelTransform(model);
+		Render::SetBackfaceCull(true);
+	}
 	Render::SetAlphaBlend(false);
 
 	GUI::SetFont("menu");
@@ -256,7 +318,7 @@ void onPlayerLeave(CRules@ this, CPlayer@ player)
 void onRender(CRules@ this)
 {
 	if(getLocalPlayer() is null) return;
-	if(isLoading(this))
+	if(this.get_bool("ClientLoading"))
 	{
 		float percent = 0;
 		if(!ask_map) percent = 1;
@@ -269,6 +331,8 @@ void onRender(CRules@ this)
 		GUI::DrawTextCentered(loading_string, Vec2f(getScreenWidth()/2, getScreenHeight()/2), color_white);
 	}
 }
+
+Vertex[] frustum_shape;
 
 // temp solution probably
 Vertex[] SkyBox = {	Vertex(-1, -1, 1, 0.25f, 0.5f, color_white), // front face

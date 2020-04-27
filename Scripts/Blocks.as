@@ -43,7 +43,7 @@ enum block_id
     block_fence,
     block_grass,
     block_tulip,
-    block_tdelweiss,
+    block_edelweiss,
     block_log_palm,
     block_sand,
     block_water,
@@ -154,6 +154,7 @@ void AddBlock(const string&in name, bool solid, bool see_through, int allsides)
     newblock.id = counter;
     newblock.name = name;
     newblock.solid = solid;
+    newblock.plant = false;
     newblock.see_through = see_through;
     newblock.MakeUVs(allsides, allsides, allsides);
 
@@ -169,6 +170,7 @@ void AddBlock(const string&in name, bool solid, bool see_through, int sides, int
     newblock.id = counter;
     newblock.name = name;
     newblock.solid = solid;
+    newblock.plant = false;
     newblock.see_through = see_through;
     newblock.MakeUVs(sides, top_and_bottom, top_and_bottom);
 
@@ -184,6 +186,7 @@ void AddBlock(const string&in name, bool solid, bool see_through, int sides, int
     newblock.id = counter;
     newblock.name = name;
     newblock.solid = solid;
+    newblock.plant = false;
     newblock.see_through = see_through;
     newblock.MakeUVs(sides, top, bottom);
 
