@@ -59,27 +59,13 @@ class World
             {
                 for(float x = 0.0f; x < map_width; x += 1.0f)
                 {
-                    //uint32 index = y*map_width_depth + z*map_width + x;
-
-                    //uint32 tree_rand = rand.NextRanged(200);
-                    //float tree_rand = noise.Sample(x*tree_frequency, z*tree_frequency);
-                    //print("tree_rand: "+tree_rand);
-                    bool make_tree = noise.Sample((map_width+x)*tree_frequency, z*tree_frequency) > 0.7;//tree_rand == 1;
+                    bool make_tree = noise.Sample((map_width+x)*tree_frequency, z*tree_frequency) > 0.7;
                     if(make_tree && rand.NextRanged(50) > 2) make_tree = false;
 
-                    bool make_grass = noise.Sample(x*grass_frequency, (map_depth+z)*grass_frequency) > 0.5;//tree_rand == 1;
+                    bool make_grass = noise.Sample(x*grass_frequency, (map_depth+z)*grass_frequency) > 0.5;
                     if(make_grass && rand.NextRanged(50) > 40) make_grass = false;
                     bool make_flower = rand.NextRanged(24) == 1;
                     bool flower_type = rand.NextRanged(4) >= 2;
-                    
-                    /*uint32 grass_rand = rand.NextRanged(8);
-                    bool make_grass = grass_rand == 1;
-                    
-                    uint32 flower_rand = rand.NextRanged(20);
-                    bool make_flower = flower_rand == 1;
-                
-                    uint32 flower_type_rand = rand.NextRanged(2);
-                    bool flower_type = flower_type_rand == 1;*/
                     
                     float h = noise.Sample(x * sample_frequency, z * sample_frequency) * (noise.Fractal(x * fractal_frequency, z * fractal_frequency)/2.0f) + add_height;//+Maths::Pow(y / float(map_height), 1.1024f)-0.5;
                     if(y == 0)
