@@ -162,7 +162,7 @@ class Player
 				vel += vel_dir;
 			}
 
-			if(c.isKeyJustPressed(KEY_KEY_R))
+			if(c.isKeyJustPressed(KEY_KEY_L))
 			{
 				for(int i = 0; i < chunks_to_render.size(); i++)
 				{
@@ -324,10 +324,6 @@ bool isColliding(const Vec3f&in position, const Vec3f&in next_position)
 				{
 					DrawHitbox(x, y, z, 0x8800FF00);
 					return true;
-				}
-				else
-				{
-					DrawHitbox(x, y, z, 0x88FF0000);
 				}
 			}
 		}

@@ -23,6 +23,7 @@ void onInit(CRules@ this)
 	Debug("Client init");
 	this.set_bool("ClientLoading", true);
 	Texture::createFromFile("Block_Textures", "Textures/Blocks_Jenny.png");
+	Texture::createFromFile("Sky_Texture", "Textures/SkyBox.png");
 	Texture::createFromFile("DEBUG", "Textures/Debug.png");
 	InitBlocks();
 
@@ -69,13 +70,24 @@ void onTick(CRules@ this)
 		}
 
 		tree.Check();
-		//print("size: "+chunks_to_render.size());
 
-		for(int i = 0; i < other_players.size(); i++)
+		if(isDebug())
 		{
-			Vec3f pos = other_players[i].pos;
-			AABB _box(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius));
-			DrawHitbox(_box, 0x88FFFFFF);
+			for(int i = 0; i < other_players.size(); i++)
+			{
+				Vec3f pos = other_players[i].pos;
+				AABB _box(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius));
+				DrawHitbox(_box, 0x88FFFFFF);
+			}
+
+			if(hold_frustum)
+			{
+				for(int i = 0; i < chunks_to_render.size(); i++)
+				{
+					Chunk@ chunk = chunks_to_render[i];
+					DrawHitbox(chunks_to_render[i].box, 0x880000FF);
+				}
+			}
 		}
 	}
 }
@@ -156,26 +168,23 @@ void Render(int id)
 	rules.add_f32("interGameTime", getRenderApproximateCorrectionFactor());
 
 	Render::SetTransformWorldspace();
+
+	Render::ClearZ();
+	Render::SetZBuffer(false, false);
+	Render::SetAlphaBlend(false);
+	Render::SetBackfaceCull(true);
 	
 	camera.render_update();
 	Matrix::MakeIdentity(model);
+	Matrix::SetTranslation(model, camera.interpolated_pos.x, camera.interpolated_pos.y, camera.interpolated_pos.z);
 	Render::SetTransform(model, camera.view, camera.projection);
+	Render::RawQuads("Sky_Texture", SkyBox);
+	Matrix::MakeIdentity(model);
+	Render::SetModelTransform(model);
 
-	Vertex[] verts = {
-		Vertex(0, 0, 0, 0, 1, color_white),
-		Vertex(0, 0, map_depth, 0, 0, color_white),
-		Vertex(map_width,	0, map_depth,	1, 0, color_white),
-		Vertex(map_width,	0, 0, 1, 1, color_white)
-	};
-
-	Render::ClearZ();
 	Render::SetZBuffer(true, true);
-	Render::SetAlphaBlend(false);
-	Render::SetBackfaceCull(true);
 
-	Render::RawQuads("Block_Textures", verts);
-
-	if(!getControls().isKeyPressed(KEY_KEY_Q))
+	if(!getControls().isKeyPressed(KEY_KEY_K))
 	{
 		int generated = 0;
 		for(int i = 0; i < chunks_to_render.size(); i++)
@@ -189,14 +198,7 @@ void Render(int id)
 					generated++;
 				}
 			}
-			//else
-			{
-				chunks_to_render[i].Render();
-				if(hold_frustum)
-				{
-					DrawHitbox(chunks_to_render[i].box, 0x880000FF);
-				}
-			}
+			chunks_to_render[i].Render();
 		}
 	}
 
@@ -267,3 +269,35 @@ void onRender(CRules@ this)
 		GUI::DrawTextCentered(loading_string, Vec2f(getScreenWidth()/2, getScreenHeight()/2), color_white);
 	}
 }
+
+// temp solution probably
+Vertex[] SkyBox = {	Vertex(-1, -1, 1, 0.25f, 0.5f, color_white), // front face
+					Vertex(-1, 1, 1, 0.25f, 0.25f, color_white),
+					Vertex(1, 1, 1, 0.5f, 0.25f, color_white),
+					Vertex(1, -1, 1, 0.5f, 0.5f, color_white),
+
+					Vertex(1, -1, -1, 0.75f, 0.5f, color_white), // back face
+					Vertex(1, 1, -1, 0.75f, 0.25f, color_white),
+					Vertex(-1, 1, -1, 1.0f, 0.25f, color_white),
+					Vertex(-1, -1, -1, 1.0f, 0.5f, color_white),
+
+					Vertex(1, -1, 1, 0.5f, 0.5f, color_white), // right face
+					Vertex(1, 1, 1, 0.5f, 0.25f, color_white),
+					Vertex(1, 1, -1, 0.75f, 0.25f, color_white),
+					Vertex(1, -1, -1, 0.75f, 0.5f, color_white),
+
+					Vertex(-1, -1, -1, 0.0f, 0.5f, color_white), // left face
+					Vertex(-1, 1, -1, 0.0f, 0.25f, color_white),
+					Vertex(-1, 1, 1, 0.25f, 0.25f, color_white),
+					Vertex(-1, -1, 1, 0.25f, 0.5f, color_white),
+
+					Vertex(-1, 1, 1, 0.25f, 0.25f, color_white), // top face
+					Vertex(-1, 1, -1, 0.25f, 0.0f, color_white),
+					Vertex(1, 1, -1, 0.5f, 0.0f, color_white),
+					Vertex(1, 1, 1, 0.5f, 0.25f, color_white),
+
+					Vertex(-1, -1, -1, 0.25f, 0.5f, color_white), // bottom face
+					Vertex(-1, -1, 1, 0.25f, 0.75f, color_white),
+					Vertex(1, -1, 1, 0.5f, 0.75f, color_white),
+					Vertex(1, -1, -1, 0.5f, 0.5f, color_white)
+};

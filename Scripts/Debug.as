@@ -1,9 +1,14 @@
 
+bool isDebug()
+{
+	return true; // set to false when release
+}
+
 Vertex[] HitBoxes;
 
 void Debug(const string&in text, int color = 0)
 {
-    //return; // uncomment when release
+    if(!isDebug()) return;
     string[] path = getCurrentScriptName().split("/");
     string script = path[path.size()-1];
     print(script+" | ---> | "+text, colors[color]);
@@ -11,7 +16,7 @@ void Debug(const string&in text, int color = 0)
 
 void DrawHitbox(float x, float y, float z, uint color)
 {
-	return; // uncomment when release
+	if(!isDebug()) return;
     HitBoxes.push_back(Vertex(x,	y,		z,		0,	1,	color));
 	HitBoxes.push_back(Vertex(x,	y+1,	z,		1,	1,	color));
 	HitBoxes.push_back(Vertex(x+1,	y+1,	z,		1,	0,	color));
@@ -45,7 +50,7 @@ void DrawHitbox(float x, float y, float z, uint color)
 
 void DrawHitbox(const AABB&in box, uint color)
 {
-	return; // uncomment when release
+	if(!isDebug()) return;
     HitBoxes.push_back(Vertex(box.min.x,	box.min.y,	box.min.z,	0,	1,	color));
 	HitBoxes.push_back(Vertex(box.min.x,	box.max.y,	box.min.z,	1,	1,	color));
 	HitBoxes.push_back(Vertex(box.max.x,	box.max.y,	box.min.z,	1,	0,	color));
