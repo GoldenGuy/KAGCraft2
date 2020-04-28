@@ -55,10 +55,10 @@ enum block_id
 
 Block@[] Blocks;
 
-int counter = 0;
+int block_counter = 0;
 void InitBlocks()
 {
-    counter = 0;
+    block_counter = 0;
     Blocks.clear();
     AddBlock("Air", false, true, 0);
     AddBlock("Grass dirt", true, false, 1, 2, 3);
@@ -152,6 +152,8 @@ class Block
         bottom_start_v = f32(bottom / 16) / 16.0f;
         bottom_end_u = bottom_start_u + u_step;
         bottom_end_v = bottom_start_v + v_step;
+
+        AddIconToken(name+"_Icon", "Textures/Blocks_Jenny.png", Vec2f(16,16), sides);
     }
 }
 
@@ -159,7 +161,7 @@ void AddBlock(const string&in name, bool solid, bool see_through, int allsides)
 {
     Debug("name: "+name, 2);
     Block newblock;
-    newblock.id = counter;
+    newblock.id = block_counter;
     newblock.name = name;
     newblock.solid = solid;
     newblock.plant = false;
@@ -169,14 +171,14 @@ void AddBlock(const string&in name, bool solid, bool see_through, int allsides)
 
     Blocks.push_back(@newblock);
 
-    counter++;
+    block_counter++;
 }
 
 void AddBlock(const string&in name, bool solid, bool see_through, int sides, int top_and_bottom)
 {
     Debug("name: "+name, 2);
     Block newblock;
-    newblock.id = counter;
+    newblock.id = block_counter;
     newblock.name = name;
     newblock.solid = solid;
     newblock.plant = false;
@@ -186,14 +188,14 @@ void AddBlock(const string&in name, bool solid, bool see_through, int sides, int
 
     Blocks.push_back(@newblock);
 
-    counter++;
+    block_counter++;
 }
 
 void AddBlock(const string&in name, bool solid, bool see_through, int sides, int top, int bottom)
 {
     Debug("name: "+name, 2);
     Block newblock;
-    newblock.id = counter;
+    newblock.id = block_counter;
     newblock.name = name;
     newblock.solid = solid;
     newblock.plant = false;
@@ -203,13 +205,13 @@ void AddBlock(const string&in name, bool solid, bool see_through, int sides, int
 
     Blocks.push_back(@newblock);
 
-    counter++;
+    block_counter++;
 }
 
 void AddPlantBlock(const string&in name, int sides)
 {
     Block newblock;
-    newblock.id = counter;
+    newblock.id = block_counter;
     newblock.name = name;
     newblock.solid = false;
     newblock.see_through = true;
@@ -219,5 +221,5 @@ void AddPlantBlock(const string&in name, int sides)
 
     Blocks.push_back(@newblock);
 
-    counter++;
+    block_counter++;
 }

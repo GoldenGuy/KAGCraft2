@@ -30,6 +30,8 @@ void onInit(CRules@ this)
 	Texture::createFromFile("DEBUG", "Textures/Debug.png");
 	Texture::createFromFile("SOLID", "Sprites/pixel.png");
 	InitBlocks();
+	this.addCommandID("pick_block");
+	this.addCommandID("pick_block_reset");
 
 	Camera _camera;
 	@camera = @_camera;
@@ -71,6 +73,14 @@ void onTick(CRules@ this)
 		if(my_player.digging)
 		{
 			my_player.RenderDiggingBlock(diggers);
+		}
+
+		for(int i = 0; i < other_players.size(); i++)
+		{
+			if(other_players[i].digging)
+			{
+				other_players[i].RenderDiggingBlock(diggers);
+			}
 		}
 
 		if(!isServer() && getPlayersCount() > 1)
@@ -192,6 +202,7 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 				temp_float = params.read_f32();
 				temp_float = params.read_f32();
 				bool temp_bool = params.read_bool();
+				temp_bool = params.read_bool();
 			}
 		}
 	}
@@ -210,6 +221,32 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 		{
 			world.map[y][z][x] = block;
     		world.UpdateBlocksAndChunks(x, y, z);
+		}
+	}
+	else if(cmd == this.getCommandID("pick_block"))
+	{
+		uint16 netid = params.read_netid();
+		CPlayer@ _player = getPlayerByNetworkId(netid);
+		if(_player is getLocalPlayer())
+		{
+			uint8 _block = params.read_u8();
+			my_player.hand_block = _block;
+			getHUD().ClearMenus(true);
+			getControls().setMousePosition(getDriver().getScreenCenterPos());
+			block_menu = false;
+			block_menu_created = false;
+		}
+	}
+	else if(cmd == this.getCommandID("pick_block_reset"))
+	{
+		uint16 netid = params.read_netid();
+		CPlayer@ _player = getPlayerByNetworkId(netid);
+		if(_player is getLocalPlayer())
+		{
+			getHUD().ClearMenus(true);
+			getControls().setMousePosition(getDriver().getScreenCenterPos());
+			block_menu = false;
+			block_menu_created = false;
 		}
 	}
 	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_RequestMapPacket"))
@@ -263,7 +300,7 @@ void Render(int id)
 
 	Render::SetAlphaBlend(true);
 	Render::RawQuads("Block_Digger", diggers);
-	
+
 	Render::RawQuads("DEBUG", HitBoxes);
 	if(hold_frustum)
 	{

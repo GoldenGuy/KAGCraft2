@@ -10,6 +10,7 @@ class ServerPlayer
 	bool digging = false;
 	Vec3f digging_pos;
 	uint dig_timer;
+	uint8 hand_block = block_stone;
 
     ServerPlayer(){}
 
@@ -27,6 +28,14 @@ class ServerPlayer
 		to_send.write_f32(dir_x);
 		to_send.write_f32(dir_y);
 		to_send.write_bool(Crouch);
+		to_send.write_bool(digging);
+		if(digging)
+		{
+			to_send.write_f32(digging_pos.x);
+			to_send.write_f32(digging_pos.y);
+			to_send.write_f32(digging_pos.z);
+			to_send.write_f32(dig_timer);
+		}
 	}
 
 	void UnSerialize(CBitStream@ received)
@@ -37,5 +46,13 @@ class ServerPlayer
 		dir_x = received.read_f32();
 		dir_y = received.read_f32();
 		Crouch = received.read_bool();
+		digging = received.read_bool();
+		if(digging)
+		{
+			digging_pos.x = received.read_f32();
+			digging_pos.y = received.read_f32();
+			digging_pos.z = received.read_f32();
+			dig_timer = received.read_f32();
+		}
 	}
 }

@@ -12,6 +12,8 @@ bool hold_frustum = false;
 float sensitivity = 0.16;
 
 float max_dig_time = 100;
+bool block_menu = false;
+bool block_menu_created = false;
 
 class Player
 {
@@ -28,6 +30,7 @@ class Player
 	bool digging = false;
 	Vec3f digging_pos;
 	float dig_timer;
+	uint8 hand_block = block_stone;
 
 	Player(){}
 
@@ -47,9 +50,24 @@ class Player
 		
 		CControls@ c = getControls();
 		Driver@ d = getDriver();
-		if(blob !is null && d !is null && c !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null)
+
+		if(c.isKeyJustPressed(KEY_KEY_E))
 		{
-			Vec2f ScrMid = Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f);
+			block_menu = !block_menu;
+		}
+
+		if(block_menu)
+		{
+			if(!block_menu_created)
+			{
+				CreateBlockMenu();
+				block_menu_created = true;
+			}
+		}
+
+		if(blob !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null && !block_menu)
+		{
+			Vec2f ScrMid = d.getScreenCenterPos();//Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f);
 			Vec2f dir = (c.getMouseScreenPos() - ScrMid);
 			
 			dir_x += dir.x*sensitivity;
@@ -73,7 +91,7 @@ class Player
 				if(check == Raycast::S_HIT)
 				{
 					DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
-					if(blob.isKeyPressed(key_action1) && !wait_to_release_dig)
+					if(blob.isKeyPressed(key_action1))
 					{
 						if(digging)
 						{
@@ -283,6 +301,14 @@ class Player
 		to_send.write_f32(dir_x);
 		to_send.write_f32(dir_y);
 		to_send.write_bool(Crouch);
+		to_send.write_bool(digging);
+		if(digging)
+		{
+			to_send.write_f32(digging_pos.x);
+			to_send.write_f32(digging_pos.y);
+			to_send.write_f32(digging_pos.z);
+			to_send.write_f32(dig_timer);
+		}
 	}
 
 	void UnSerialize(CBitStream@ received)
@@ -294,6 +320,14 @@ class Player
 		dir_x = received.read_f32();
 		dir_y = received.read_f32();
 		Crouch = received.read_bool();
+		digging = received.read_bool();
+		if(digging)
+		{
+			digging_pos.x = received.read_f32();
+			digging_pos.y = received.read_f32();
+			digging_pos.z = received.read_f32();
+			dig_timer = received.read_f32();
+		}
 	}
 
 	void RenderDiggingBlock(Vertex[]&inout verts)
@@ -331,6 +365,40 @@ class Player
 		verts.push_back(Vertex(digging_pos.x-s,		digging_pos.y-s,	digging_pos.z-s,	u,	0,	color_white));
 		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y-s,	digging_pos.z-s,	u_step,	0,	color_white));
 		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y-s,	digging_pos.z+1+s,	u_step,	1,	color_white));
+	}
+
+	void CreateBlockMenu()
+	{
+		getHUD().ClearMenus(true);
+		CGridMenu@ menu = CreateGridMenu(getDriver().getScreenCenterPos(), null, Vec2f(8, 5), "Pick a block.");
+		
+		if (menu !is null)
+		{
+			CBitStream exitParams;
+			exitParams.write_netid(getLocalPlayer().getNetworkID());
+			menu.SetDefaultCommand(getRules().getCommandID("pick_block_reset"), exitParams);
+			menu.deleteAfterClick = true;
+			for (int i = 1; i < block_counter; i++)
+			{
+				bool current_picked = (i == hand_block);
+				CBitStream params;
+				params.write_netid(getLocalPlayer().getNetworkID());
+				params.write_u8(i);
+				CGridButton@ button = menu.AddButton(Blocks[i].name+"_Icon", "Pick a block.", getRules().getCommandID("pick_block"), Vec2f(1,1), params);
+				if(button !is null)
+				{
+					button.selectOnClick = true;
+					//button.deleteAfterClick = true;
+					button.clickable = true;
+					if(current_picked)
+					{
+						button.clickable = false;
+						button.SetSelected(2);
+					}
+					button.SetHoverText(Blocks[i].name+"."+(current_picked ? " (currently picked)" : ""));
+				}
+			}
+		}
 	}
 }
 
