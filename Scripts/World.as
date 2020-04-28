@@ -143,6 +143,7 @@ class World
     {
         uint8[][][] _faces_bits(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
         faces_bits = _faces_bits;
+        @noise = @Noise(XORRandom(10000000));
     }
 
     void MakeTree(Vec3f pos)
