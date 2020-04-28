@@ -22,7 +22,7 @@ float fractal_frequency = 0.02f;
 float add_height = 0.16f;
 float dirt_start = 0.16f;
 float tree_frequency = 0.06f;
-float grass_frequency = 0.04f;
+float grass_frequency = 0.08f;
 
 class World
 {
@@ -30,7 +30,9 @@ class World
     uint8[][][] map;
     uint8[][][] faces_bits;
     Chunk@[] chunks;
-    bool poop = true;
+
+    Noise@ noise;
+    Random@ rand;
 
     void GenerateMap()
     {
@@ -38,12 +40,12 @@ class World
         map.clear();
         Debug("map_size: "+map_size, 2);
 
-        uint32 seed = (1147483646*Time_Local()) % 500000;
+        uint32 seed = (114748346*Time_Local()+Time_Local()) % 500000;
 
         Debug("map seed: "+seed, 2);
 
-        Noise noise(seed);
-        Random rand(seed);
+        @noise = @Noise(seed);
+        @rand = @Random(seed);
         
         float something = 1.0f/map_height;
     
@@ -60,9 +62,9 @@ class World
                 for(float x = 0.0f; x < map_width; x += 1.0f)
                 {
                     bool make_tree = noise.Sample((map_width+x)*tree_frequency, z*tree_frequency) > 0.7;
-                    if(make_tree && rand.NextRanged(50) > 2) make_tree = false;
+                    if(make_tree && rand.NextRanged(70) > 2) make_tree = false;
 
-                    bool make_grass = noise.Sample(x*grass_frequency, (map_depth+z)*grass_frequency) > 0.5;
+                    bool make_grass = noise.Sample(x*grass_frequency, (map_depth+z)*grass_frequency) > 0.6;
                     if(make_grass && rand.NextRanged(50) > 40) make_grass = false;
                     bool make_flower = rand.NextRanged(24) == 1;
                     bool flower_type = rand.NextRanged(4) >= 2;
@@ -648,25 +650,27 @@ class Chunk
 
     void addPlantFaces(Block@ b, const Vec3f&in pos)
 	{
-		verts.push_back(Vertex(pos.x+0.84f,	pos.y+1,	pos.z+0.84f,	b.sides_start_u,	b.sides_start_v,	top_scol));
-		verts.push_back(Vertex(pos.x+0.16f,	pos.y+1,	pos.z+0.16f,	b.sides_end_u,	    b.sides_start_v,	top_scol));
-		verts.push_back(Vertex(pos.x+0.16f,	pos.y,		pos.z+0.16f,	b.sides_end_u,	    b.sides_end_v,		top_scol));
-		verts.push_back(Vertex(pos.x+0.84f,	pos.y,		pos.z+0.84f,	b.sides_start_u,	b.sides_end_v,		top_scol));
+		Vec2f rand_offset = Vec2f(_world.noise.Sample(pos.x*60, (pos.z-pos.y)*60)/2.0f-0.25f, _world.noise.Sample(pos.z*60, (pos.y-pos.x)*60)/2.0f-0.25f);
+        
+        verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y+1,	pos.z+0.84f+rand_offset.y,	b.sides_start_u,	b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y+1,	pos.z+0.16f+rand_offset.y,	b.sides_end_u,	    b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y,		pos.z+0.16f+rand_offset.y,	b.sides_end_u,	    b.sides_end_v,		top_scol));
+		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y,		pos.z+0.84f+rand_offset.y,	b.sides_start_u,	b.sides_end_v,		top_scol));
 
-		verts.push_back(Vertex(pos.x+0.84f,	pos.y+1,	pos.z+0.16f,	b.sides_start_u,	b.sides_start_v,	top_scol));
-		verts.push_back(Vertex(pos.x+0.16f,	pos.y+1,	pos.z+0.84f,	b.sides_end_u,	    b.sides_start_v,	top_scol));
-		verts.push_back(Vertex(pos.x+0.16f,	pos.y,		pos.z+0.84f,	b.sides_end_u,	    b.sides_end_v,		top_scol));
-		verts.push_back(Vertex(pos.x+0.84f,	pos.y,		pos.z+0.16f,	b.sides_start_u,	b.sides_end_v,		top_scol));
+		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y+1,	pos.z+0.16f+rand_offset.y,	b.sides_start_u,	b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y+1,	pos.z+0.84f+rand_offset.y,	b.sides_end_u,	    b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y,		pos.z+0.84f+rand_offset.y,	b.sides_end_u,	    b.sides_end_v,		top_scol));
+		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y,		pos.z+0.16f+rand_offset.y,	b.sides_start_u,	b.sides_end_v,		top_scol));
 
-		verts.push_back(Vertex(pos.x+0.16f,	pos.y+1,	pos.z+0.16f,	b.sides_start_u,	b.sides_start_v,	top_scol));
-		verts.push_back(Vertex(pos.x+0.84f,	pos.y+1,	pos.z+0.84f,	b.sides_end_u,	    b.sides_start_v,	top_scol));
-		verts.push_back(Vertex(pos.x+0.84f,	pos.y,		pos.z+0.84f,	b.sides_end_u,	    b.sides_end_v,		top_scol));
-		verts.push_back(Vertex(pos.x+0.16f,	pos.y,		pos.z+0.16f,	b.sides_start_u,	b.sides_end_v,		top_scol));
+		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y+1,	pos.z+0.16f+rand_offset.y,	b.sides_start_u,	b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y+1,	pos.z+0.84f+rand_offset.y,	b.sides_end_u,	    b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y,		pos.z+0.84f+rand_offset.y,	b.sides_end_u,	    b.sides_end_v,		top_scol));
+		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y,		pos.z+0.16f+rand_offset.y,	b.sides_start_u,	b.sides_end_v,		top_scol));
 
-		verts.push_back(Vertex(pos.x+0.16f,	pos.y+1,	pos.z+0.84f,	b.sides_start_u,	b.sides_start_v,    top_scol));
-		verts.push_back(Vertex(pos.x+0.84f,	pos.y+1,	pos.z+0.16f,	b.sides_end_u,	    b.sides_start_v,	top_scol));
-		verts.push_back(Vertex(pos.x+0.84f,	pos.y,		pos.z+0.16f,	b.sides_end_u,	    b.sides_end_v,		top_scol));
-		verts.push_back(Vertex(pos.x+0.16f,	pos.y,		pos.z+0.84f,	b.sides_start_u,	b.sides_end_v,		top_scol));
+		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y+1,	pos.z+0.84f+rand_offset.y,	b.sides_start_u,	b.sides_start_v,    top_scol));
+		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y+1,	pos.z+0.16f+rand_offset.y,	b.sides_end_u,	    b.sides_start_v,	top_scol));
+		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y,		pos.z+0.16f+rand_offset.y,	b.sides_end_u,	    b.sides_end_v,		top_scol));
+		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y,		pos.z+0.84f+rand_offset.y,	b.sides_start_u,	b.sides_end_v,		top_scol));
 	}
 
     void Render()
@@ -677,11 +681,11 @@ class Chunk
 
 const uint8 debug_alpha =	255;
 const uint8 top_col =		255;
-const uint8 bottom_col =	166;
-const uint8 left_col =		191;
-const uint8 right_col =	    191;
-const uint8 front_col =	    230;
-const uint8 back_col =		230;
+const uint8 bottom_col =	150;
+const uint8 left_col =		185;
+const uint8 right_col =	    185;
+const uint8 front_col =	    220;
+const uint8 back_col =		220;
 
 const SColor top_scol = SColor(debug_alpha, top_col, top_col, top_col);
 const SColor bottom_scol = SColor(debug_alpha, bottom_col, bottom_col, bottom_col);
