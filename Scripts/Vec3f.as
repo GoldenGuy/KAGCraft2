@@ -56,6 +56,8 @@ class Vec3f
 
 	void opDivAssign(float oof) { x /= oof; y /= oof; z /= oof; }
 
+	bool opEquals(const Vec3f&in oof) const { return x == oof.x && y == oof.y && z == oof.z; }
+
 	// only for asu's build, since as upgrade
 	//void opAssign(const Vec3f &in oof){ x=oof.x;y=oof.y;z=oof.z; }
 	
