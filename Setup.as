@@ -17,4 +17,5 @@ void onInit(CRules@ this)
 	map.SetBorderColourRight(col);
 	map.SetBorderColourTop(col);
 	map.SetBorderColourBottom(col);
+	map.MakeMiniMap();
 }
