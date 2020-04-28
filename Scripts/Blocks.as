@@ -1,6 +1,7 @@
 
-const f32 u_step = 1.0f/16.0f;
-const f32 v_step = 1.0f/16.0f;
+const float u_step = 1.0f/16.0f;
+const float v_step = 1.0f/16.0f;
+const float uv_fix = 0.0002f;
 
 enum block_id
 {
@@ -119,39 +120,39 @@ class Block
     bool plant;
     float dig_speed; // 100 - instant, 0 - dont break
 
-    f32 sides_start_u;
-    f32 sides_start_v;
-    f32 sides_end_u;
-    f32 sides_end_v;
+    float sides_start_u;
+    float sides_start_v;
+    float sides_end_u;
+    float sides_end_v;
 
-    f32 top_start_u;
-    f32 top_start_v;
-    f32 top_end_u;
-    f32 top_end_v;
+    float top_start_u;
+    float top_start_v;
+    float top_end_u;
+    float top_end_v;
 
-    f32 bottom_start_u;
-    f32 bottom_start_v;
-    f32 bottom_end_u;
-    f32 bottom_end_v;
+    float bottom_start_u;
+    float bottom_start_v;
+    float bottom_end_u;
+    float bottom_end_v;
 
     Block(){}
 
     void MakeUVs(int sides, int top, int bottom)
     {
-        sides_start_u = f32(sides % 16) / 16.0f;
-        sides_start_v = f32(sides / 16) / 16.0f;
-        sides_end_u = sides_start_u + u_step;
-        sides_end_v = sides_start_v + v_step;
+        sides_start_u = float(sides % 16) / 16.0f + uv_fix;
+        sides_start_v = float(sides / 16) / 16.0f + uv_fix;
+        sides_end_u = sides_start_u + u_step - uv_fix*2.0f;
+        sides_end_v = sides_start_v + v_step - uv_fix*2.0f;
 
-        top_start_u = f32(top % 16) / 16.0f;
-        top_start_v = f32(top / 16) / 16.0f;
-        top_end_u = top_start_u + u_step;
-        top_end_v = top_start_v + v_step;
+        top_start_u = float(top % 16) / 16.0f + uv_fix;
+        top_start_v = float(top / 16) / 16.0f + uv_fix;
+        top_end_u = top_start_u + u_step - uv_fix*2.0f;
+        top_end_v = top_start_v + v_step - uv_fix*2.0f;
 
-        bottom_start_u = f32(bottom % 16) / 16.0f;
-        bottom_start_v = f32(bottom / 16) / 16.0f;
-        bottom_end_u = bottom_start_u + u_step;
-        bottom_end_v = bottom_start_v + v_step;
+        bottom_start_u = float(bottom % 16) / 16.0f + uv_fix;
+        bottom_start_v = float(bottom / 16) / 16.0f + uv_fix;
+        bottom_end_u = bottom_start_u + u_step - uv_fix*2.0f;
+        bottom_end_v = bottom_start_v + v_step - uv_fix*2.0f;
 
         AddIconToken(name+"_Icon", "Textures/Blocks_Jenny.png", Vec2f(16,16), sides);
     }
