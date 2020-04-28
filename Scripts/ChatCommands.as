@@ -6,13 +6,12 @@ bool onServerProcessChat(CRules@ this, const string& in text_in, string& out tex
 
 bool onClientProcessChat(CRules@ this, const string&in text_in, string&out text_out, CPlayer@ player)
 {
-	if(!player.isMyPlayer())
-	{
-		return true;
-	}
-
 	if (text_in.substr(0, 1) == "/") // command
 	{
+		if(!player.isMyPlayer())
+		{
+			return false;
+		}
 		if(this.get_bool("ClientLoading"))
 		{
 			client_AddToChat("Commands are not available while game is loading.", chat_colors::color_red);
