@@ -100,6 +100,13 @@ void InitBlocks()
     AddBlock("Sand", true, false, 15);
     AddBlock("Water", true, false, 17);
     AddBlock("Deep water", true, false, 18);
+
+    Blocks[block_bedrock].dig_speed = 0;
+    Blocks[block_fence].dig_speed = 0;
+    Blocks[block_leaves].dig_speed = 13;
+    Blocks[block_stone].dig_speed = 3;
+    Blocks[block_hard_stone].dig_speed = 3;
+
     Debug("Blocks are created.");
 }
 
@@ -110,6 +117,7 @@ class Block
     bool solid;
     bool see_through;
     bool plant;
+    float dig_speed; // 100 - instant, 0 - dont break
 
     f32 sides_start_u;
     f32 sides_start_v;
@@ -155,6 +163,7 @@ void AddBlock(const string&in name, bool solid, bool see_through, int allsides)
     newblock.name = name;
     newblock.solid = solid;
     newblock.plant = false;
+    newblock.dig_speed = 5;
     newblock.see_through = see_through;
     newblock.MakeUVs(allsides, allsides, allsides);
 
@@ -171,6 +180,7 @@ void AddBlock(const string&in name, bool solid, bool see_through, int sides, int
     newblock.name = name;
     newblock.solid = solid;
     newblock.plant = false;
+    newblock.dig_speed = 5;
     newblock.see_through = see_through;
     newblock.MakeUVs(sides, top_and_bottom, top_and_bottom);
 
@@ -187,6 +197,7 @@ void AddBlock(const string&in name, bool solid, bool see_through, int sides, int
     newblock.name = name;
     newblock.solid = solid;
     newblock.plant = false;
+    newblock.dig_speed = 5;
     newblock.see_through = see_through;
     newblock.MakeUVs(sides, top, bottom);
 
@@ -203,6 +214,7 @@ void AddPlantBlock(const string&in name, int sides)
     newblock.solid = false;
     newblock.see_through = true;
     newblock.plant = true;
+    newblock.dig_speed = 100;
     newblock.MakeUVs(sides, sides, sides);
 
     Blocks.push_back(@newblock);

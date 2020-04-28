@@ -25,6 +25,7 @@ void onInit(CRules@ this)
 	block_queue.clear();
 
 	Texture::createFromFile("Block_Textures", "Textures/Blocks_Jenny.png");
+	Texture::createFromFile("Block_Digger", "Textures/Digging.png");
 	Texture::createFromFile("Sky_Texture", "Textures/SkyBox.png");
 	Texture::createFromFile("DEBUG", "Textures/Debug.png");
 	Texture::createFromFile("SOLID", "Sprites/pixel.png");
@@ -65,6 +66,13 @@ void onTick(CRules@ this)
 		}
 		// game here
 		my_player.Update();
+
+		diggers.clear();
+		if(my_player.digging)
+		{
+			my_player.RenderDiggingBlock(diggers);
+		}
+
 		if(!isServer() && getPlayersCount() > 1)
 		{
 			CBitStream to_send;
@@ -254,6 +262,8 @@ void Render(int id)
 	}
 
 	Render::SetAlphaBlend(true);
+	Render::RawQuads("Block_Digger", diggers);
+	
 	Render::RawQuads("DEBUG", HitBoxes);
 	if(hold_frustum)
 	{
@@ -333,6 +343,8 @@ void onRender(CRules@ this)
 }
 
 Vertex[] frustum_shape;
+
+Vertex[] diggers; // ...maybe change the name...
 
 // temp solution probably
 Vertex[] SkyBox = {	Vertex(-1, -1, 1, 0.25f, 0.5f, color_white), // front face

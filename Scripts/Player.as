@@ -11,6 +11,8 @@ bool fly = false;
 bool hold_frustum = false;
 float sensitivity = 0.16;
 
+float max_dig_time = 100;
+
 class Player
 {
     Vec3f pos, vel, old_pos;
@@ -23,6 +25,9 @@ class Player
 	float dir_x = 0.01f;
 	float dir_y = 0.01f;
 	Vec3f look_dir;
+	bool digging = false;
+	Vec3f digging_pos;
+	float dig_timer;
 
 	Player(){}
 
@@ -68,9 +73,56 @@ class Player
 				if(check == Raycast::S_HIT)
 				{
 					DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
-					if(blob.isKeyPressed(key_action1))
+					if(blob.isKeyPressed(key_action1) && !wait_to_release_dig)
 					{
-						server_SetBlock(block_air, hit_pos);
+						if(digging)
+						{
+							if(digging_pos == hit_pos)
+							{
+								uint8 block = world.map[hit_pos.y][hit_pos.z][hit_pos.x];
+								Block@ b = Blocks[block];
+
+								dig_timer += b.dig_speed;
+								if(dig_timer >= max_dig_time)
+								{
+									server_SetBlock(block_air, hit_pos);
+									digging = false;
+								}
+							}
+							else
+							{
+								digging = false;
+							}
+						}
+						else
+						{
+							digging = true;
+							dig_timer = 0;
+							digging_pos = hit_pos;
+						}
+					}
+					else if(blob.isKeyJustPressed(key_action2))
+					{
+						uint8 block = world.map[hit_pos.y][hit_pos.z][hit_pos.x];
+						if(block == block_grass)
+						{
+							server_SetBlock(block_stone, hit_pos);
+						}
+						else
+						{
+							Vec3f prev_hit_pos;
+							uint8 check2 = RaycastWorld_Previous(camera.pos, look_dir, 40, prev_hit_pos);
+							if(check2 == Raycast::S_HIT)
+							{
+								server_SetBlock(block_stone, prev_hit_pos);
+							}
+						}
+					}
+
+					if(digging && blob.isKeyJustReleased(key_action1))
+					{
+						digging = false;
+						dig_timer = 0;
 					}
 				}
 			}
@@ -242,6 +294,43 @@ class Player
 		dir_x = received.read_f32();
 		dir_y = received.read_f32();
 		Crouch = received.read_bool();
+	}
+
+	void RenderDiggingBlock(Vertex[]&inout verts)
+	{
+		float u = float(int((dig_timer / max_dig_time) * 8.0f)) / 8.0f;
+		float u_step = 1.0f / 8.0f + u;
+		float s = 0.02f;
+		
+		verts.push_back(Vertex(digging_pos.x-s,		digging_pos.y-s,	digging_pos.z-s,	u,	1,	color_white));
+		verts.push_back(Vertex(digging_pos.x-s,		digging_pos.y+1+s,	digging_pos.z-s,	u,	0,	color_white));
+		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y+1+s,	digging_pos.z-s,	u_step,	0,	color_white));
+		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y-s,	digging_pos.z-s,	u_step,	1,	color_white));
+
+		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y-s,	digging_pos.z+1+s,	u,	1,	color_white));
+		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y+1+s,	digging_pos.z+1+s,	u,	0,	color_white));
+		verts.push_back(Vertex(digging_pos.x-s,		digging_pos.y+1+s,	digging_pos.z+1+s,	u_step,	0,	color_white));
+		verts.push_back(Vertex(digging_pos.x-s,		digging_pos.y-s,	digging_pos.z+1+s,	u_step,	1,	color_white));
+
+		verts.push_back(Vertex(digging_pos.x-s,		digging_pos.y-s,	digging_pos.z+1+s,	u,	1,	color_white));
+		verts.push_back(Vertex(digging_pos.x-s,		digging_pos.y+1+s,	digging_pos.z+1+s,	u,	0,	color_white));
+		verts.push_back(Vertex(digging_pos.x-s,		digging_pos.y+1+s,	digging_pos.z-s,	u_step,	0,	color_white));
+		verts.push_back(Vertex(digging_pos.x-s,		digging_pos.y-s,	digging_pos.z-s,	u_step,	1,	color_white));
+
+		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y-s,	digging_pos.z-s,	u,	1,	color_white));
+		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y+1+s,	digging_pos.z-s,	u,	0,	color_white));
+		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y+1+s,	digging_pos.z+1+s,	u_step,	0,	color_white));
+		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y-s,	digging_pos.z+1+s,	u_step,	1,	color_white));
+
+		verts.push_back(Vertex(digging_pos.x-s,		digging_pos.y+1+s,	digging_pos.z-s,	u,	1,	color_white));
+		verts.push_back(Vertex(digging_pos.x-s,		digging_pos.y+1+s,	digging_pos.z+1+s,	u,	0,	color_white));
+		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y+1+s,	digging_pos.z+1+s,	u_step,	0,	color_white));
+		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y+1+s,	digging_pos.z-s,	u_step,	1,	color_white));
+
+		verts.push_back(Vertex(digging_pos.x-s,		digging_pos.y-s,	digging_pos.z+1+s,	u,	1,	color_white));
+		verts.push_back(Vertex(digging_pos.x-s,		digging_pos.y-s,	digging_pos.z-s,	u,	0,	color_white));
+		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y-s,	digging_pos.z-s,	u_step,	0,	color_white));
+		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y-s,	digging_pos.z+1+s,	u_step,	1,	color_white));
 	}
 }
 

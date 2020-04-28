@@ -7,6 +7,9 @@ class ServerPlayer
 	float dir_y = 0.01f;
 	bool Crouch = false;
     bool Frozen = false;
+	bool digging = false;
+	Vec3f digging_pos;
+	uint dig_timer;
 
     ServerPlayer(){}
 
