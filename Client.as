@@ -273,7 +273,7 @@ void Render(int id)
 	Matrix::MakeIdentity(model);
 	Matrix::SetTranslation(model, camera.interpolated_pos.x, camera.interpolated_pos.y, camera.interpolated_pos.z);
 	Render::SetTransform(model, camera.view, camera.projection);
-	Render::RawQuads("Sky_Texture", SkyBox);
+	//Render::RawQuads("Sky_Texture", SkyBox);
 	Matrix::MakeIdentity(model);
 	Render::SetModelTransform(model);
 
@@ -315,15 +315,110 @@ void Render(int id)
 	}
 	Render::SetAlphaBlend(false);
 
+	Render::SetTransformScreenspace();
+	
 	GUI::SetFont("menu");
 	GUI::DrawShadowedText("Pos: "+my_player.pos.IntString(), Vec2f(20,20), color_white);
 	GUI::DrawShadowedText("Vel: "+my_player.vel.FloatString(), Vec2f(20,40), color_white);
 	GUI::DrawShadowedText("Ang: "+my_player.look_dir.FloatString(), Vec2f(20,60), color_white);
 
 	GUI::DrawShadowedText("dir_x: "+my_player.dir_x, Vec2f(20,80), color_white);
+
+	//Vec3f temp_pos1 = Vec3f(0,1,1);
+	//Vec3f temp_pos2 = Vec3f(0,2,2);
+	//temp_pos1 = VectorMatrixMultiply(temp_pos1, camera.view);
+	//temp_pos1 = VectorMatrixMultiply(temp_pos1, camera.projection);
+
+	//Vec2f screen_pos1 = get2dPoint(Vec3f(0,0,0), camera.view, camera.projection);
+	//Vec2f screen_pos2 = get2dPoint(Vec3f(0,map_height,map_depth), camera.view, camera.projection);
+	//GUI::DrawShadowedText("screen_pos1: "+screen_pos1, Vec2f(20,100), color_white);
+	//GUI::DrawShadowedText("screen_pos2: "+screen_pos2, Vec2f(20,115), color_white);
+	//GUI::DrawLine2D(screen_pos1, screen_pos2, color_black);
+
+	Vec3f temp_pos1 = Vec3f(0,0,0);
+	temp_pos1 = VectorMatrixMultiply(temp_pos1, camera.view);
+	GUI::DrawShadowedText("temp_pos1: "+temp_pos1.IntString(), Vec2f(20,100), color_white);
 }
 
 int max_generate = 3;
+
+//float[] MatrixInverse(float[] matrix)
+//{
+//	int n = 16;
+//	float[] result = matrix;
+//
+//	int[] perm;
+//	int toggle;
+//	float[] lum = MatrixDecompose(matrix, out perm,
+//		out toggle);
+//	if (lum == null)
+//		throw new Exception("Unable to compute inverse");
+//
+//	float[] b = new float[n];
+//	for (int i = 0; i < n; ++i)
+//{
+//		for (int j = 0; j < n; ++j)
+//{
+//			if (i == perm[j])
+//				b[j] = 1.0;
+//			else
+//				b[j] = 0.0;
+//		}
+//
+//		float[] x = HelperSolve(lum, b);
+//
+//		for (int j = 0; j < n; ++j)
+//	result[j][i] = x[j];
+//	}
+//	return result;
+//}
+//
+///*Vec3f VectorMatrixMultiply(const Vec3f&inout vector, const float[]&in matrix)
+//{
+//	return Vec3f(
+//		vector.x * matrix[0] + vector.y * matrix[1] + vector.z * matrix[2] +  matrix[3],
+//		vector.x * matrix[4] + vector.y * matrix[5] + vector.z * matrix[6] +  matrix[7],
+//		vector.x * matrix[8] + vector.y * matrix[9] + vector.z * matrix[10] + matrix[11]
+//	);
+//}*/
+//
+//Vec3f VectorMatrixMultiply(const Vec3f&in vector, const float[]&in matrix)
+//{
+//	return Vec3f(
+//		vector.x * matrix[0] + vector.y * matrix[4] + vector.z * matrix[8] +  matrix[12],
+//		vector.x * matrix[1] + vector.y * matrix[5] + vector.z * matrix[9] +  matrix[13],
+//		vector.x * matrix[2] + vector.y * matrix[6] + vector.z * matrix[10] + matrix[14]
+//	);
+//}
+//
+//Vec2f get2dPoint(Vec3f&in vector3D, const float[]&in cam_matrix, const float[]&in proj_matrix)
+//{
+//	//Matrix4 viewProjectionMatrix = projectionMatrix * viewMatrix;
+//	//float[] cam_proj_matrix = Matrix_Multiply(proj_matrix, cam_matrix);
+//	//float[] cam_proj_matrix = Matrix_Multiply(cam_matrix, proj_matrix);
+//	//float[] cam_proj_matrix;
+//	//Matrix::Multiply(proj_matrix, cam_matrix, cam_proj_matrix);
+//	//Matrix::Multiply(cam_matrix, proj_matrix, cam_proj);
+//	//vector3D = VectorMatrixMultiply(vector3D, cam_proj_matrix);
+//
+//	float[] cam_proj_matrix = Matrix_Multiply(camera._view, camera._model);
+//	cam_proj_matrix = Matrix_Multiply(proj_matrix, cam_proj_matrix);
+//	vector3D = VectorMatrixMultiply(vector3D, cam_proj_matrix);
+//
+//	//vector3D = VectorMatrixMultiply(vector3D, camera._model);
+//	//vector3D = VectorMatrixMultiply(vector3D, camera._view);
+//	//vector3D = VectorMatrixMultiply(vector3D, proj_matrix);
+//
+//	int winX = int(Maths::Round(((vector3D.x + 1) / 2.0f) * getScreenWidth()));
+//
+//	//we calculate -point3D.y because the screen Y axis is
+//	//oriented top->down
+//
+//	int winY = int(Maths::Round(((1 - vector3D.y) / 2.0f) * getScreenHeight()));
+//
+//	return Vec2f(winX, winY);
+//	//return Vec2f(vector3D.x, vector3D.y);
+//}
 
 // hook doesnt work
 
