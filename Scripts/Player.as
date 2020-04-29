@@ -54,14 +54,17 @@ class Player
 		if(c.isKeyJustPressed(KEY_KEY_E))
 		{
 			block_menu = !block_menu;
-		}
-
-		if(block_menu)
-		{
-			if(!block_menu_created)
+			if(block_menu)
 			{
-				CreateBlockMenu();
-				block_menu_created = true;
+				if(!block_menu_created)
+				{
+					CreateBlockMenu();
+				}
+			}
+			else
+			{
+				getHUD().ClearMenus(true);
+				block_menu_created = false;
 			}
 		}
 
@@ -403,6 +406,7 @@ class Player
 				}
 			}
 		}
+		block_menu_created = true;
 	}
 }
 
