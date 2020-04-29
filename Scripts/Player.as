@@ -91,7 +91,24 @@ class Player
 				if(check == Raycast::S_HIT)
 				{
 					DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
-					if(blob.isKeyPressed(key_action1))
+					if(blob.isKeyPressed(key_action2))
+					{
+						uint8 block = world.map[hit_pos.y][hit_pos.z][hit_pos.x];
+						if(block == block_grass)
+						{
+							server_SetBlock(block_stone, hit_pos);
+						}
+						else
+						{
+							Vec3f prev_hit_pos;
+							uint8 check2 = RaycastWorld_Previous(camera.pos, look_dir, 40, prev_hit_pos);
+							if(check2 == Raycast::S_HIT)
+							{
+								server_SetBlock(block_stone, prev_hit_pos);
+							}
+						}
+					}
+					else if(blob.isKeyPressed(key_action1))
 					{
 						if(digging)
 						{
@@ -119,29 +136,16 @@ class Player
 							digging_pos = hit_pos;
 						}
 					}
-					else if(blob.isKeyJustPressed(key_action2))
-					{
-						uint8 block = world.map[hit_pos.y][hit_pos.z][hit_pos.x];
-						if(block == block_grass)
-						{
-							server_SetBlock(block_stone, hit_pos);
-						}
-						else
-						{
-							Vec3f prev_hit_pos;
-							uint8 check2 = RaycastWorld_Previous(camera.pos, look_dir, 40, prev_hit_pos);
-							if(check2 == Raycast::S_HIT)
-							{
-								server_SetBlock(block_stone, prev_hit_pos);
-							}
-						}
-					}
-
-					if(digging && blob.isKeyJustReleased(key_action1))
+					else if(digging)
 					{
 						digging = false;
 						dig_timer = 0;
 					}
+				}
+				else if(digging)
+				{
+					digging = false;
+					dig_timer = 0;
 				}
 			}
 			
