@@ -69,12 +69,18 @@ void onTick(CRules@ this)
 		// game here
 		my_player.Update();
 
+		for(int i = 0; i < other_players.size(); i++)
+		{
+			Vec3f pos = other_players[i].pos;
+			AABB _box(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius));
+			DrawHitbox(_box, 0x88FFFFFF);
+		}
+
 		diggers.clear();
 		if(my_player.digging)
 		{
 			my_player.RenderDiggingBlock(diggers);
 		}
-
 		for(int i = 0; i < other_players.size(); i++)
 		{
 			if(other_players[i].digging)
@@ -94,13 +100,6 @@ void onTick(CRules@ this)
 
 		if(isDebug())
 		{
-			for(int i = 0; i < other_players.size(); i++)
-			{
-				Vec3f pos = other_players[i].pos;
-				AABB _box(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius));
-				DrawHitbox(_box, 0x88FFFFFF);
-			}
-
 			if(hold_frustum)
 			{
 				Vec3f FLU = camera.frustum.getFarLeftUp();
@@ -156,7 +155,7 @@ void onTick(CRules@ this)
 
 void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 {
-	Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
+	//Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
 	if(cmd == this.getCommandID("S_SendMapPacket"))
 	{
 		ready_unser = true;
@@ -203,6 +202,13 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 				temp_float = params.read_f32();
 				bool temp_bool = params.read_bool();
 				temp_bool = params.read_bool();
+				if(temp_bool)
+				{
+					temp_float = params.read_f32();
+					temp_float = params.read_f32();
+					temp_float = params.read_f32();
+					temp_float = params.read_f32();
+				}
 			}
 		}
 	}

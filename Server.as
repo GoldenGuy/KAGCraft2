@@ -60,7 +60,7 @@ void onTick(CRules@ this)
 
 void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 {
-	Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
+	//Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
 	if(cmd == this.getCommandID("C_RequestMap"))
 	{
 		uint16 netid = params.read_netid();
