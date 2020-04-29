@@ -385,6 +385,12 @@ void onRender(CRules@ this)
 		GUI::SetFont("menu");
 		GUI::DrawTextCentered(loading_string, Vec2f(getScreenWidth()/2, getScreenHeight()/2), color_white);
 	}
+	else if(block_menu)
+	{
+		Render::SetTransformScreenspace();
+		Render::SetBackfaceCull(false);
+		Render::RawQuads("Block_Textures", block_menu_verts);
+	}
 }
 
 Vertex[] frustum_shape;

@@ -14,6 +14,7 @@ float sensitivity = 0.16;
 float max_dig_time = 100;
 bool block_menu = false;
 bool block_menu_created = false;
+Vertex[] block_menu_verts;
 
 class Player
 {
@@ -58,12 +59,12 @@ class Player
 			{
 				if(!block_menu_created)
 				{
-					CreateBlockMenu();
+					//CreateBlockMenu();
 				}
 			}
 			else
 			{
-				getHUD().ClearMenus(true);
+				//getHUD().ClearMenus(true);
 				block_menu_created = false;
 			}
 		}
@@ -374,17 +375,62 @@ class Player
 		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y-s,	digging_pos.z+1+s,	u_step,	1,	color_white));
 	}
 
-	void CreateBlockMenu()
+	void GenerateBlockMenu()
+	{
+		block_menu_verts.clear();
+		Vec2f size = Vec2f(8,5);
+		int len = Maths::Min(size.x*size.y, Blocks.size()-1);
+		Vec2f screen_mid = getDriver().getScreenCenterPos();
+		Vec2f step = Vec2f(42,42);
+		for(int i = 0; i < len; i++)
+		{
+			addBlockToMenu(Vec2f(((i % size.x) - size.x/2)*step.x + screen_mid.x, (int(i / int(size.x)) - size.y/2)*step.y + screen_mid.y) + Vec2f((step.x/2), (step.y/2)), i+1);
+		}
+	}
+
+	void addBlockToMenu(Vec2f pos, uint8 id)
+	{
+		Block@ b = Blocks[id];
+		Vec2f size = Vec2f(49,49);
+
+		if(b.plant)
+		{
+			block_menu_verts.push_back(Vertex(pos.x-size.x*0.34f,	pos.y+size.y*0.34f, 0, b.sides_start_u,	b.sides_end_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x-size.x*0.34f,	pos.y-size.y*0.34f, 0, b.sides_start_u,	b.sides_start_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x+size.x*0.34f,	pos.y-size.y*0.34f, 0, b.sides_end_u,	b.sides_start_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x+size.x*0.34f,	pos.y+size.y*0.34f, 0, b.sides_end_u,	b.sides_end_v, color_white));
+		}
+		else
+		{
+			block_menu_verts.push_back(Vertex(pos.x-size.x*0.35f,	pos.y+size.y*0.27f, 0, b.sides_start_u,	b.sides_end_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x-size.x*0.35f,	pos.y-size.y*0.18f, 0, b.sides_start_u,	b.sides_start_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x, 				pos.y,				0, b.sides_end_u,	b.sides_start_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x,				pos.y+size.y*0.45f, 0, b.sides_end_u,	b.sides_end_v, color_white));
+
+			block_menu_verts.push_back(Vertex(pos.x,				pos.y+size.y*0.45f, 0, b.sides_start_u,	b.sides_end_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x,				pos.y,				0, b.sides_start_u,	b.sides_start_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x+size.x*0.35f, 	pos.y-size.y*0.18f,	0, b.sides_end_u,	b.sides_start_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x+size.x*0.35f,	pos.y+size.y*0.27f, 0, b.sides_end_u,	b.sides_end_v, color_white));
+
+			block_menu_verts.push_back(Vertex(pos.x-size.x*0.35f,	pos.y-size.y*0.18f, 0, b.top_start_u,	b.top_end_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x,				pos.y-size.y*0.36f, 0, b.top_start_u,	b.top_start_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x+size.x*0.35f,	pos.y-size.y*0.18f, 0, b.top_end_u,		b.top_start_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x,				pos.y,				0, b.top_end_u,		b.top_end_v, color_white));
+		}
+	}
+
+	/*void CreateBlockMenu()
 	{
 		getHUD().ClearMenus(true);
-		CGridMenu@ menu = CreateGridMenu(getDriver().getScreenCenterPos(), null, Vec2f(8, 5), "Pick a block.");
+		CGridMenu@ menu = CreateGridMenu(getDriver().getScreenCenterPos(), blob, Vec2f(8, 5), "Pick a block.");
 		
 		if (menu !is null)
 		{
+			print("menu not null");
 			CBitStream exitParams;
 			exitParams.write_netid(getLocalPlayer().getNetworkID());
 			menu.SetDefaultCommand(getRules().getCommandID("pick_block_reset"), exitParams);
-			menu.deleteAfterClick = true;
+			menu.deleteAfterClick = false;
 			for (int i = 1; i < block_counter; i++)
 			{
 				bool current_picked = (i == hand_block);
@@ -407,7 +453,7 @@ class Player
 			}
 		}
 		block_menu_created = true;
-	}
+	}*/
 }
 
 void CollisionResponse(Vec3f&inout position, Vec3f&inout velocity)

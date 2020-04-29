@@ -115,6 +115,7 @@ bool isLoading(CRules@ this)
         my_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
 		my_player.SetBlob(getLocalPlayerBlob());
 		my_player.SetPlayer(getLocalPlayer());
+		my_player.GenerateBlockMenu();
 		getControls().setMousePosition(Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f));
         player_ready = true;
 		Render::addScript(Render::layer_background, "Client.as", "Render", 1);
