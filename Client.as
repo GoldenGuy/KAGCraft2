@@ -67,6 +67,7 @@ void onTick(CRules@ this)
 			this.set_bool("ClientLoading", false);
 		}
 		// game here
+		camera.tick_update();
 		my_player.Update();
 
 		for(int i = 0; i < other_players.size(); i++)
@@ -266,6 +267,7 @@ float[] model;
 void Render(int id)
 {
 	CRules@ rules = getRules();
+	camera.render_update();
 	rules.set_f32("interFrameTime", Maths::Clamp01(rules.get_f32("interFrameTime")+getRenderApproximateCorrectionFactor()));
 	rules.add_f32("interGameTime", getRenderApproximateCorrectionFactor());
 
@@ -275,7 +277,6 @@ void Render(int id)
 	Render::SetAlphaBlend(false);
 	Render::SetBackfaceCull(true);
 	
-	camera.render_update();
 	Matrix::MakeIdentity(model);
 	Matrix::SetTranslation(model, camera.interpolated_pos.x, camera.interpolated_pos.y, camera.interpolated_pos.z);
 	Render::SetTransform(model, camera.view, camera.projection);
@@ -389,6 +390,9 @@ void onRender(CRules@ this)
 	{
 		Render::SetTransformScreenspace();
 		Render::SetBackfaceCull(false);
+		GUI::DrawRectangle(block_menu_start, block_menu_end, 0xAA404040);
+		GUI::DrawPane(block_menu_mouse, block_menu_mouse+block_menu_tile_size);
+		GUI::DrawPane(picked_block_pos, picked_block_pos+block_menu_tile_size, 0xFF30AA30);
 		Render::RawQuads("Block_Textures", block_menu_verts);
 	}
 }
@@ -423,8 +427,8 @@ Vertex[] SkyBox = {	Vertex(-1, -1, 1, 0.25f, 0.5f, color_white), // front face
 					Vertex(1, 1, -1, 0.5f, 0.0f, color_white),
 					Vertex(1, 1, 1, 0.5f, 0.25f, color_white),
 
-					Vertex(-1, -1, -1, 0.25f, 0.5f, color_white), // bottom face
-					Vertex(-1, -1, 1, 0.25f, 0.75f, color_white),
-					Vertex(1, -1, 1, 0.5f, 0.75f, color_white),
-					Vertex(1, -1, -1, 0.5f, 0.5f, color_white)
+					Vertex(-1, -1, -1, 0.25f, 0.75f, color_white), // bottom face
+					Vertex(-1, -1, 1, 0.25f, 0.5f, color_white),
+					Vertex(1, -1, 1, 0.5f, 0.5f, color_white),
+					Vertex(1, -1, -1, 0.5f, 0.75f, color_white)
 };

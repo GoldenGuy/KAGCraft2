@@ -60,8 +60,15 @@ class Camera
 	void turn(float nextdir_x, float nextdir_y, float nextdir_z, bool instantly)
 	{
 		next_dir_x = nextdir_x;
+		if(dir_x - next_dir_x > 180) dir_x -= 360;
+		else if(next_dir_x - dir_x > 180) dir_x += 360;
 		next_dir_y = nextdir_y;
+		if(dir_y - next_dir_y > 180) dir_y -= 360;
+		else if(next_dir_y - dir_y > 180) dir_y += 360;
 		next_dir_z = nextdir_z;
+		if(dir_z - next_dir_z > 180) dir_z -= 360;
+		else if(next_dir_z - dir_z > 180) dir_z += 360;
+		
 		if(instantly)
 		{
 			dir_x = nextdir_x;

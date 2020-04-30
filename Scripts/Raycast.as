@@ -13,7 +13,7 @@ namespace Raycast
 	}
 }
 	
-uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, int max_dist, Vec3f&out hit_pos, bool ignore_nonsolid)
+uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_dist, Vec3f&out hit_pos, bool ignore_nonsolid)
 {
 	Vec3f ray_world_pos(int(ray_pos.x), int(ray_pos.y), int(ray_pos.z));
 	Vec3f delta_dist(
@@ -64,6 +64,7 @@ uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, int max_dis
 				ray_world_pos.x += step.x;
 				if(ray_world_pos.x >= map_width || ray_world_pos.x < 0)
 				{
+					hit_pos = ray_pos + ray_dir * (side_dist.x-delta_dist.x);
 					return Raycast::S_OOB_X;
 				}
 				side = 0;
@@ -74,6 +75,7 @@ uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, int max_dis
 				ray_world_pos.z += step.z;
 				if(ray_world_pos.z >= map_depth || ray_world_pos.z < 0)
 				{
+					hit_pos = ray_pos + ray_dir * (side_dist.z-delta_dist.z);
 					return Raycast::S_OOB_Z;
 				}
 				side = 2;
@@ -87,6 +89,7 @@ uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, int max_dis
 				ray_world_pos.y += step.y;
 				if(ray_world_pos.y >= map_height || ray_world_pos.y < 0)
 				{
+					hit_pos = ray_pos + ray_dir * (side_dist.y-delta_dist.y);
 					return Raycast::S_OOB_Y;
 				}
 				side = 1;
@@ -97,6 +100,7 @@ uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, int max_dis
 				ray_world_pos.z += step.z;
 				if(ray_world_pos.z >= map_depth || ray_world_pos.z < 0)
 				{
+					hit_pos = ray_pos + ray_dir * (side_dist.z-delta_dist.z);
 					return Raycast::S_OOB_Z;
 				}
 				side = 2;
@@ -120,10 +124,11 @@ uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, int max_dis
 			return Raycast::S_HIT;
 		}
 	}
+	hit_pos = ray_pos + ray_dir * max_dist;
 	return Raycast::S_TOOFAR;
 }
 
-uint8 RaycastWorld_Previous(const Vec3f&in ray_pos, const Vec3f&in ray_dir, int max_dist, Vec3f&out hit_pos)
+uint8 RaycastWorld_Previous(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_dist, Vec3f&out hit_pos)
 {
 	Vec3f ray_world_pos(int(ray_pos.x), int(ray_pos.y), int(ray_pos.z));
 	Vec3f delta_dist(
@@ -217,7 +222,7 @@ uint8 RaycastWorld_Previous(const Vec3f&in ray_pos, const Vec3f&in ray_dir, int 
 	return Raycast::S_TOOFAR;
 }
 
-uint8 RaycastWorld(const Vec3f&in ray_pos, const Vec3f&in ray_dir, int max_dist, Vec3f&out hit_pos)
+uint8 RaycastWorld(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_dist, Vec3f&out hit_pos)
 {
 	Vec3f ray_world_pos(int(ray_pos.x), int(ray_pos.y), int(ray_pos.z));
 	Vec3f delta_dist(

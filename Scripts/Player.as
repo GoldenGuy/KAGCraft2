@@ -9,11 +9,20 @@ const float player_radius = 0.35f;
 const float player_diameter = player_radius*2;
 bool fly = false;
 bool hold_frustum = false;
+bool thirdperson = false;
 float sensitivity = 0.16;
 
 float max_dig_time = 100;
 bool block_menu = false;
 bool block_menu_created = false;
+Vec2f block_menu_start = Vec2f_zero;
+Vec2f block_menu_end = Vec2f_zero;
+Vec2f block_menu_size = Vec2f(8,5);
+Vec2f block_menu_tile_size = Vec2f(56,56);
+Vec2f block_menu_icon_size = Vec2f(64,64);
+Vec2f block_menu_mouse = Vec2f_zero;
+Vec2f picked_block_pos = Vec2f_zero;
+uint8[] block_menu_blocks;
 Vertex[] block_menu_verts;
 
 class Player
@@ -24,7 +33,6 @@ class Player
     bool onGround = false;
 	bool Crouch = false;
 	bool Frozen = false;
-    //Camera@ camera;
 	float dir_x = 0.01f;
 	float dir_y = 0.01f;
 	Vec3f look_dir;
@@ -55,18 +63,36 @@ class Player
 		if(c.isKeyJustPressed(KEY_KEY_E))
 		{
 			block_menu = !block_menu;
-			if(block_menu)
+			if(!block_menu)
 			{
-				if(!block_menu_created)
-				{
-					//CreateBlockMenu();
-				}
+				c.setMousePosition(d.getScreenCenterPos());
 			}
 			else
 			{
-				//getHUD().ClearMenus(true);
-				block_menu_created = false;
+				for(int i = 0; i < block_menu_blocks.size(); i++)
+				{
+					if(block_menu_blocks[i] == hand_block)
+					{
+						picked_block_pos = block_menu_start + Vec2f((i % block_menu_size.x) * block_menu_tile_size.x, int(i / block_menu_size.x) * block_menu_tile_size.y);
+					}
+				}
 			}
+		}
+		if(block_menu)
+		{
+			block_menu_mouse = c.getMouseScreenPos()-block_menu_start;
+			block_menu_mouse = Vec2f(Maths::Clamp(int(block_menu_mouse.x/block_menu_tile_size.x), 0, block_menu_size.x-1), Maths::Clamp(int(block_menu_mouse.y/block_menu_tile_size.y), 0, block_menu_size.y-1));
+			// check for click
+			if(blob !is null && blob.isKeyJustPressed(key_action1))
+			{
+				int index = block_menu_mouse.x + block_menu_mouse.y*block_menu_size.x;
+				hand_block = block_menu_blocks[index];
+
+				picked_block_pos = block_menu_start + Vec2f((index % block_menu_size.x) * block_menu_tile_size.x, int(index / block_menu_size.x) * block_menu_tile_size.y);
+			}
+			block_menu_mouse.x *= block_menu_tile_size.x;
+			block_menu_mouse.y *= block_menu_tile_size.y;
+			block_menu_mouse += block_menu_start;
 		}
 
 		if(blob !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null && !block_menu)
@@ -88,27 +114,28 @@ class Player
 
 			if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
 			if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
+			if(c.isKeyJustPressed(KEY_F5)) thirdperson = !thirdperson;
 
 			{
 				Vec3f hit_pos;
-				uint8 check = RaycastWorld(camera.pos, look_dir, 40, hit_pos);
+				uint8 check = RaycastWorld(pos+Vec3f(0,eye_height,0), look_dir, 40, hit_pos);
 				if(check == Raycast::S_HIT)
 				{
 					DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
-					if(blob.isKeyPressed(key_action2))
+					if(blob.isKeyJustPressed(key_action2))
 					{
 						uint8 block = world.map[hit_pos.y][hit_pos.z][hit_pos.x];
 						if(block == block_grass)
 						{
-							server_SetBlock(block_stone, hit_pos);
+							server_SetBlock(hand_block, hit_pos);
 						}
 						else
 						{
 							Vec3f prev_hit_pos;
-							uint8 check2 = RaycastWorld_Previous(camera.pos, look_dir, 40, prev_hit_pos);
+							uint8 check2 = RaycastWorld_Previous(pos+Vec3f(0,eye_height,0), look_dir, 40, prev_hit_pos);
 							if(check2 == Raycast::S_HIT)
 							{
-								server_SetBlock(block_stone, prev_hit_pos);
+								server_SetBlock(hand_block, prev_hit_pos);
 							}
 						}
 					}
@@ -295,9 +322,18 @@ class Player
 		if(vel.y < 0.0001f && vel.y > -0.0001f) vel.y = 0;
 		if(vel.z < 0.0001f && vel.z > -0.0001f) vel.z = 0;
 		
-		camera.move(pos+Vec3f(0,eye_height,0), false);
+		Vec3f cam_pos = pos+Vec3f(0,eye_height,0);
+		Vec3f hit_pos = Vec3f();
+		if(thirdperson)
+		{
+			uint8 check = RaycastPrecise(pos+Vec3f(0,eye_height,0), look_dir*(-1), 8.5, hit_pos, true);
+			if(check != 0)
+			{
+				cam_pos = hit_pos-look_dir*(-1.5);
+			}
+		}
+		camera.move(cam_pos, false);
 		camera.turn(dir_x, dir_y, 0, false);
-		camera.tick_update();
     }
 
 	void Serialize(CBitStream@ to_send)
@@ -377,45 +413,58 @@ class Player
 
 	void GenerateBlockMenu()
 	{
+		block_menu_blocks.clear();
 		block_menu_verts.clear();
-		Vec2f size = Vec2f(8,5);
-		int len = Maths::Min(size.x*size.y, Blocks.size()-1);
+		int len = block_menu_size.x*block_menu_size.y;
 		Vec2f screen_mid = getDriver().getScreenCenterPos();
-		Vec2f step = Vec2f(42,42);
+		block_menu_start = screen_mid-Vec2f(block_menu_size.x/2.0f*block_menu_tile_size.x, block_menu_size.y/2.0f*block_menu_tile_size.y);
+		block_menu_end = screen_mid+Vec2f(block_menu_size.x/2.0f*block_menu_tile_size.x, block_menu_size.y/2.0f*block_menu_tile_size.y);
+		uint8 pos_index = 0;
+
 		for(int i = 0; i < len; i++)
 		{
-			addBlockToMenu(Vec2f(((i % size.x) - size.x/2)*step.x + screen_mid.x, (int(i / int(size.x)) - size.y/2)*step.y + screen_mid.y) + Vec2f((step.x/2), (step.y/2)), i+1);
+			if(i >= Blocks.size())
+			{
+				return;
+			}
+			Block@ b = Blocks[i];
+			if(!b.allowed_to_build)
+			{
+				continue;
+			}
+			addBlockToMenu(Vec2f(((pos_index % block_menu_size.x) - block_menu_size.x/2)*block_menu_tile_size.x + screen_mid.x, (int(pos_index / int(block_menu_size.x)) - block_menu_size.y/2)*block_menu_tile_size.y + screen_mid.y) + Vec2f((block_menu_tile_size.x/2), (block_menu_tile_size.y/2)), i);
+			block_menu_blocks.push_back(i);
+			pos_index++;
 		}
 	}
 
 	void addBlockToMenu(Vec2f pos, uint8 id)
 	{
 		Block@ b = Blocks[id];
-		Vec2f size = Vec2f(49,49);
 
 		if(b.plant)
 		{
-			block_menu_verts.push_back(Vertex(pos.x-size.x*0.34f,	pos.y+size.y*0.34f, 0, b.sides_start_u,	b.sides_end_v, color_white));
-			block_menu_verts.push_back(Vertex(pos.x-size.x*0.34f,	pos.y-size.y*0.34f, 0, b.sides_start_u,	b.sides_start_v, color_white));
-			block_menu_verts.push_back(Vertex(pos.x+size.x*0.34f,	pos.y-size.y*0.34f, 0, b.sides_end_u,	b.sides_start_v, color_white));
-			block_menu_verts.push_back(Vertex(pos.x+size.x*0.34f,	pos.y+size.y*0.34f, 0, b.sides_end_u,	b.sides_end_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.34f,	pos.y+block_menu_icon_size.y*0.34f, 0, b.sides_start_u,	b.sides_end_v, top_scol));
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.34f,	pos.y-block_menu_icon_size.y*0.34f, 0, b.sides_start_u,	b.sides_start_v, top_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.34f,	pos.y-block_menu_icon_size.y*0.34f, 0, b.sides_end_u,	b.sides_start_v, top_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.34f,	pos.y+block_menu_icon_size.y*0.34f, 0, b.sides_end_u,	b.sides_end_v, top_scol));
 		}
 		else
 		{
-			block_menu_verts.push_back(Vertex(pos.x-size.x*0.35f,	pos.y+size.y*0.27f, 0, b.sides_start_u,	b.sides_end_v, color_white));
-			block_menu_verts.push_back(Vertex(pos.x-size.x*0.35f,	pos.y-size.y*0.18f, 0, b.sides_start_u,	b.sides_start_v, color_white));
-			block_menu_verts.push_back(Vertex(pos.x, 				pos.y,				0, b.sides_end_u,	b.sides_start_v, color_white));
-			block_menu_verts.push_back(Vertex(pos.x,				pos.y+size.y*0.45f, 0, b.sides_end_u,	b.sides_end_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.35f,	pos.y+block_menu_icon_size.y*0.27f-block_menu_icon_size.y*0.05f, 0, b.sides_start_u,	b.sides_end_v, front_scol));
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.35f,	pos.y-block_menu_icon_size.y*0.18f, 0, b.sides_start_u,	b.sides_start_v, front_scol));
+			block_menu_verts.push_back(Vertex(pos.x, 								pos.y,								0, b.sides_end_u,	b.sides_start_v, front_scol));
+			block_menu_verts.push_back(Vertex(pos.x,								pos.y+block_menu_icon_size.y*0.45f-block_menu_icon_size.y*0.05f, 0, b.sides_end_u,	b.sides_end_v, front_scol));
 
-			block_menu_verts.push_back(Vertex(pos.x,				pos.y+size.y*0.45f, 0, b.sides_start_u,	b.sides_end_v, color_white));
-			block_menu_verts.push_back(Vertex(pos.x,				pos.y,				0, b.sides_start_u,	b.sides_start_v, color_white));
-			block_menu_verts.push_back(Vertex(pos.x+size.x*0.35f, 	pos.y-size.y*0.18f,	0, b.sides_end_u,	b.sides_start_v, color_white));
-			block_menu_verts.push_back(Vertex(pos.x+size.x*0.35f,	pos.y+size.y*0.27f, 0, b.sides_end_u,	b.sides_end_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x,								pos.y+block_menu_icon_size.y*0.45f-block_menu_icon_size.y*0.05f, 0, b.sides_start_u,	b.sides_end_v, left_scol));
+			block_menu_verts.push_back(Vertex(pos.x,								pos.y,								0, b.sides_start_u,	b.sides_start_v, left_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.35f, 	pos.y-block_menu_icon_size.y*0.18f,	0, b.sides_end_u,	b.sides_start_v, left_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.35f,	pos.y+block_menu_icon_size.y*0.27f-block_menu_icon_size.y*0.05f, 0, b.sides_end_u,	b.sides_end_v, left_scol));
 
-			block_menu_verts.push_back(Vertex(pos.x-size.x*0.35f,	pos.y-size.y*0.18f, 0, b.top_start_u,	b.top_end_v, color_white));
-			block_menu_verts.push_back(Vertex(pos.x,				pos.y-size.y*0.36f, 0, b.top_start_u,	b.top_start_v, color_white));
-			block_menu_verts.push_back(Vertex(pos.x+size.x*0.35f,	pos.y-size.y*0.18f, 0, b.top_end_u,		b.top_start_v, color_white));
-			block_menu_verts.push_back(Vertex(pos.x,				pos.y,				0, b.top_end_u,		b.top_end_v, color_white));
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.35f,	pos.y-block_menu_icon_size.y*0.18f, 0, b.top_start_u,	b.top_end_v, top_scol));
+			block_menu_verts.push_back(Vertex(pos.x,								pos.y-block_menu_icon_size.y*0.36f, 0, b.top_start_u,	b.top_start_v, top_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.35f,	pos.y-block_menu_icon_size.y*0.18f, 0, b.top_end_u,		b.top_start_v, top_scol));
+			block_menu_verts.push_back(Vertex(pos.x,								pos.y,								0, b.top_end_u,		b.top_end_v, top_scol));
 		}
 	}
 

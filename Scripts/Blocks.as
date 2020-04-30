@@ -93,7 +93,7 @@ void InitBlocks()
     AddBlock("Metal", true, false, 14);
     AddBlock("Gearbox", true, false, 16);
     AddBlock("Bedrock", true, false, 240);
-    AddBlock("Fence", true, false, 241);
+    AddBlock("Fence", true, true, 241);
     AddPlantBlock("Grass", 112);
     AddPlantBlock("Tulip", 113);
     AddPlantBlock("Edelweiss", 114);
@@ -103,10 +103,13 @@ void InitBlocks()
     AddBlock("Deep water", true, false, 18);
 
     Blocks[block_bedrock].dig_speed = 0;
-    Blocks[block_fence].dig_speed = 0;
+    Blocks[block_fence].dig_speed = 2.2;
     Blocks[block_leaves].dig_speed = 13;
     Blocks[block_stone].dig_speed = 3;
     Blocks[block_hard_stone].dig_speed = 3;
+
+    Blocks[block_air].allowed_to_build = false;
+    Blocks[block_bedrock].allowed_to_build = false;
 
     Debug("Blocks are created.");
 }
@@ -119,6 +122,7 @@ class Block
     bool see_through;
     bool plant;
     float dig_speed; // 100 - instant, 0 - dont break
+    bool allowed_to_build;
 
     float sides_start_u;
     float sides_start_v;
@@ -168,6 +172,7 @@ void AddBlock(const string&in name, bool solid, bool see_through, int allsides)
     newblock.plant = false;
     newblock.dig_speed = 5;
     newblock.see_through = see_through;
+    newblock.allowed_to_build = true;
     newblock.MakeUVs(allsides, allsides, allsides);
 
     Blocks.push_back(@newblock);
@@ -185,6 +190,7 @@ void AddBlock(const string&in name, bool solid, bool see_through, int sides, int
     newblock.plant = false;
     newblock.dig_speed = 5;
     newblock.see_through = see_through;
+    newblock.allowed_to_build = true;
     newblock.MakeUVs(sides, top_and_bottom, top_and_bottom);
 
     Blocks.push_back(@newblock);
@@ -202,6 +208,7 @@ void AddBlock(const string&in name, bool solid, bool see_through, int sides, int
     newblock.plant = false;
     newblock.dig_speed = 5;
     newblock.see_through = see_through;
+    newblock.allowed_to_build = true;
     newblock.MakeUVs(sides, top, bottom);
 
     Blocks.push_back(@newblock);
@@ -218,6 +225,7 @@ void AddPlantBlock(const string&in name, int sides)
     newblock.see_through = true;
     newblock.plant = true;
     newblock.dig_speed = 100;
+    newblock.allowed_to_build = true;
     newblock.MakeUVs(sides, sides, sides);
 
     Blocks.push_back(@newblock);
