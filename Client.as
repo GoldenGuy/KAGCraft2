@@ -10,6 +10,7 @@
 #include "Raycast.as"
 #include "Camera.as"
 #include "Player.as"
+#include "Scoreboard.as"
 
 World@ world;
 
@@ -27,6 +28,7 @@ void onInit(CRules@ this)
 	Texture::createFromFile("Block_Textures", "Textures/Blocks_Jenny.png");
 	Texture::createFromFile("Block_Digger", "Textures/Digging.png");
 	Texture::createFromFile("Sky_Texture", "Textures/SkyBox.png");
+	Texture::createFromFile("BLOCK_MOUSE", "Textures/BlockMouse.png");
 	Texture::createFromFile("DEBUG", "Textures/Debug.png");
 	Texture::createFromFile("SOLID", "Sprites/pixel.png");
 	InitBlocks();
@@ -308,7 +310,17 @@ void Render(int id)
 	Render::SetAlphaBlend(true);
 	Render::RawQuads("Block_Digger", diggers);
 
-	Render::RawQuads("DEBUG", HitBoxes);
+	if(draw_block_mouse)
+	{
+		Matrix::MakeIdentity(model);
+		Matrix::SetTranslation(model, block_mouse_pos.x, block_mouse_pos.y, block_mouse_pos.z);
+		Render::SetModelTransform(model);
+		Render::RawQuads("BLOCK_MOUSE", block_mouse);
+		Matrix::MakeIdentity(model);
+		Render::SetModelTransform(model);
+	}
+
+	//Render::RawQuads("DEBUG", HitBoxes);
 	if(hold_frustum)
 	{
 		Render::SetBackfaceCull(false);

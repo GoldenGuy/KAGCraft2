@@ -114,6 +114,7 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 
 void onNewPlayerJoin(CRules@ this, CPlayer@ player)
 {
+	getSecurity().sendSeclevs(player);
 	CBlob@ blob = server_CreateBlob("husk");
 	if(blob !is null)
 	{
