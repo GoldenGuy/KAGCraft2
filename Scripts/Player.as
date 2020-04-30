@@ -24,6 +24,8 @@ Vec2f block_menu_mouse = Vec2f_zero;
 Vec2f picked_block_pos = Vec2f_zero;
 uint8[] block_menu_blocks;
 Vertex[] block_menu_verts;
+bool draw_block_mouse = false;
+Vec3f block_mouse_pos = Vec3f();
 
 class Player
 {
@@ -56,6 +58,7 @@ class Player
     void Update()
     {
         float temp_friction = friction;
+		draw_block_mouse = false;
 		
 		CControls@ c = getControls();
 		Driver@ d = getDriver();
@@ -112,15 +115,20 @@ class Player
 								Maths::Sin(dir_y*piboe),
 								Maths::Cos((dir_x)*piboe)*Maths::Cos(dir_y*piboe));
 
-			if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
-			if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
+			if(isDebug())
+			{
+				if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
+				if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
+			}
 			if(c.isKeyJustPressed(KEY_F5)) thirdperson = !thirdperson;
 
 			{
 				Vec3f hit_pos;
-				uint8 check = RaycastWorld(pos+Vec3f(0,eye_height,0), look_dir, 40, hit_pos);
+				uint8 check = RaycastWorld(pos+Vec3f(0,eye_height,0), look_dir, 4, hit_pos);
 				if(check == Raycast::S_HIT)
 				{
+					draw_block_mouse = true;
+					block_mouse_pos = hit_pos;
 					DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
 					if(blob.isKeyJustPressed(key_action2))
 					{
@@ -290,7 +298,7 @@ class Player
 
 			if(!onGround)
 			{
-				vel.y = Maths::Max(vel.y-0.04f, -0.3f);
+				vel.y = Maths::Max(vel.y-0.04f, -0.8f);
 			}
 		}
 
@@ -326,10 +334,10 @@ class Player
 		Vec3f hit_pos = Vec3f();
 		if(thirdperson)
 		{
-			uint8 check = RaycastPrecise(pos+Vec3f(0,eye_height,0), look_dir*(-1), 8.5, hit_pos, true);
+			uint8 check = RaycastPrecise(pos+Vec3f(0,eye_height,0), look_dir*(-1), 7.5, hit_pos, true);
 			if(check != 0)
 			{
-				cam_pos = hit_pos-look_dir*(-1.5);
+				cam_pos = hit_pos+look_dir*0.5;
 			}
 		}
 		camera.move(cam_pos, false);
@@ -590,3 +598,35 @@ bool isColliding(const Vec3f&in position, const Vec3f&in next_position)
 	}
 	return false;
 }
+
+Vertex[] block_mouse = {
+		Vertex(-0.02f,	-0.02f,	-0.02f,	0,	1,	color_white),
+		Vertex(-0.02f,	1.02f,	-0.02f,	0,	0,	color_white),
+		Vertex(1.02f,	1.02f,	-0.02f,	1,	0,	color_white),
+		Vertex(1.02f,	-0.02f,	-0.02f,	1,	1,	color_white),
+
+		Vertex(1.02f,	-0.02f,	1.02f,	0,	1,	color_white),
+		Vertex(1.02f,	1.02f,	1.02f,	0,	0,	color_white),
+		Vertex(-0.02f,	1.02f,	1.02f,	1,	0,	color_white),
+		Vertex(-0.02f,	-0.02f,	1.02f,	1,	1,	color_white),
+
+		Vertex(-0.02f,	-0.02f,	1.02f,	0,	1,	color_white),
+		Vertex(-0.02f,	1.02f,	1.02f,	0,	0,	color_white),
+		Vertex(-0.02f,	1.02f,	-0.02f,	1,	0,	color_white),
+		Vertex(-0.02f,	-0.02f,	-0.02f,	1,	1,	color_white),
+
+		Vertex(1.02f,	-0.02f,	-0.02f,	0,	1,	color_white),
+		Vertex(1.02f,	1.02f,	-0.02f,	0,	0,	color_white),
+		Vertex(1.02f,	1.02f,	1.02f,	1,	0,	color_white),
+		Vertex(1.02f,	-0.02f,	1.02f,	1,	1,	color_white),
+
+		Vertex(-0.02f,	1.02f,	-0.02f,	0,	1,	color_white),
+		Vertex(-0.02f,	1.02f,	1.02f,	0,	0,	color_white),
+		Vertex(1.02f,	1.02f,	1.02f,	1,	0,	color_white),
+		Vertex(1.02f,	1.02f,	-0.02f,	1,	1,	color_white),
+
+		Vertex(-0.02f,	-0.02f,	1.02f,	0,	1,	color_white),
+		Vertex(-0.02f,	-0.02f,	-0.02f,	0,	0,	color_white),
+		Vertex(1.02f,	-0.02f,	-0.02f,	1,	0,	color_white),
+		Vertex(1.02f,	-0.02f,	1.02f,	1,	1,	color_white)
+};
