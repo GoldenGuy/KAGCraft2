@@ -1,13 +1,13 @@
 
 #include "Blocks.as"
 
-const uint32 chunk_width = 16;
-const uint32 chunk_depth = 16;
-const uint32 chunk_height = 16;
+const uint32 chunk_width = 12;
+const uint32 chunk_depth = 12;
+const uint32 chunk_height = 12;
 
-uint32 world_width = 16;
-uint32 world_depth = 16;
-uint32 world_height = 8;
+uint32 world_width = 8;
+uint32 world_depth = 8;
+uint32 world_height = 4;
 uint32 world_width_depth = world_width * world_depth;
 uint32 world_size = world_width_depth * world_height;
 
