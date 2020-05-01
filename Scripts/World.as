@@ -499,13 +499,13 @@ class Chunk
 				{
                     //int index = _world.getIndex(_x, _y, _z);
 
-                    uint8 block = _world.map[_y][_z][_x];
-
-                    if(block == Block::air) continue;
-
                     int faces = _world.faces_bits[_y][_z][_x];
 
                     if(faces == 0) continue;
+
+                    uint8 block = _world.map[_y][_z][_x];
+
+                    if(block == Block::air) continue;
 
                     //Block@ b = Blocks[block];
                     if(Block::plant[block])

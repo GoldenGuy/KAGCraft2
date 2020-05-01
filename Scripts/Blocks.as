@@ -80,35 +80,35 @@ namespace Block
 
     void MakeUVs(int sides, int top, int bottom)
     {
-        float sides_start_u = float(sides % 16) / 16.0f + Block::uv_fix;
-        float sides_start_v = float(sides / 16) / 16.0f + Block::uv_fix;
-        float sides_end_u = sides_start_u + Block::u_step - Block::uv_fix*2.0f;
-        float sides_end_v = sides_start_v + Block::v_step - Block::uv_fix*2.0f;
+        float sides_start_u = float(sides % 16) / 16.0f + uv_fix;
+        float sides_start_v = float(sides / 16) / 16.0f + uv_fix;
+        float sides_end_u = sides_start_u + u_step - uv_fix*2.0f;
+        float sides_end_v = sides_start_v + v_step - uv_fix*2.0f;
 
-        float top_start_u = float(top % 16) / 16.0f + Block::uv_fix;
-        float top_start_v = float(top / 16) / 16.0f + Block::uv_fix;
-        float top_end_u = top_start_u + Block::u_step - Block::uv_fix*2.0f;
-        float top_end_v = top_start_v + Block::v_step - Block::uv_fix*2.0f;
+        float top_start_u = float(top % 16) / 16.0f + uv_fix;
+        float top_start_v = float(top / 16) / 16.0f + uv_fix;
+        float top_end_u = top_start_u + u_step - uv_fix*2.0f;
+        float top_end_v = top_start_v + v_step - uv_fix*2.0f;
 
-        float bottom_start_u = float(bottom % 16) / 16.0f + Block::uv_fix;
-        float bottom_start_v = float(bottom / 16) / 16.0f + Block::uv_fix;
-        float bottom_end_u = bottom_start_u + Block::u_step - Block::uv_fix*2.0f;
-        float bottom_end_v = bottom_start_v + Block::v_step - Block::uv_fix*2.0f;
+        float bottom_start_u = float(bottom % 16) / 16.0f + uv_fix;
+        float bottom_start_v = float(bottom / 16) / 16.0f + uv_fix;
+        float bottom_end_u = bottom_start_u + u_step - uv_fix*2.0f;
+        float bottom_end_v = bottom_start_v + v_step - uv_fix*2.0f;
 
-        Block::u_sides_start.push_back(sides_start_u);
-        Block::v_sides_start.push_back(sides_start_v);
-        Block::u_sides_end.push_back(sides_end_u);
-        Block::v_sides_end.push_back(sides_end_v);
+        u_sides_start.push_back(sides_start_u);
+        v_sides_start.push_back(sides_start_v);
+        u_sides_end.push_back(sides_end_u);
+        v_sides_end.push_back(sides_end_v);
 
-        Block::u_top_start.push_back(top_start_u);
-        Block::v_top_start.push_back(top_start_v);
-        Block::u_top_end.push_back(top_end_u);
-        Block::v_top_end.push_back(top_end_v);
+        u_top_start.push_back(top_start_u);
+        v_top_start.push_back(top_start_v);
+        u_top_end.push_back(top_end_u);
+        v_top_end.push_back(top_end_v);
 
-        Block::u_bottom_start.push_back(bottom_start_u);
-        Block::v_bottom_start.push_back(bottom_start_v);
-        Block::u_bottom_end.push_back(bottom_end_u);
-        Block::v_bottom_end.push_back(bottom_end_v);
+        u_bottom_start.push_back(bottom_start_u);
+        v_bottom_start.push_back(bottom_start_v);
+        u_bottom_end.push_back(bottom_end_u);
+        v_bottom_end.push_back(bottom_end_v);
     }
 }
 
@@ -236,7 +236,7 @@ void AddPlantBlock(const string&in name, int sides)
     Block::solid.push_back(false);
     Block::see_through.push_back(true);
     Block::plant.push_back(true);
-    Block::dig_speed.push_back(6);
+    Block::dig_speed.push_back(30);
     Block::allowed_to_build.push_back(true);
 
     Block::MakeUVs(sides, sides, sides);
