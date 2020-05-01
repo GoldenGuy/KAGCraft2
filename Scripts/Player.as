@@ -41,7 +41,7 @@ class Player
 	bool digging = false;
 	Vec3f digging_pos;
 	float dig_timer;
-	uint8 hand_block = block_stone;
+	uint8 hand_block = Block::block_stone;
 
 	Player(){}
 
@@ -108,14 +108,14 @@ class Player
 			dir_x = dir_x % 360;
 			dir_y = Maths::Clamp(dir_y-(dir.y*sensitivity),-90,90);
 			
-			Vec2f asuREEEEEE = /*Vec2f(3,26);*/Vec2f(0,0);
+			Vec2f asuREEEEEE = Vec2f(3,26);//Vec2f(0,0);
 			c.setMousePosition(ScrMid-asuREEEEEE);
 
 			look_dir = Vec3f(	Maths::Sin((dir_x)*piboe)*Maths::Cos(dir_y*piboe),
 								Maths::Sin(dir_y*piboe),
 								Maths::Cos((dir_x)*piboe)*Maths::Cos(dir_y*piboe));
 
-			if(isDebug())
+			//if(isDebug())
 			{
 				if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
 				if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
@@ -124,18 +124,25 @@ class Player
 
 			{
 				Vec3f hit_pos;
-				uint8 check = RaycastWorld(pos+Vec3f(0,eye_height,0), look_dir, 4, hit_pos);
+				uint8 check = RaycastWorld(pos+Vec3f(0,eye_height,0), look_dir, 40, hit_pos);
 				if(check == Raycast::S_HIT)
 				{
 					draw_block_mouse = true;
 					block_mouse_pos = hit_pos;
 					DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
-					if(blob.isKeyJustPressed(key_action2))
+					if(blob.isKeyPressed(key_action2))
 					{
 						uint8 block = world.map[hit_pos.y][hit_pos.z][hit_pos.x];
-						if(block == block_grass)
+						if(block == Block::block_grass)
 						{
 							server_SetBlock(hand_block, hit_pos);
+
+							server_SetBlock(hand_block, hit_pos+Vec3f(0,0,1));
+							server_SetBlock(hand_block, hit_pos-Vec3f(0,0,1));
+							server_SetBlock(hand_block, hit_pos+Vec3f(1,0,0));
+							server_SetBlock(hand_block, hit_pos-Vec3f(1,0,0));
+							server_SetBlock(hand_block, hit_pos+Vec3f(0,1,0));
+							server_SetBlock(hand_block, hit_pos-Vec3f(0,1,0));
 						}
 						else
 						{
@@ -144,22 +151,28 @@ class Player
 							if(check2 == Raycast::S_HIT)
 							{
 								server_SetBlock(hand_block, prev_hit_pos);
+
+								server_SetBlock(hand_block, prev_hit_pos+Vec3f(0,0,1));
+								server_SetBlock(hand_block, prev_hit_pos-Vec3f(0,0,1));
+								server_SetBlock(hand_block, prev_hit_pos+Vec3f(1,0,0));
+								server_SetBlock(hand_block, prev_hit_pos-Vec3f(1,0,0));
+								server_SetBlock(hand_block, prev_hit_pos+Vec3f(0,1,0));
+								server_SetBlock(hand_block, prev_hit_pos-Vec3f(0,1,0));
 							}
 						}
 					}
 					else if(blob.isKeyPressed(key_action1))
 					{
-						if(digging)
+						/*if(digging)
 						{
 							if(digging_pos == hit_pos)
 							{
 								uint8 block = world.map[hit_pos.y][hit_pos.z][hit_pos.x];
-								Block@ b = Blocks[block];
 
-								dig_timer += b.dig_speed;
+								dig_timer += Block::dig_speed[block];
 								if(dig_timer >= max_dig_time)
 								{
-									server_SetBlock(block_air, hit_pos);
+									server_SetBlock(Block::block_air, hit_pos);
 									digging = false;
 								}
 							}
@@ -173,7 +186,15 @@ class Player
 							digging = true;
 							dig_timer = 0;
 							digging_pos = hit_pos;
-						}
+						}*/
+						server_SetBlock(Block::block_air, hit_pos);
+
+						server_SetBlock(Block::block_air, hit_pos+Vec3f(0,0,1));
+						server_SetBlock(Block::block_air, hit_pos-Vec3f(0,0,1));
+						server_SetBlock(Block::block_air, hit_pos+Vec3f(1,0,0));
+						server_SetBlock(Block::block_air, hit_pos-Vec3f(1,0,0));
+						server_SetBlock(Block::block_air, hit_pos+Vec3f(0,1,0));
+						server_SetBlock(Block::block_air, hit_pos-Vec3f(0,1,0));
 					}
 					else if(digging)
 					{
@@ -302,7 +323,8 @@ class Player
 			}
 		}
 
-		CollisionResponse(pos, vel);
+		//CollisionResponse(pos, vel);
+		pos+=vel;
 
 		//pos = Vec3f(Maths::Clamp(pos.x, player_diameter/1.9f, map_width-player_diameter/1.9f), Maths::Clamp(pos.y, 0, map_height-player_height), Maths::Clamp(pos.z, player_diameter/1.9f, map_depth-player_diameter/1.9f));
 
@@ -431,12 +453,11 @@ class Player
 
 		for(int i = 0; i < len; i++)
 		{
-			if(i >= Blocks.size())
+			if(i >= Block::blocks_count)
 			{
 				return;
 			}
-			Block@ b = Blocks[i];
-			if(!b.allowed_to_build)
+			if(!Block::allowed_to_build[i])
 			{
 				continue;
 			}
@@ -448,31 +469,44 @@ class Player
 
 	void addBlockToMenu(Vec2f pos, uint8 id)
 	{
-		Block@ b = Blocks[id];
-
-		if(b.plant)
+		if(Block::plant[id])
 		{
-			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.34f,	pos.y+block_menu_icon_size.y*0.34f, 0, b.sides_start_u,	b.sides_end_v, top_scol));
-			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.34f,	pos.y-block_menu_icon_size.y*0.34f, 0, b.sides_start_u,	b.sides_start_v, top_scol));
-			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.34f,	pos.y-block_menu_icon_size.y*0.34f, 0, b.sides_end_u,	b.sides_start_v, top_scol));
-			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.34f,	pos.y+block_menu_icon_size.y*0.34f, 0, b.sides_end_u,	b.sides_end_v, top_scol));
+			float u1 = Block::u_sides_start[id];
+			float u2 = Block::u_sides_end[id];
+			float v1 = Block::v_sides_start[id];
+			float v2 = Block::v_sides_end[id];
+			
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.34f,	pos.y+block_menu_icon_size.y*0.34f, 0, u1,	v1,	top_scol));
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.34f,	pos.y-block_menu_icon_size.y*0.34f, 0, u2,	v1,	top_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.34f,	pos.y-block_menu_icon_size.y*0.34f, 0, u2,	v2,	top_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.34f,	pos.y+block_menu_icon_size.y*0.34f, 0, u1,	v2,	top_scol));
 		}
 		else
 		{
-			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.35f,	pos.y+block_menu_icon_size.y*0.27f-block_menu_icon_size.y*0.05f, 0, b.sides_start_u,	b.sides_end_v, front_scol));
-			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.35f,	pos.y-block_menu_icon_size.y*0.18f, 0, b.sides_start_u,	b.sides_start_v, front_scol));
-			block_menu_verts.push_back(Vertex(pos.x, 								pos.y,								0, b.sides_end_u,	b.sides_start_v, front_scol));
-			block_menu_verts.push_back(Vertex(pos.x,								pos.y+block_menu_icon_size.y*0.45f-block_menu_icon_size.y*0.05f, 0, b.sides_end_u,	b.sides_end_v, front_scol));
+			float u1 = Block::u_sides_start[id];
+			float u2 = Block::u_sides_end[id];
+			float v1 = Block::v_sides_start[id];
+			float v2 = Block::v_sides_end[id];
+			
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.35f,	pos.y+block_menu_icon_size.y*0.27f-block_menu_icon_size.y*0.05f,	0, u1,	v1,	front_scol));
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.35f,	pos.y-block_menu_icon_size.y*0.18f,									0, u2,	v1,	front_scol));
+			block_menu_verts.push_back(Vertex(pos.x, 								pos.y,																0, u2,	v2,	front_scol));
+			block_menu_verts.push_back(Vertex(pos.x,								pos.y+block_menu_icon_size.y*0.45f-block_menu_icon_size.y*0.05f,	0, u1,	v2,	front_scol));
 
-			block_menu_verts.push_back(Vertex(pos.x,								pos.y+block_menu_icon_size.y*0.45f-block_menu_icon_size.y*0.05f, 0, b.sides_start_u,	b.sides_end_v, left_scol));
-			block_menu_verts.push_back(Vertex(pos.x,								pos.y,								0, b.sides_start_u,	b.sides_start_v, left_scol));
-			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.35f, 	pos.y-block_menu_icon_size.y*0.18f,	0, b.sides_end_u,	b.sides_start_v, left_scol));
-			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.35f,	pos.y+block_menu_icon_size.y*0.27f-block_menu_icon_size.y*0.05f, 0, b.sides_end_u,	b.sides_end_v, left_scol));
+			block_menu_verts.push_back(Vertex(pos.x,								pos.y+block_menu_icon_size.y*0.45f-block_menu_icon_size.y*0.05f,	0, u1,	v1,	left_scol));
+			block_menu_verts.push_back(Vertex(pos.x,								pos.y,																0, u2,	v1,	left_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.35f, 	pos.y-block_menu_icon_size.y*0.18f,									0, u2,	v2,	left_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.35f,	pos.y+block_menu_icon_size.y*0.27f-block_menu_icon_size.y*0.05f,	0, u1,	v2,	left_scol));
 
-			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.35f,	pos.y-block_menu_icon_size.y*0.18f, 0, b.top_start_u,	b.top_end_v, top_scol));
-			block_menu_verts.push_back(Vertex(pos.x,								pos.y-block_menu_icon_size.y*0.36f, 0, b.top_start_u,	b.top_start_v, top_scol));
-			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.35f,	pos.y-block_menu_icon_size.y*0.18f, 0, b.top_end_u,		b.top_start_v, top_scol));
-			block_menu_verts.push_back(Vertex(pos.x,								pos.y,								0, b.top_end_u,		b.top_end_v, top_scol));
+			u1 = Block::u_top_start[id];
+			u2 = Block::u_top_end[id];
+			v1 = Block::v_top_start[id];
+			v2 = Block::v_top_end[id];
+
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.35f,	pos.y-block_menu_icon_size.y*0.18f, 0, u1,	v1,	top_scol));
+			block_menu_verts.push_back(Vertex(pos.x,								pos.y-block_menu_icon_size.y*0.36f, 0, u2,	v1,	top_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.35f,	pos.y-block_menu_icon_size.y*0.18f, 0, u2,	v2,	top_scol));
+			block_menu_verts.push_back(Vertex(pos.x,								pos.y,								0, u1,	v2,	top_scol));
 		}
 	}
 

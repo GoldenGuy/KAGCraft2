@@ -1,66 +1,142 @@
 
-const float u_step = 1.0f/16.0f;
-const float v_step = 1.0f/16.0f;
-const float uv_fix = 0.0002f;
 
-enum block_id
+namespace Block
 {
-    block_air = 0,
-    block_grass_dirt,
-    block_dirt,
-    block_stone,
-    block_hard_stone,
-    block_stone_wall,
-    block_gold,
-    block_crate,
+    const float u_step = 1.0f/16.0f;
+    const float v_step = 1.0f/16.0f;
+    const float uv_fix = 0.0002f;
     
-    block_log_birch,
-    block_log,
-    block_leaves,
-    block_planks_birch,
-    block_planks,
-    block_bricks,
-    block_glass,
-    block_wool_red,
-    
-    block_wool_orange,
-    block_wool_yellow,
-    block_wool_green,
-    block_wool_cyan,
-    block_wool_blue,
-    block_wool_darkblue,
-    block_wool_purple,
-    block_wool_white,
-    
-    block_wool_gray,
-    block_wool_black,
-    block_wool_brown,
-    block_wool_pink,
-    block_metal_shiny,
-    block_metal,
-    block_gearbox,
-    block_bedrock,
-    
-    block_fence,
-    block_grass,
-    block_tulip,
-    block_edelweiss,
-    block_log_palm,
-    block_sand,
-    block_water,
-    block_watersecond,
-    
-    blocks_count
+    enum block_id
+    {
+        block_air = 0,
+        block_grass_dirt,
+        block_dirt,
+        block_stone,
+        block_hard_stone,
+        block_stone_wall,
+        block_gold,
+        block_crate,
+        
+        block_log_birch,
+        block_log,
+        block_leaves,
+        block_planks_birch,
+        block_planks,
+        block_bricks,
+        block_glass,
+        block_wool_red,
+        
+        block_wool_orange,
+        block_wool_yellow,
+        block_wool_green,
+        block_wool_cyan,
+        block_wool_blue,
+        block_wool_darkblue,
+        block_wool_purple,
+        block_wool_white,
+        
+        block_wool_gray,
+        block_wool_black,
+        block_wool_brown,
+        block_wool_pink,
+        block_metal_shiny,
+        block_metal,
+        block_gearbox,
+        block_bedrock,
+        
+        block_fence,
+        block_grass,
+        block_tulip,
+        block_edelweiss,
+        block_log_palm,
+        block_sand,
+        block_water,
+        block_watersecond,
+        
+        blocks_count
+    }
+
+    string[] block_names;
+    bool[] solid;
+    bool[] see_through;
+    bool[] plant;
+    float[] dig_speed;
+    bool[] allowed_to_build;
+
+    float[] u_sides_start;
+    float[] v_sides_start;
+    float[] u_sides_end;
+    float[] v_sides_end;
+
+    float[] u_top_start;
+    float[] v_top_start;
+    float[] u_top_end;
+    float[] v_top_end;
+
+    float[] u_bottom_start;
+    float[] v_bottom_start;
+    float[] u_bottom_end;
+    float[] v_bottom_end;
+
+    void MakeUVs(int sides, int top, int bottom)
+    {
+        float sides_start_u = float(sides % 16) / 16.0f + Block::uv_fix;
+        float sides_start_v = float(sides / 16) / 16.0f + Block::uv_fix;
+        float sides_end_u = sides_start_u + Block::u_step - Block::uv_fix*2.0f;
+        float sides_end_v = sides_start_v + Block::v_step - Block::uv_fix*2.0f;
+
+        float top_start_u = float(top % 16) / 16.0f + Block::uv_fix;
+        float top_start_v = float(top / 16) / 16.0f + Block::uv_fix;
+        float top_end_u = top_start_u + Block::u_step - Block::uv_fix*2.0f;
+        float top_end_v = top_start_v + Block::v_step - Block::uv_fix*2.0f;
+
+        float bottom_start_u = float(bottom % 16) / 16.0f + Block::uv_fix;
+        float bottom_start_v = float(bottom / 16) / 16.0f + Block::uv_fix;
+        float bottom_end_u = bottom_start_u + Block::u_step - Block::uv_fix*2.0f;
+        float bottom_end_v = bottom_start_v + Block::v_step - Block::uv_fix*2.0f;
+
+        Block::u_sides_start.push_back(sides_start_u);
+        Block::v_sides_start.push_back(sides_start_v);
+        Block::u_sides_end.push_back(sides_end_u);
+        Block::v_sides_end.push_back(sides_end_v);
+
+        Block::u_top_start.push_back(top_start_u);
+        Block::v_top_start.push_back(top_start_v);
+        Block::u_top_end.push_back(top_end_u);
+        Block::v_top_end.push_back(top_end_v);
+
+        Block::u_bottom_start.push_back(bottom_start_u);
+        Block::v_bottom_start.push_back(bottom_start_v);
+        Block::u_bottom_end.push_back(bottom_end_u);
+        Block::v_bottom_end.push_back(bottom_end_v);
+    }
 }
 
-
-Block@[] Blocks;
-
-int block_counter = 0;
+//int block_counter = 0;
 void InitBlocks()
 {
-    block_counter = 0;
-    Blocks.clear();
+    //block_counter = 0;
+    Block::block_names.clear();
+    Block::solid.clear();
+    Block::see_through.clear();
+    Block::plant.clear();
+    Block::dig_speed.clear();
+    Block::allowed_to_build.clear();
+
+    Block::u_sides_start.clear();
+    Block::v_sides_start.clear();
+    Block::u_sides_end.clear();
+    Block::v_sides_end.clear();
+    Block::u_top_start.clear();
+    Block::v_top_start.clear();
+    Block::u_top_end.clear();
+    Block::v_top_end.clear();
+    Block::u_bottom_start.clear();
+    Block::v_bottom_start.clear();
+    Block::u_bottom_end.clear();
+    Block::v_bottom_end.clear();
+
+    //Blocks.clear();
     AddBlock("Air", false, true, 0);
     AddBlock("Grass dirt", true, false, 1, 2, 3);
     AddBlock("Dirt", true, false, 3);
@@ -102,133 +178,66 @@ void InitBlocks()
     AddBlock("Water", true, false, 17);
     AddBlock("Deep water", true, false, 18);
 
-    Blocks[block_bedrock].dig_speed = 0;
-    Blocks[block_fence].dig_speed = 2.2;
-    Blocks[block_leaves].dig_speed = 13;
-    Blocks[block_stone].dig_speed = 3;
-    Blocks[block_hard_stone].dig_speed = 3;
+    Block::dig_speed[Block::block_bedrock] = 0;
+    Block::dig_speed[Block::block_fence] = 2.2;
+    Block::dig_speed[Block::block_leaves] = 13;
+    Block::dig_speed[Block::block_stone] = 3;
+    Block::dig_speed[Block::block_hard_stone] = 3;
 
-    Blocks[block_air].allowed_to_build = false;
-    Blocks[block_bedrock].allowed_to_build = false;
+    Block::allowed_to_build[Block::block_air] = false;
+    Block::allowed_to_build[Block::block_bedrock] = false;
 
     Debug("Blocks are created.");
 }
 
-class Block
-{
-    int id;
-    string name;
-    bool solid;
-    bool see_through;
-    bool plant;
-    float dig_speed; // 100 - instant, 0 - dont break
-    bool allowed_to_build;
-
-    float sides_start_u;
-    float sides_start_v;
-    float sides_end_u;
-    float sides_end_v;
-
-    float top_start_u;
-    float top_start_v;
-    float top_end_u;
-    float top_end_v;
-
-    float bottom_start_u;
-    float bottom_start_v;
-    float bottom_end_u;
-    float bottom_end_v;
-
-    Block(){}
-
-    void MakeUVs(int sides, int top, int bottom)
-    {
-        sides_start_u = float(sides % 16) / 16.0f + uv_fix;
-        sides_start_v = float(sides / 16) / 16.0f + uv_fix;
-        sides_end_u = sides_start_u + u_step - uv_fix*2.0f;
-        sides_end_v = sides_start_v + v_step - uv_fix*2.0f;
-
-        top_start_u = float(top % 16) / 16.0f + uv_fix;
-        top_start_v = float(top / 16) / 16.0f + uv_fix;
-        top_end_u = top_start_u + u_step - uv_fix*2.0f;
-        top_end_v = top_start_v + v_step - uv_fix*2.0f;
-
-        bottom_start_u = float(bottom % 16) / 16.0f + uv_fix;
-        bottom_start_v = float(bottom / 16) / 16.0f + uv_fix;
-        bottom_end_u = bottom_start_u + u_step - uv_fix*2.0f;
-        bottom_end_v = bottom_start_v + v_step - uv_fix*2.0f;
-
-        AddIconToken(name+"_Icon", "Textures/Blocks_Jenny.png", Vec2f(16,16), sides);
-    }
-}
-
-void AddBlock(const string&in name, bool solid, bool see_through, int allsides)
+void AddBlock(const string&in name, bool _solid, bool _see_through, int allsides)
 {
     Debug("name: "+name, 2);
-    Block newblock;
-    newblock.id = block_counter;
-    newblock.name = name;
-    newblock.solid = solid;
-    newblock.plant = false;
-    newblock.dig_speed = 5;
-    newblock.see_through = see_through;
-    newblock.allowed_to_build = true;
-    newblock.MakeUVs(allsides, allsides, allsides);
+    Block::block_names.push_back(name);
+    Block::solid.push_back(_solid);
+    Block::see_through.push_back(_see_through);
+    Block::plant.push_back(false);
+    Block::dig_speed.push_back(6);
+    Block::allowed_to_build.push_back(true);
 
-    Blocks.push_back(@newblock);
-
-    block_counter++;
+    Block::MakeUVs(allsides, allsides, allsides);
 }
 
-void AddBlock(const string&in name, bool solid, bool see_through, int sides, int top_and_bottom)
+void AddBlock(const string&in name, bool _solid, bool _see_through, int sides, int top_and_bottom)
 {
     Debug("name: "+name, 2);
-    Block newblock;
-    newblock.id = block_counter;
-    newblock.name = name;
-    newblock.solid = solid;
-    newblock.plant = false;
-    newblock.dig_speed = 5;
-    newblock.see_through = see_through;
-    newblock.allowed_to_build = true;
-    newblock.MakeUVs(sides, top_and_bottom, top_and_bottom);
+    Block::block_names.push_back(name);
+    Block::solid.push_back(_solid);
+    Block::see_through.push_back(_see_through);
+    Block::plant.push_back(false);
+    Block::dig_speed.push_back(6);
+    Block::allowed_to_build.push_back(true);
 
-    Blocks.push_back(@newblock);
-
-    block_counter++;
+    Block::MakeUVs(sides, top_and_bottom, top_and_bottom);
 }
 
-void AddBlock(const string&in name, bool solid, bool see_through, int sides, int top, int bottom)
+void AddBlock(const string&in name, bool _solid, bool _see_through, int sides, int top, int bottom)
 {
     Debug("name: "+name, 2);
-    Block newblock;
-    newblock.id = block_counter;
-    newblock.name = name;
-    newblock.solid = solid;
-    newblock.plant = false;
-    newblock.dig_speed = 5;
-    newblock.see_through = see_through;
-    newblock.allowed_to_build = true;
-    newblock.MakeUVs(sides, top, bottom);
+    Block::block_names.push_back(name);
+    Block::solid.push_back(_solid);
+    Block::see_through.push_back(_see_through);
+    Block::plant.push_back(false);
+    Block::dig_speed.push_back(6);
+    Block::allowed_to_build.push_back(true);
 
-    Blocks.push_back(@newblock);
-
-    block_counter++;
+    Block::MakeUVs(sides, top, bottom);
 }
 
 void AddPlantBlock(const string&in name, int sides)
 {
-    Block newblock;
-    newblock.id = block_counter;
-    newblock.name = name;
-    newblock.solid = false;
-    newblock.see_through = true;
-    newblock.plant = true;
-    newblock.dig_speed = 100;
-    newblock.allowed_to_build = true;
-    newblock.MakeUVs(sides, sides, sides);
+    Debug("name: "+name, 2);
+    Block::block_names.push_back(name);
+    Block::solid.push_back(false);
+    Block::see_through.push_back(true);
+    Block::plant.push_back(true);
+    Block::dig_speed.push_back(6);
+    Block::allowed_to_build.push_back(true);
 
-    Blocks.push_back(@newblock);
-
-    block_counter++;
+    Block::MakeUVs(sides, sides, sides);
 }

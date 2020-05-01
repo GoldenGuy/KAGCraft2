@@ -10,7 +10,7 @@ class ServerPlayer
 	bool digging = false;
 	Vec3f digging_pos;
 	uint dig_timer;
-	uint8 hand_block = block_stone;
+	uint8 hand_block = Block::block_stone;
 
     ServerPlayer(){}
 
