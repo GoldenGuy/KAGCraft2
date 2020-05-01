@@ -41,7 +41,7 @@ class Player
 	bool digging = false;
 	Vec3f digging_pos;
 	float dig_timer;
-	uint8 hand_block = Block::block_stone;
+	uint8 hand_block = Block::stone;
 
 	Player(){}
 
@@ -108,14 +108,14 @@ class Player
 			dir_x = dir_x % 360;
 			dir_y = Maths::Clamp(dir_y-(dir.y*sensitivity),-90,90);
 			
-			Vec2f asuREEEEEE = Vec2f(3,26);//Vec2f(0,0);
+			Vec2f asuREEEEEE = /*Vec2f(3,26);*/Vec2f(0,0);
 			c.setMousePosition(ScrMid-asuREEEEEE);
 
 			look_dir = Vec3f(	Maths::Sin((dir_x)*piboe)*Maths::Cos(dir_y*piboe),
 								Maths::Sin(dir_y*piboe),
 								Maths::Cos((dir_x)*piboe)*Maths::Cos(dir_y*piboe));
 
-			//if(isDebug())
+			if(isDebug())
 			{
 				if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
 				if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
@@ -124,30 +124,30 @@ class Player
 
 			{
 				Vec3f hit_pos;
-				uint8 check = RaycastWorld(pos+Vec3f(0,eye_height,0), look_dir, 40, hit_pos);
+				uint8 check = RaycastWorld(pos+Vec3f(0,eye_height,0), look_dir, 5, hit_pos);
 				if(check == Raycast::S_HIT)
 				{
 					draw_block_mouse = true;
 					block_mouse_pos = hit_pos;
 					DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
-					if(blob.isKeyPressed(key_action2))
+					if(blob.isKeyJustPressed(key_action2))
 					{
 						uint8 block = world.map[hit_pos.y][hit_pos.z][hit_pos.x];
-						if(block == Block::block_grass)
+						if(block == Block::grass)
 						{
 							server_SetBlock(hand_block, hit_pos);
 
-							server_SetBlock(hand_block, hit_pos+Vec3f(0,0,1));
+							/*server_SetBlock(hand_block, hit_pos+Vec3f(0,0,1));
 							server_SetBlock(hand_block, hit_pos-Vec3f(0,0,1));
 							server_SetBlock(hand_block, hit_pos+Vec3f(1,0,0));
 							server_SetBlock(hand_block, hit_pos-Vec3f(1,0,0));
 							server_SetBlock(hand_block, hit_pos+Vec3f(0,1,0));
-							server_SetBlock(hand_block, hit_pos-Vec3f(0,1,0));
+							server_SetBlock(hand_block, hit_pos-Vec3f(0,1,0));*/
 						}
 						else
 						{
 							Vec3f prev_hit_pos;
-							uint8 check2 = RaycastWorld_Previous(pos+Vec3f(0,eye_height,0), look_dir, 40, prev_hit_pos);
+							uint8 check2 = RaycastWorld_Previous(pos+Vec3f(0,eye_height,0), look_dir, 5, prev_hit_pos);
 							if(check2 == Raycast::S_HIT)
 							{
 								server_SetBlock(hand_block, prev_hit_pos);
@@ -163,7 +163,7 @@ class Player
 					}
 					else if(blob.isKeyPressed(key_action1))
 					{
-						/*if(digging)
+						if(digging)
 						{
 							if(digging_pos == hit_pos)
 							{
@@ -172,7 +172,7 @@ class Player
 								dig_timer += Block::dig_speed[block];
 								if(dig_timer >= max_dig_time)
 								{
-									server_SetBlock(Block::block_air, hit_pos);
+									server_SetBlock(Block::air, hit_pos);
 									digging = false;
 								}
 							}
@@ -186,15 +186,15 @@ class Player
 							digging = true;
 							dig_timer = 0;
 							digging_pos = hit_pos;
-						}*/
-						server_SetBlock(Block::block_air, hit_pos);
+						}
+						/*server_SetBlock(Block::air, hit_pos);
 
-						server_SetBlock(Block::block_air, hit_pos+Vec3f(0,0,1));
-						server_SetBlock(Block::block_air, hit_pos-Vec3f(0,0,1));
-						server_SetBlock(Block::block_air, hit_pos+Vec3f(1,0,0));
-						server_SetBlock(Block::block_air, hit_pos-Vec3f(1,0,0));
-						server_SetBlock(Block::block_air, hit_pos+Vec3f(0,1,0));
-						server_SetBlock(Block::block_air, hit_pos-Vec3f(0,1,0));
+						server_SetBlock(Block::air, hit_pos+Vec3f(0,0,1));
+						server_SetBlock(Block::air, hit_pos-Vec3f(0,0,1));
+						server_SetBlock(Block::air, hit_pos+Vec3f(1,0,0));
+						server_SetBlock(Block::air, hit_pos-Vec3f(1,0,0));
+						server_SetBlock(Block::air, hit_pos+Vec3f(0,1,0));
+						server_SetBlock(Block::air, hit_pos-Vec3f(0,1,0));*/
 					}
 					else if(digging)
 					{
@@ -323,8 +323,8 @@ class Player
 			}
 		}
 
-		//CollisionResponse(pos, vel);
-		pos+=vel;
+		CollisionResponse(pos, vel);
+		//pos+=vel;
 
 		//pos = Vec3f(Maths::Clamp(pos.x, player_diameter/1.9f, map_width-player_diameter/1.9f), Maths::Clamp(pos.y, 0, map_height-player_height), Maths::Clamp(pos.z, player_diameter/1.9f, map_depth-player_diameter/1.9f));
 

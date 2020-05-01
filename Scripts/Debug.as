@@ -1,7 +1,7 @@
 
 bool isDebug()
 {
-	return false; // set to false when release
+	return true; // set to false when release
 }
 
 Vertex[] HitBoxes;

@@ -72,20 +72,20 @@ class World
                     float h = noise.Sample(x * sample_frequency, z * sample_frequency) * (noise.Fractal(x * fractal_frequency, z * fractal_frequency)/2.0f) + add_height;//+Maths::Pow(y / float(map_height), 1.1024f)-0.5;
                     if(y == 0)
                     {
-                        map[y][z][x] = Block::block_bedrock;
+                        map[y][z][x] = Block::bedrock;
                     }
                     else if(h > h_diff)
                     {
                         if(h-h_diff <= dirt_start)
                         {
                             if(h-something > h_diff)
-                                map[y][z][x] = Block::block_dirt;
+                                map[y][z][x] = Block::dirt;
                             else
                             {
                                 if(make_tree)
                                 {
                                     trees.push_back(Vec3f(x,y+1,z));
-                                    map[y][z][x] = Block::block_dirt;
+                                    map[y][z][x] = Block::dirt;
                                 }
                                 else if(make_grass)
                                 {
@@ -93,31 +93,31 @@ class World
                                     {
                                         if(flower_type)
                                         {
-                                            map[y+1][z][x] = Block::block_tulip;
+                                            map[y+1][z][x] = Block::tulip;
                                         }
                                         else
                                         {
-                                            map[y+1][z][x] = Block::block_edelweiss;
+                                            map[y+1][z][x] = Block::edelweiss;
                                         }
                                     }
                                     else
                                     {
-                                        map[y+1][z][x] = Block::block_grass;
+                                        map[y+1][z][x] = Block::grass;
                                     }
-                                    map[y][z][x] = Block::block_grass_dirt;
+                                    map[y][z][x] = Block::grass_dirt;
                                 }
-                                else map[y][z][x] = Block::block_grass_dirt;
+                                else map[y][z][x] = Block::grass_dirt;
                             }
                         }
                         else
                         {
                             if(h-h_diff > dirt_start+0.06)
                             {
-                                map[y][z][x] = Block::block_hard_stone;
+                                map[y][z][x] = Block::hard_stone;
                             }
                             else
                             {
-                                map[y][z][x] = Block::block_stone;
+                                map[y][z][x] = Block::stone;
                             }
                         }
                     }
@@ -148,9 +148,9 @@ class World
 
     void MakeTree(Vec3f pos)
 	{
-		uint8 tree_type = Block::block_log;
+		uint8 tree_type = Block::log;
 		if(XORRandom(3) == 0)
-			tree_type = Block::block_log_birch;
+			tree_type = Block::log_birch;
 		if(inWorldBounds(pos.x, pos.y, pos.z))
 		{
 			SetBlock(pos.x, pos.y, pos.z, tree_type);
@@ -166,7 +166,7 @@ class World
 					for(int _z = -2; _z <= 2; _z++)
 						for(int _x = -2; _x <= 2; _x++)
 							if(!(_x == 0 && _z == 0))
-								SetBlock(pos.x+_x, pos.y, pos.z+_z, Block::block_leaves);
+								SetBlock(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
 					
 					pos.y += 1;
 					if(inWorldBounds(pos.x, pos.y, pos.z))
@@ -176,7 +176,7 @@ class World
 						for(int _z = -2; _z <= 2; _z++)
 							for(int _x = -2; _x <= 2; _x++)
 								if(!(_x == 0 && _z == 0))
-									SetBlock(pos.x+_x, pos.y, pos.z+_z, Block::block_leaves);
+									SetBlock(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
 						
 						pos.y += 1;
 						if(inWorldBounds(pos.x, pos.y, pos.z))
@@ -186,16 +186,16 @@ class World
 							for(int _z = -1; _z <= 1; _z++)
 								for(int _x = -1; _x <= 1; _x++)
 									if(!(_x == 0 && _z == 0))
-										SetBlock(pos.x+_x, pos.y, pos.z+_z, Block::block_leaves);
+										SetBlock(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
 							
 							pos.y += 1;
 							if(inWorldBounds(pos.x, pos.y, pos.z))
 							{
-								SetBlock(pos.x+1, pos.y, pos.z, Block::block_leaves);
-								SetBlock(pos.x-1, pos.y, pos.z, Block::block_leaves);
-								SetBlock(pos.x, pos.y, pos.z, Block::block_leaves);
-								SetBlock(pos.x, pos.y, pos.z+1, Block::block_leaves);
-								SetBlock(pos.x, pos.y, pos.z-1, Block::block_leaves);
+								SetBlock(pos.x+1, pos.y, pos.z, Block::leaves);
+								SetBlock(pos.x-1, pos.y, pos.z, Block::leaves);
+								SetBlock(pos.x, pos.y, pos.z, Block::leaves);
+								SetBlock(pos.x, pos.y, pos.z+1, Block::leaves);
+								SetBlock(pos.x, pos.y, pos.z-1, Block::leaves);
 								getNet().server_KeepConnectionsAlive();
 							}
 						}
@@ -239,7 +239,7 @@ class World
 
     void UpdateBlockFaces(int x, int y, int z)
     {
-        if(map[y][z][x] == Block::block_air || Block::plant[map[y][z][x]])
+        if(map[y][z][x] == Block::air || Block::plant[map[y][z][x]])
         {
             faces_bits[y][z][x] = 64;
             return;
@@ -501,7 +501,7 @@ class Chunk
 
                     uint8 block = _world.map[_y][_z][_x];
 
-                    if(block == Block::block_air) continue;
+                    if(block == Block::air) continue;
 
                     int faces = _world.faces_bits[_y][_z][_x];
 

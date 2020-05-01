@@ -8,50 +8,50 @@ namespace Block
     
     enum block_id
     {
-        block_air = 0,
-        block_grass_dirt,
-        block_dirt,
-        block_stone,
-        block_hard_stone,
-        block_stone_wall,
-        block_gold,
-        block_crate,
-        
-        block_log_birch,
-        block_log,
-        block_leaves,
-        block_planks_birch,
-        block_planks,
-        block_bricks,
-        block_glass,
-        block_wool_red,
-        
-        block_wool_orange,
-        block_wool_yellow,
-        block_wool_green,
-        block_wool_cyan,
-        block_wool_blue,
-        block_wool_darkblue,
-        block_wool_purple,
-        block_wool_white,
-        
-        block_wool_gray,
-        block_wool_black,
-        block_wool_brown,
-        block_wool_pink,
-        block_metal_shiny,
-        block_metal,
-        block_gearbox,
-        block_bedrock,
-        
-        block_fence,
-        block_grass,
-        block_tulip,
-        block_edelweiss,
-        block_log_palm,
-        block_sand,
-        block_water,
-        block_watersecond,
+        air = 0,
+        grass_dirt,
+        dirt,
+        stone,
+        hard_stone,
+        stone_wall,
+        gold,
+        crate,
+
+        log_birch,
+        log,
+        leaves,
+        planks_birch,
+        planks,
+        bricks,
+        glass,
+        wool_red,
+
+        wool_orange,
+        wool_yellow,
+        wool_green,
+        wool_cyan,
+        wool_blue,
+        wool_darkblue,
+        wool_purple,
+        wool_white,
+
+        wool_gray,
+        wool_black,
+        wool_brown,
+        wool_pink,
+        metal_shiny,
+        metal,
+        gearbox,
+        bedrock,
+
+        fence,
+        grass,
+        tulip,
+        edelweiss,
+        log_palm,
+        sand,
+        water,
+        watersecond,
         
         blocks_count
     }
@@ -178,14 +178,14 @@ void InitBlocks()
     AddBlock("Water", true, false, 17);
     AddBlock("Deep water", true, false, 18);
 
-    Block::dig_speed[Block::block_bedrock] = 0;
-    Block::dig_speed[Block::block_fence] = 2.2;
-    Block::dig_speed[Block::block_leaves] = 13;
-    Block::dig_speed[Block::block_stone] = 3;
-    Block::dig_speed[Block::block_hard_stone] = 3;
+    Block::dig_speed[Block::bedrock] = 0;
+    Block::dig_speed[Block::fence] = 2.2;
+    Block::dig_speed[Block::leaves] = 13;
+    Block::dig_speed[Block::stone] = 3;
+    Block::dig_speed[Block::hard_stone] = 3;
 
-    Block::allowed_to_build[Block::block_air] = false;
-    Block::allowed_to_build[Block::block_bedrock] = false;
+    Block::allowed_to_build[Block::air] = false;
+    Block::allowed_to_build[Block::bedrock] = false;
 
     Debug("Blocks are created.");
 }
