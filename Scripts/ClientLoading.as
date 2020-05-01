@@ -109,7 +109,9 @@ bool isLoading(CRules@ this)
 	}
     else if(!player_ready)
     {
-        Player _my_player();
+        world.SetUpMaterial();
+		
+		Player _my_player();
         @my_player = @_my_player;
 		
         my_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
@@ -118,6 +120,8 @@ bool isLoading(CRules@ this)
 		my_player.GenerateBlockMenu();
 		getControls().setMousePosition(Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f));
         player_ready = true;
+
+		Render::SetFog(0x00FFFFFF, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, false);
 		Render::addScript(Render::layer_background, "Client.as", "Render", 1);
 
 		for(int i = 0; i < block_queue.size(); i++)

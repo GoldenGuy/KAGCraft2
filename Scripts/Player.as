@@ -152,12 +152,12 @@ class Player
 							{
 								server_SetBlock(hand_block, prev_hit_pos);
 
-								server_SetBlock(hand_block, prev_hit_pos+Vec3f(0,0,1));
+								/*server_SetBlock(hand_block, prev_hit_pos+Vec3f(0,0,1));
 								server_SetBlock(hand_block, prev_hit_pos-Vec3f(0,0,1));
 								server_SetBlock(hand_block, prev_hit_pos+Vec3f(1,0,0));
 								server_SetBlock(hand_block, prev_hit_pos-Vec3f(1,0,0));
 								server_SetBlock(hand_block, prev_hit_pos+Vec3f(0,1,0));
-								server_SetBlock(hand_block, prev_hit_pos-Vec3f(0,1,0));
+								server_SetBlock(hand_block, prev_hit_pos-Vec3f(0,1,0));*/
 							}
 						}
 					}

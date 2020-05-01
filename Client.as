@@ -289,6 +289,9 @@ void Render(int id)
 	Render::ClearZ();
 	Render::SetZBuffer(true, true);
 
+	Render::SetAlphaBlend(true);
+	world.map_material.SetVideoMaterial();
+
 	if(!getControls().isKeyPressed(KEY_KEY_K))
 	{
 		int generated = 0;
@@ -344,7 +347,7 @@ void Render(int id)
 	GUI::DrawShadowedText("dir_x: "+my_player.dir_x, Vec2f(20,80), color_white);
 }
 
-int max_generate = 3;
+int max_generate = 2;
 
 // hook doesnt work
 

@@ -30,6 +30,7 @@ class World
     uint8[][][] map;
     uint8[][][] faces_bits;
     Chunk@[] chunks;
+    SMaterial map_material;
 
     Noise@ noise;
     Random@ rand;
@@ -137,6 +138,35 @@ class World
     {
         uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
         map = _map;
+    }
+
+    void SetUpMaterial()
+    {
+        //SMaterial@ _mapMaterial = SMaterial();
+        //@mapMaterial = @_mapMaterial;
+        map_material.AddTexture("Block_Textures", 0);
+        //mapMaterial.AddTexture("detail_map", 1);
+        //mapMaterial.AddTexture("nm", 1);
+        map_material.DisableAllFlags();
+        map_material.SetFlag(SMaterial::COLOR_MASK, true);
+        map_material.SetFlag(SMaterial::ZBUFFER, true);
+        map_material.SetFlag(SMaterial::ZWRITE_ENABLE, true);
+        map_material.SetFlag(SMaterial::BACK_FACE_CULLING, true);
+        map_material.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF); //TRANSPARENT_ALPHA_CHANNEL_REF
+        map_material.SetFlag(SMaterial::FOG_ENABLE, true);
+
+        //mapMaterial.SetFlag(SMaterial::GOURAUD_SHADING, true);
+
+        //mapMaterial.SetFlag(SMaterial::LIGHTING, true);
+
+        //mapMaterial.SetLayerAnisotropicFilter(0, 0);
+        //mapMaterial.SetFlag(SMaterial::ANISOTROPIC_FILTER, true);
+        //mapMaterial.SetLayerLODBias(0, 1);
+        //mapMaterial.SetFlag(SMaterial::USE_MIP_MAPS, true);
+        //mapMaterial.RegenMipMap(0);
+
+        //mapMaterial.SetFlag(SMaterial::ANTI_ALIASING, true);
+        //mapMaterial.SetAntiAliasing(AntiAliasing::OFF);
     }
     
     void FacesSetUp()
@@ -451,7 +481,9 @@ class Chunk
     int x, y, z, world_x, world_y, world_z, world_x_bounds, world_y_bounds, world_z_bounds;
     int index, world_index;
     bool visible, rebuild, empty;
+    SMesh mesh;
     Vertex[] verts;
+    uint16[] indices;
     AABB box;
 
     Chunk(){}
@@ -459,6 +491,8 @@ class Chunk
     Chunk(World@ reference, int _index)
     {
         @_world = @reference;
+        mesh.Clear();
+        mesh.SetHardwareMapping(SMesh::DYNAMIC);
         index = _index;
         x = _index % world_width; z = (_index / world_width) % world_depth; y = _index / world_width_depth;
         world_x = x*chunk_width; world_z = z*chunk_depth; world_y = y*chunk_height;
@@ -490,6 +524,8 @@ class Chunk
     {
         rebuild = false;
         verts.clear();
+        indices.clear();
+        empty = false;
 
         for (int _y = world_y; _y < world_y_bounds; _y++)
 		{
@@ -522,6 +558,15 @@ class Chunk
         if(verts.size() == 0)
         {
             empty = true;
+        }
+        else
+        {
+            mesh.SetVertex(verts);
+            mesh.SetIndices(indices);
+            mesh.SetDirty(SMesh::VERTEX_INDEX);
+            mesh.BuildMesh();
+            //mesh.DropMesh();
+            //mesh.DropMeshBuffer();
         }
     }
 
@@ -612,6 +657,7 @@ class Chunk
 		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,	u2,	v1,	front_scol));
 		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z,	u2,	v2, front_scol));
 		verts.push_back(Vertex(pos.x,	pos.y,		pos.z,	u1,	v2, front_scol));
+        addIndices();
 	}
 	
 	void addBackFace(uint8 block, const Vec3f&in pos)
@@ -625,6 +671,7 @@ class Chunk
 		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	u2,	v1,	back_scol));
 		verts.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	u2,	v2,	back_scol));
 		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	u1,	v2,	back_scol));
+        addIndices();
 	}
 	
 	void addUpFace(uint8 block, const Vec3f&in pos)
@@ -638,6 +685,7 @@ class Chunk
 		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	u2,	v1,	top_scol));
 		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		u2,	v2,  top_scol));
 		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		u1,	v2,  top_scol));
+        addIndices();
 	}
 	
 	void addDownFace(uint8 block, const Vec3f&in pos)
@@ -651,6 +699,7 @@ class Chunk
 		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		u2,	v1, bottom_scol));
 		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	u2,	v2, bottom_scol));
 		verts.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	u1,	v2, bottom_scol));
+        addIndices();
 	}
 	
 	void addRightFace(uint8 block, const Vec3f&in pos)
@@ -664,6 +713,7 @@ class Chunk
 		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	u2,	v1,	right_scol));
 		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	u2,	v2,	right_scol));
 		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		u1,	v2,	right_scol));
+        addIndices();
 	}
 	
 	void addLeftFace(uint8 block, const Vec3f&in pos)
@@ -677,6 +727,7 @@ class Chunk
         verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		u2,	v1,	left_scol));
         verts.push_back(Vertex(pos.x,	pos.y,		pos.z,		u2,	v2,	left_scol));
         verts.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	u1,	v2,	left_scol));
+        addIndices();
 	}
 
     void addPlantFaces(uint8 block, const Vec3f&in pos)
@@ -692,26 +743,42 @@ class Chunk
 		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y+1,	pos.z+0.16f+rand_offset.y,	u2,	v1,	top_scol));
 		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y,		pos.z+0.16f+rand_offset.y,	u2,	v2,	top_scol));
 		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y,		pos.z+0.84f+rand_offset.y,	u1,	v2,	top_scol));
+        addIndices();
 
 		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y+1,	pos.z+0.16f+rand_offset.y,	u1,	v1,	top_scol));
 		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y+1,	pos.z+0.84f+rand_offset.y,	u2,	v1,	top_scol));
 		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y,		pos.z+0.84f+rand_offset.y,	u2,	v2,	top_scol));
 		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y,		pos.z+0.16f+rand_offset.y,	u1,	v2,	top_scol));
+        addIndices();
 
 		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y+1,	pos.z+0.16f+rand_offset.y,	u1,	v1,	top_scol));
 		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y+1,	pos.z+0.84f+rand_offset.y,	u2,	v1,	top_scol));
 		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y,		pos.z+0.84f+rand_offset.y,	u2,	v2,	top_scol));
 		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y,		pos.z+0.16f+rand_offset.y,	u1,	v2,	top_scol));
+        addIndices();
 
 		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y+1,	pos.z+0.84f+rand_offset.y,	u1,	v1, top_scol));
 		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y+1,	pos.z+0.16f+rand_offset.y,	u2,	v1,	top_scol));
 		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y,		pos.z+0.16f+rand_offset.y,	u2,	v2,	top_scol));
 		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y,		pos.z+0.84f+rand_offset.y,	u1,	v2,	top_scol));
+        addIndices();
 	}
+
+    void addIndices()
+    {
+        u32 size = verts.size()-1;
+        indices.push_back(size-3);
+        indices.push_back(size-2);
+        indices.push_back(size-1);
+        indices.push_back(size-3);
+        indices.push_back(size-1);
+        indices.push_back(size);
+    }
 
     void Render()
     {
-        Render::RawQuads("Block_Textures", verts);
+        //Render::RawQuads("Block_Textures", verts);
+        mesh.RenderMesh();
     }
 }
 
