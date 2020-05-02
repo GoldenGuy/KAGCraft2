@@ -31,6 +31,7 @@ bool onClientProcessChat(CRules@ this, const string&in text_in, string&out text_
 			client_AddToChat("\"Jenny\"", chat_colors::color_blue);
 			client_AddToChat("\"Minecraft\"", chat_colors::color_blue);
 			client_AddToChat("\"PublicEnemy\"", chat_colors::color_blue);
+			client_AddToChat("\"3x3\"", chat_colors::color_blue);
 		}
 		else // check commands with multiple arguments
 		{
@@ -41,14 +42,13 @@ bool onClientProcessChat(CRules@ this, const string&in text_in, string&out text_
 				if (tokens[0] == "/blocks")
 				{
 					string name = tokens[1];
-					if(name == "Classic" || name == "Jenny" || name == "Minecraft" || name == "PublicEnemy")
+					if(name == "Classic" || name == "Jenny" || name == "Minecraft" || name == "PublicEnemy" || name == "3x3")
 					{
+						if(Texture::exists("temp")) Texture::destroy("temp");
+						Texture::createFromFile("temp", "Textures/Blocks_"+name+".png");
+						ImageData@ data = Texture::data("temp");
+						Texture::update("Block_Textures", data);
 						client_AddToChat("Changing block textures to \""+name+"\".", chat_colors::color_green);
-
-						{
-							Texture::destroy("Block_Textures");
-							Texture::createFromFile("Block_Textures", "Textures/Blocks_"+name+".png");
-						}
 					}
 					else
 					{

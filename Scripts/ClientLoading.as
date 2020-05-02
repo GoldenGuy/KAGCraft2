@@ -37,6 +37,21 @@ bool isLoading(CRules@ this)
 		{
 			map_ready = true;
 		}
+		else
+		{
+			if(map_packets.size() > 0)
+			{
+				world.UnSerialize(map_packets[0], got_packets);
+				map_packets.removeAt(0);
+				got_packets++;
+				loading_string = "Unserializing map packet. "+got_packets+"/"+amount_of_packets;
+				//return true;
+			}
+		}
+		/*if(got_packets >= amount_of_packets)
+		{
+			map_ready = true;
+		}
 		if(ready_unser)
 		{
 			ready_unser = false;
@@ -56,7 +71,7 @@ bool isLoading(CRules@ this)
 				to_send.write_u32(got_packets);
 				this.SendCommand(this.getCommandID("C_RequestMapPacket"), to_send, false);
 			}
-		}
+		}*/
 		return true;
 	}
 	else if(!map_renderable)
@@ -121,7 +136,7 @@ bool isLoading(CRules@ this)
 		getControls().setMousePosition(Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f));
         player_ready = true;
 
-		Render::SetFog(0x00FFFFFF, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, false);
+		Render::SetFog(0x00898886, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, false);
 		Render::addScript(Render::layer_background, "Client.as", "Render", 1);
 
 		for(int i = 0; i < block_queue.size(); i++)
@@ -137,6 +152,22 @@ bool isLoading(CRules@ this)
     }
     return false;
 }
+
+/*MapPackets[] block_queue;
+
+class MapPackets
+{
+	CBitStream@ stream;
+	uint8 block;
+
+	BlockToPlace(){}
+
+	BlockToPlace(const Vec3f&in _pos, uint8 _block)
+	{
+		pos = _pos;
+		block = _block;
+	}
+}*/
 
 BlockToPlace[] block_queue;
 

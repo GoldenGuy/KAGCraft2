@@ -1,13 +1,13 @@
 
 #include "Blocks.as"
 
-const uint32 chunk_width = 12;
-const uint32 chunk_depth = 12;
-const uint32 chunk_height = 12;
+const uint32 chunk_width = 14;
+const uint32 chunk_depth = 14;
+const uint32 chunk_height = 14;
 
-uint32 world_width = 8;
-uint32 world_depth = 8;
-uint32 world_height = 4;
+uint32 world_width = 16;
+uint32 world_depth = 16;
+uint32 world_height = 8;
 uint32 world_width_depth = world_width * world_depth;
 uint32 world_size = world_width_depth * world_height;
 
@@ -339,7 +339,7 @@ class World
         to_send.write_u8(similar_block_id);
     }
 
-    void UnSerialize(uint32 packet)
+    void UnSerialize(CBitStream@ to_read, uint32 packet)
     {
         uint32 start = packet*ms_packet_size;
         uint32 end = start+ms_packet_size;
@@ -350,8 +350,8 @@ class World
 
         while(index < ms_packet_size)
         {
-            uint32 amount = map_packet.read_u32();
-            uint8 block_id = map_packet.read_u8();
+            uint32 amount = to_read.read_u32();
+            uint8 block_id = to_read.read_u8();
             for(uint32 j = 0; j < amount; j++)
             {
                 if(index == ms_packet_size)
@@ -818,7 +818,7 @@ void server_SetBlock(uint8 block, const Vec3f&in pos)
 
 // map sending and receiving
 
-uint32 ms_packet_size = chunk_width*chunk_depth*chunk_height*16; // 16 chunks per packet
+uint32 ms_packet_size = chunk_width*chunk_depth*chunk_height*8; // 16 chunks per packet
 uint32 amount_of_packets = map_size / ms_packet_size;
 
 // server
@@ -838,7 +838,8 @@ class MapSender
 
 // client
 
-CBitStream map_packet;
+//CBitStream map_packet;
+CBitStream@[] map_packets;
 uint32 got_packets;
 bool ready_unser;
 

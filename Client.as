@@ -161,10 +161,14 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 	//Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
 	if(cmd == this.getCommandID("S_SendMapPacket"))
 	{
-		ready_unser = true;
-		map_packet.Clear();
+		//ready_unser = true;
+		//map_packet.Clear();
+		//map_packet = params;
+		//map_packet.SetBitIndex(params.getBitIndex());
+		CBitStream map_packet;
 		map_packet = params;
 		map_packet.SetBitIndex(params.getBitIndex());
+		map_packets.push_back(@map_packet);
 	}
 	else if(cmd == this.getCommandID("S_PlayerUpdate"))
 	{

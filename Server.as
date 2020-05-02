@@ -46,10 +46,17 @@ void onTick(CRules@ this)
 		if(players_to_send[0].player !is null)
 		{
 			CBitStream to_send;
-			world.Serialize(@to_send, players_to_send[0].packet_number);
+			CPlayer@ player = players_to_send[0].player;
+			uint32 packet_num = players_to_send[0].packet_number;
+			world.Serialize(@to_send, packet_num);
 			this.SendCommand(this.getCommandID("S_SendMapPacket"), to_send, players_to_send[0].player);
-			Debug("Sending map packet, "+(players_to_send[0].packet_number+1)+"/"+amount_of_packets+".", 3);
+			packet_num++;
+			Debug("Sending map packet, "+packet_num+"/"+amount_of_packets+".", 3);
 			players_to_send.removeAt(0);
+			if(packet_num < amount_of_packets)
+			{
+				players_to_send.push_back(MapSender(player, packet_num));
+			}
 		}
 		else
 		{
@@ -77,13 +84,13 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 			players_to_send.push_back(MapSender(player, 0));
 		}
 	}
-	else if(cmd == this.getCommandID("C_RequestMapPacket"))
+	/*else if(cmd == this.getCommandID("C_RequestMapPacket"))
 	{
 		uint16 netid = params.read_netid();
 		uint32 packet_number = params.read_u32();
 		CPlayer@ player = getPlayerByNetworkId(netid);
 		players_to_send.push_back(MapSender(player, packet_number));
-	}
+	}*/
 	else if(cmd == this.getCommandID("C_PlayerUpdate"))
 	{
 		uint16 netid = params.read_netid();
