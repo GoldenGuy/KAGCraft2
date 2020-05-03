@@ -11,6 +11,7 @@
 #include "Camera.as"
 #include "Player.as"
 #include "Scoreboard.as"
+#include "UtilitySectors.as"
 
 World@ world;
 
@@ -73,12 +74,12 @@ void onTick(CRules@ this)
 		camera.tick_update();
 		my_player.Update();
 
-		for(int i = 0; i < other_players.size(); i++)
+		/*for(int i = 0; i < other_players.size(); i++)
 		{
 			Vec3f pos = other_players[i].pos;
 			AABB _box(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius));
 			DrawHitbox(_box, 0x88FFFFFF);
-		}
+		}*/
 
 		diggers.clear();
 		if(my_player.digging)
@@ -154,6 +155,7 @@ void onTick(CRules@ this)
 				}
 			}
 		}
+		UpdateSectors();
 	}
 }
 
@@ -278,18 +280,23 @@ void Render(int id)
 	rules.set_f32("interFrameTime", Maths::Clamp01(rules.get_f32("interFrameTime")+getRenderApproximateCorrectionFactor()));
 	rules.add_f32("interGameTime", getRenderApproximateCorrectionFactor());
 
+	Render::SetTransformScreenspace();
+
+	Render::RawQuads("SOLID", Fill);
+
 	Render::SetTransformWorldspace();
 
 	Render::SetZBuffer(false, false);
 	Render::SetAlphaBlend(false);
 	Render::SetBackfaceCull(true);
 	
+	//Matrix::MakeIdentity(model);
+	//Matrix::SetTranslation(model, camera.interpolated_pos.x, camera.interpolated_pos.y, camera.interpolated_pos.z);
+	//Render::SetTransform(model, camera.view, camera.projection);
+	//Render::RawQuads("Sky_Texture", SkyBox);
 	Matrix::MakeIdentity(model);
-	Matrix::SetTranslation(model, camera.interpolated_pos.x, camera.interpolated_pos.y, camera.interpolated_pos.z);
+	//Render::SetModelTransform(model);
 	Render::SetTransform(model, camera.view, camera.projection);
-	Render::RawQuads("Sky_Texture", SkyBox);
-	Matrix::MakeIdentity(model);
-	Render::SetModelTransform(model);
 
 	Render::ClearZ();
 	Render::SetZBuffer(true, true);
@@ -299,10 +306,9 @@ void Render(int id)
 
 	if(!getControls().isKeyPressed(KEY_KEY_K))
 	{
-		int generated = 0;
 		for(int i = 0; i < chunks_to_render.size(); i++)
 		{
-			Chunk@ chunk = chunks_to_render[i];
+			/*Chunk@ chunk = chunks_to_render[i];
 			if(chunk.rebuild)
 			{
 				if(generated < max_generate)
@@ -310,7 +316,7 @@ void Render(int id)
 					chunk.GenerateMesh();
 					generated++;
 				}
-			}
+			}*/
 			chunks_to_render[i].Render();
 		}
 	}
@@ -328,7 +334,8 @@ void Render(int id)
 		Render::SetModelTransform(model);
 	}
 
-	//Render::RawQuads("DEBUG", HitBoxes);
+	//Render::RawQuads("SOLID", HitBoxes);
+	RenderSectors();
 	if(hold_frustum)
 	{
 		Render::SetBackfaceCull(false);
@@ -352,7 +359,8 @@ void Render(int id)
 	GUI::DrawShadowedText("dir_x: "+my_player.dir_x, Vec2f(20,80), color_white);
 }
 
-int max_generate = 3;
+int max_generate = 4;
+int generated = 0;
 
 // hook doesnt work
 
@@ -451,4 +459,10 @@ Vertex[] SkyBox = {	Vertex(-1, -1, 1, 0.25f, 0.5f, color_white), // front face
 					Vertex(-1, -1, 1, 0.25f, 0.5f, color_white),
 					Vertex(1, -1, 1, 0.5f, 0.5f, color_white),
 					Vertex(1, -1, -1, 0.5f, 0.75f, color_white)
+};
+
+Vertex[] Fill = {	Vertex(0, 0, 0, 0, 0, sky_color),
+					Vertex(getScreenWidth(), 0, 0, 1, 0, sky_color),
+					Vertex(getScreenWidth(), getScreenHeight(), 0, 1, 1, sky_color),
+					Vertex(0, getScreenHeight(), 0, 0, 1, sky_color)
 };

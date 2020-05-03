@@ -6,6 +6,7 @@
 #include "World.as"
 #include "Vec3f.as"
 #include "ServerPlayer.as"
+#include "UtilitySectors.as"
 
 World@ world;
 

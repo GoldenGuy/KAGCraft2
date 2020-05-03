@@ -44,7 +44,8 @@ bool isLoading(CRules@ this)
 				world.UnSerialize(map_packets[0], got_packets);
 				map_packets.removeAt(0);
 				got_packets++;
-				loading_string = "Unserializing map packet. "+got_packets+"/"+amount_of_packets;
+				int percent = (float(got_packets)/float(amount_of_packets))*100;
+				loading_string = "Loading map. "+percent+"%";
 				//return true;
 			}
 		}
@@ -149,7 +150,7 @@ bool isLoading(CRules@ this)
 		getControls().setMousePosition(Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f));
         player_ready = true;
 
-		Render::SetFog(0x00898886, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, false);
+		Render::SetFog(sky_color, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, false);
 		Render::addScript(Render::layer_background, "Client.as", "Render", 1);
 
 		for(int i = 0; i < block_queue.size(); i++)

@@ -135,14 +135,30 @@ class Player
 						uint8 block = world.map[hit_pos.y][hit_pos.z][hit_pos.x];
 						if(block == Block::grass)
 						{
-							server_SetBlock(hand_block, hit_pos);
-
-							/*server_SetBlock(hand_block, hit_pos+Vec3f(0,0,1));
-							server_SetBlock(hand_block, hit_pos-Vec3f(0,0,1));
-							server_SetBlock(hand_block, hit_pos+Vec3f(1,0,0));
-							server_SetBlock(hand_block, hit_pos-Vec3f(1,0,0));
-							server_SetBlock(hand_block, hit_pos+Vec3f(0,1,0));
-							server_SetBlock(hand_block, hit_pos-Vec3f(0,1,0));*/
+							if(!testAABBAABB(AABB(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius)), AABB(hit_pos, hit_pos+Vec3f(1,1,1))))
+							{
+								bool place = true;
+								for(int i = 0; i < other_players.size(); i++)
+								{
+									Vec3f _pos = other_players[i].pos;
+									if(testAABBAABB(AABB(_pos-Vec3f(player_radius,0,player_radius), _pos+Vec3f(player_radius,player_height,player_radius)), AABB(hit_pos, hit_pos+Vec3f(1,1,1))))
+									{
+										place = false;
+										Sound::Play("NoAmmo.ogg");
+										break;
+									}
+								}
+								if(place)
+								{
+									server_SetBlock(hand_block, hit_pos);
+								}
+							}
+							else
+							{
+								Sound::Play("NoAmmo.ogg");
+								AddSector(AABB(hit_pos, hit_pos+Vec3f(1,1,1)), 0x60FF0000, 20);
+								AddSector(AABB(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius)), 0x60FF0000, 20);
+							}
 						}
 						else
 						{
@@ -150,14 +166,30 @@ class Player
 							uint8 check2 = RaycastWorld_Previous(pos+Vec3f(0,eye_height,0), look_dir, 5, prev_hit_pos);
 							if(check2 == Raycast::S_HIT)
 							{
-								server_SetBlock(hand_block, prev_hit_pos);
-
-								/*server_SetBlock(hand_block, prev_hit_pos+Vec3f(0,0,1));
-								server_SetBlock(hand_block, prev_hit_pos-Vec3f(0,0,1));
-								server_SetBlock(hand_block, prev_hit_pos+Vec3f(1,0,0));
-								server_SetBlock(hand_block, prev_hit_pos-Vec3f(1,0,0));
-								server_SetBlock(hand_block, prev_hit_pos+Vec3f(0,1,0));
-								server_SetBlock(hand_block, prev_hit_pos-Vec3f(0,1,0));*/
+								if(!testAABBAABB(AABB(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius)), AABB(prev_hit_pos, prev_hit_pos+Vec3f(1,1,1))))
+								{
+									bool place = true;
+									for(int i = 0; i < other_players.size(); i++)
+									{
+										Vec3f _pos = other_players[i].pos;
+										if(testAABBAABB(AABB(_pos-Vec3f(player_radius,0,player_radius), _pos+Vec3f(player_radius,player_height,player_radius)), AABB(prev_hit_pos, prev_hit_pos+Vec3f(1,1,1))))
+										{
+											place = false;
+											Sound::Play("NoAmmo.ogg");
+											break;
+										}
+									}
+									if(place)
+									{
+										server_SetBlock(hand_block, prev_hit_pos);
+									}
+								}
+								else
+								{
+									Sound::Play("NoAmmo.ogg");
+									AddSector(AABB(prev_hit_pos, prev_hit_pos+Vec3f(1,1,1)), 0x60FF0000, 20);
+									AddSector(AABB(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius)), 0x60FF0000, 20);
+								}
 							}
 						}
 					}

@@ -5,8 +5,8 @@ const uint32 chunk_width = 14;
 const uint32 chunk_depth = 14;
 const uint32 chunk_height = 14;
 
-uint32 world_width = 16;
-uint32 world_depth = 16;
+uint32 world_width = 32;
+uint32 world_depth = 32;
 uint32 world_height = 8;
 uint32 world_width_depth = world_width * world_depth;
 uint32 world_size = world_width_depth * world_height;
@@ -24,6 +24,8 @@ float hills_spread = 0.048f;
 
 float tree_frequency = 0.06f;
 float grass_frequency = 0.08f;
+
+SColor sky_color = 0xFF89A2ED;
 
 class World
 {
@@ -325,6 +327,7 @@ class World
         {
             Chunk chunk(this, i);
             chunks.push_back(@chunk);
+            getNet().server_KeepConnectionsAlive();
         }
     }
 
@@ -589,7 +592,7 @@ class Chunk
     World@ _world;
     int x, y, z, world_x, world_y, world_z, world_x_bounds, world_y_bounds, world_z_bounds;
     int index, world_index;
-    bool visible, rebuild, empty;
+    bool visible, rebuild, empty, drop;
     SMesh mesh;
     Vertex[] verts;
     uint16[] indices;
@@ -601,14 +604,17 @@ class Chunk
     {
         @_world = @reference;
         mesh.Clear();
-        mesh.SetHardwareMapping(SMesh::DYNAMIC);
+        mesh.SetHardwareMapping(SMesh::STATIC);
+        //mesh.BuildMesh();
+        //mesh.DropMesh();
+        //mesh.DropMeshBuffer();
         index = _index;
         x = _index % world_width; z = (_index / world_width) % world_depth; y = _index / world_width_depth;
         world_x = x*chunk_width; world_z = z*chunk_depth; world_y = y*chunk_height;
         world_x_bounds = world_x+chunk_width; world_z_bounds = world_z+chunk_depth; world_y_bounds = world_y+chunk_height;
         box = AABB(Vec3f(world_x, world_y, world_z), Vec3f(world_x_bounds, world_y_bounds, world_z_bounds));
         visible = false;
-        rebuild = true;
+        drop = false;
 
         for (int _y = world_y; _y < world_y_bounds; _y++)
 		{
@@ -618,14 +624,20 @@ class Chunk
 				{
                     //int index = _world.getIndex(_x, _y, _z);
                     //Vec3f(x,y,z).Print();
-                    if(_world.faces_bits[_y][_z][_x] > 0)
+                    if(_world.map[_y][_z][_x] == Block::air)
                     {
+                        continue;
+                    }
+                    else if(_world.faces_bits[_y][_z][_x] > 0)
+                    {
+                        rebuild = true;
                         empty = false;
                         return;
                     }
                 }
             }
         }
+        rebuild = false;
         empty = true;
     }
 
@@ -674,14 +686,23 @@ class Chunk
             mesh.SetIndices(indices);
             mesh.SetDirty(SMesh::VERTEX_INDEX);
             mesh.BuildMesh();
+            drop = true;
             //mesh.DropMesh();
             //mesh.DropMeshBuffer();
         }
+        AddSector(AABB(Vec3f(world_x, world_y, world_z), Vec3f(world_x_bounds, world_y_bounds, world_z_bounds)), 0x50A8360D, 20);
     }
 
     void SetVisible()
     {
         visible = true;
+    }
+
+    void DropMesh()
+    {
+        //mesh.DropMesh();
+        //mesh.DropMeshBuffer();
+        drop = false;
     }
 
     void addFaces(uint8 block, uint8 face_info, const Vec3f&in pos)

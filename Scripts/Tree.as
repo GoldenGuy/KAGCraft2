@@ -17,29 +17,70 @@ class Root
     Branch@ BRxz1;
     Branch@ BRx1z1;
 
+    Branch@ BRx2z;
+    Branch@ BRx3z;
+    Branch@ BRx2z1;
+    Branch@ BRx3z1;
+
+    Branch@ BRxz2;
+    Branch@ BRx1z2;
+    Branch@ BRxz3;
+    Branch@ BRx1z3;
+
+    Branch@ BRx2z2;
+    Branch@ BRx3z2;
+    Branch@ BRx2z3;
+    Branch@ BRx3z3;
+
     void Init()
     {
         box = AABB(Vec3f(0, 0, 0), Vec3f(map_width, map_height, map_depth));
 
-        Branch _BRxz(Vec3f(0, 0, 0),                      Vec3f(map_width/2, map_height, map_depth/2));
-        Branch _BRx1z(Vec3f(map_width/2, 0, 0),            Vec3f(map_width, map_height, map_depth/2));
-        Branch _BRxz1(Vec3f(0, 0, map_depth/2),            Vec3f(map_width/2, map_height, map_depth));
-        Branch _BRx1z1(Vec3f(map_width/2, 0, map_depth/2),  Vec3f(map_width, map_height, map_depth));
+        @BRxz =     @Branch(Vec3f(0,                0, 0),              Vec3f(map_width/4,      map_height, map_depth/4));
+        @BRx1z =    @Branch(Vec3f(map_width/4,      0, 0),              Vec3f(map_width/2,      map_height, map_depth/4));
+        @BRxz1 =    @Branch(Vec3f(0,                0, map_depth/4),    Vec3f(map_width/4,      map_height, map_depth/2));
+        @BRx1z1 =   @Branch(Vec3f(map_width/4,      0, map_depth/4),    Vec3f(map_width/2,      map_height, map_depth/2));
 
-        @BRxz = @_BRxz;
-        @BRx1z = @_BRx1z;
-        @BRxz1 = @_BRxz1;
-        @BRx1z1 = @_BRx1z1;
+        @BRx2z =    @Branch(Vec3f(map_width/2,      0, 0),              Vec3f(map_width/4*3,    map_height, map_depth/4));
+        @BRx3z =    @Branch(Vec3f(map_width/4*3,    0, 0),              Vec3f(map_width,        map_height, map_depth/4));
+        @BRx2z1 =   @Branch(Vec3f(map_width/2,      0, map_depth/4),    Vec3f(map_width/4*3,    map_height, map_depth/2));
+        @BRx3z1 =   @Branch(Vec3f(map_width/4*3,    0, map_depth/4),    Vec3f(map_width,        map_height, map_depth/2));
+
+        @BRxz2 =    @Branch(Vec3f(0,                0, map_depth/2),    Vec3f(map_width/4,      map_height, map_depth/4*3));
+        @BRx1z2 =   @Branch(Vec3f(map_width/4,      0, map_depth/2),    Vec3f(map_width/2,      map_height, map_depth/4*3));
+        @BRxz3 =    @Branch(Vec3f(0,                0, map_depth/4*3),  Vec3f(map_width/4,      map_height, map_depth));
+        @BRx1z3 =   @Branch(Vec3f(map_width/4,      0, map_depth/4*3),  Vec3f(map_width/2,      map_height, map_depth));
+
+        @BRx2z2 =   @Branch(Vec3f(map_width/2,      0, map_depth/2),    Vec3f(map_width/4*3,    map_height, map_depth/4*3));
+        @BRx3z2 =   @Branch(Vec3f(map_width/4*3,    0, map_depth/2),    Vec3f(map_width,        map_height, map_depth/4*3));
+        @BRx2z3 =   @Branch(Vec3f(map_width/2,      0, map_depth/4*3),  Vec3f(map_width/4*3,    map_height, map_depth));
+        @BRx3z3 =   @Branch(Vec3f(map_width/4*3,    0, map_depth/4*3),  Vec3f(map_width,        map_height, map_depth));
     }
 
     void Check()
     {
         chunks_to_render.clear();
+        generated = 0;
 
         BRxz.Check();
         BRx1z.Check();
         BRxz1.Check();
         BRx1z1.Check();
+
+        BRx2z.Check();
+        BRx3z.Check();
+        BRx2z1.Check();
+        BRx3z1.Check();
+
+        BRxz2.Check();
+        BRx1z2.Check();
+        BRxz3.Check();
+        BRx1z3.Check();
+
+        BRx2z2.Check();
+        BRx3z2.Check();
+        BRx2z3.Check();
+        BRx3z3.Check();
     }
 }
 
@@ -73,7 +114,7 @@ class Branch
     {
         box = AABB(pos_start, pos_end);
 
-        if(pos_end.x-pos_start.x <= chunk_width*2)
+        if(pos_end.y-pos_start.y <= chunk_height*2)
         {
             // leaf, fill chunks here
 
@@ -96,15 +137,16 @@ class Branch
 
             Vec3f size = (pos_end-pos_start)/2;
 
-            Branch _BRxyz(pos_start,                        pos_start+size);            @BRxyz = @_BRxyz;
-            Branch _BRx1yz(pos_start+size*Vec3f(1,0,0),     pos_end-size*Vec3f(0,1,1)); @BRx1yz = @_BRx1yz;
-            Branch _BRxyz1(pos_start+size*Vec3f(0,0,1),     pos_end-size*Vec3f(1,1,0)); @BRxyz1 = @_BRxyz1;
-            Branch _BRx1yz1(pos_start+size*Vec3f(1,0,1),    pos_end-size*Vec3f(0,1,0)); @BRx1yz1 = @_BRx1yz1;
-            Branch _BRxy1z(pos_start+size*Vec3f(0,1,0),     pos_end-size*Vec3f(1,0,1)); @BRxy1z = @_BRxy1z;
-            Branch _BRx1y1z(pos_start+size*Vec3f(1,1,0),    pos_end-size*Vec3f(0,0,1)); @BRx1y1z = @_BRx1y1z;
-            Branch _BRxy1z1(pos_start+size*Vec3f(0,1,1),    pos_end-size*Vec3f(1,0,0)); @BRxy1z1 = @_BRxy1z1;
-            Branch _BRx1y1z1(pos_start+size,                pos_end);                   @BRx1y1z1 = @_BRx1y1z1;
+            @BRxyz =    @Branch(pos_start,                   pos_start+size);
+            @BRx1yz =   @Branch(pos_start+size*Vec3f(1,0,0), pos_end-size*Vec3f(0,1,1));
+            @BRxyz1 =   @Branch(pos_start+size*Vec3f(0,0,1), pos_end-size*Vec3f(1,1,0));
+            @BRx1yz1 =  @Branch(pos_start+size*Vec3f(1,0,1), pos_end-size*Vec3f(0,1,0));
+            @BRxy1z =   @Branch(pos_start+size*Vec3f(0,1,0), pos_end-size*Vec3f(1,0,1));
+            @BRx1y1z =  @Branch(pos_start+size*Vec3f(1,1,0), pos_end-size*Vec3f(0,0,1));
+            @BRxy1z1 =  @Branch(pos_start+size*Vec3f(0,1,1), pos_end-size*Vec3f(1,0,0));
+            @BRx1y1z1 = @Branch(pos_start+size,              pos_end);
         }
+        getNet().server_KeepConnectionsAlive();
     }
 
     void Check()
@@ -113,14 +155,117 @@ class Branch
         {
             if(leaf)
             {
-                if(!CHxyz.empty && camera.frustum.ContainsSphere( CHxyz.box.center-camera.frustum_pos, CHxyz.box.corner)) chunks_to_render.push_back(@CHxyz);
-                if(!CHx1yz.empty && camera.frustum.ContainsSphere( CHx1yz.box.center-camera.frustum_pos, CHx1yz.box.corner)) chunks_to_render.push_back(@CHx1yz);
-                if(!CHxyz1.empty && camera.frustum.ContainsSphere( CHxyz1.box.center-camera.frustum_pos, CHxyz1.box.corner)) chunks_to_render.push_back(@CHxyz1);
-                if(!CHx1yz1.empty && camera.frustum.ContainsSphere( CHx1yz1.box.center-camera.frustum_pos, CHx1yz1.box.corner)) chunks_to_render.push_back(@CHx1yz1);
-                if(!CHxy1z.empty && camera.frustum.ContainsSphere( CHxy1z.box.center-camera.frustum_pos, CHxy1z.box.corner)) chunks_to_render.push_back(@CHxy1z);
-                if(!CHx1y1z.empty && camera.frustum.ContainsSphere( CHx1y1z.box.center-camera.frustum_pos, CHx1y1z.box.corner)) chunks_to_render.push_back(@CHx1y1z);
-                if(!CHxy1z1.empty && camera.frustum.ContainsSphere( CHxy1z1.box.center-camera.frustum_pos, CHxy1z1.box.corner)) chunks_to_render.push_back(@CHxy1z1);
-                if(!CHx1y1z1.empty && camera.frustum.ContainsSphere( CHx1y1z1.box.center-camera.frustum_pos, CHx1y1z1.box.corner)) chunks_to_render.push_back(@CHx1y1z1);
+                if(CHxyz !is null)
+                if(!CHxyz.empty)
+                {
+                    if(camera.frustum.ContainsSphere( CHxyz.box.center-camera.frustum_pos, CHxyz.box.corner))
+                    {
+                        chunks_to_render.push_back(@CHxyz);
+                        if(CHxyz.rebuild && generated < max_generate)
+                        {
+                            CHxyz.GenerateMesh();
+                            generated++;
+                        }
+                    }
+                }
+
+                if(CHx1yz !is null)
+                if(!CHx1yz.empty)
+                {
+                    if(camera.frustum.ContainsSphere( CHx1yz.box.center-camera.frustum_pos, CHx1yz.box.corner))
+                    {
+                        chunks_to_render.push_back(@CHx1yz);
+                        if(CHx1yz.rebuild && generated < max_generate)
+                        {
+                            CHx1yz.GenerateMesh();
+                            generated++;
+                        }
+                    }
+                }
+
+                if(CHxyz1 !is null)
+                if(!CHxyz1.empty)
+                {
+                    if(camera.frustum.ContainsSphere( CHxyz1.box.center-camera.frustum_pos, CHxyz1.box.corner))
+                    {
+                        chunks_to_render.push_back(@CHxyz1);
+                        if(CHxyz1.rebuild && generated < max_generate)
+                        {
+                            CHxyz1.GenerateMesh();
+                            generated++;
+                        }
+                    }
+                }
+
+                if(CHx1yz1 !is null)
+                if(!CHx1yz1.empty)
+                {
+                    if(camera.frustum.ContainsSphere( CHx1yz1.box.center-camera.frustum_pos, CHx1yz1.box.corner))
+                    {
+                        chunks_to_render.push_back(@CHx1yz1);
+                        if(CHx1yz1.rebuild && generated < max_generate)
+                        {
+                            CHx1yz1.GenerateMesh();
+                            generated++;
+                        }
+                    }
+                }
+
+                if(CHxy1z !is null)
+                if(!CHxy1z.empty)
+                {
+                    if(camera.frustum.ContainsSphere( CHxy1z.box.center-camera.frustum_pos, CHxy1z.box.corner))
+                    {
+                        chunks_to_render.push_back(@CHxy1z);
+                        if(CHxy1z.rebuild && generated < max_generate)
+                        {
+                            CHxy1z.GenerateMesh();
+                            generated++;
+                        }
+                    }
+                }
+
+                if(CHx1y1z !is null)
+                if(!CHx1y1z.empty)
+                {
+                    if(camera.frustum.ContainsSphere( CHx1y1z.box.center-camera.frustum_pos, CHx1y1z.box.corner))
+                    {
+                        chunks_to_render.push_back(@CHx1y1z);
+                        if(CHx1y1z.rebuild && generated < max_generate)
+                        {
+                            CHx1y1z.GenerateMesh();
+                            generated++;
+                        }
+                    }
+                }
+
+                if(CHxy1z1 !is null)
+                if(!CHxy1z1.empty)
+                {
+                    if(camera.frustum.ContainsSphere( CHxy1z1.box.center-camera.frustum_pos, CHxy1z1.box.corner))
+                    {
+                        chunks_to_render.push_back(@CHxy1z1);
+                        if(CHxy1z1.rebuild && generated < max_generate)
+                        {
+                            CHxy1z1.GenerateMesh();
+                            generated++;
+                        }
+                    }
+                }
+
+                if(CHx1y1z1 !is null)
+                if(!CHx1y1z1.empty)
+                {
+                    if(camera.frustum.ContainsSphere( CHx1y1z1.box.center-camera.frustum_pos, CHx1y1z1.box.corner))
+                    {
+                        chunks_to_render.push_back(@CHx1y1z1);
+                        if(CHx1y1z1.rebuild && generated < max_generate)
+                        {
+                            CHx1y1z1.GenerateMesh();
+                            generated++;
+                        }
+                    }
+                }
             }
             else
             {
