@@ -476,10 +476,10 @@ class Player
 			float v1 = Block::v_sides_start[id];
 			float v2 = Block::v_sides_end[id];
 			
-			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.34f,	pos.y+block_menu_icon_size.y*0.34f, 0, u1,	v1,	top_scol));
-			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.34f,	pos.y-block_menu_icon_size.y*0.34f, 0, u2,	v1,	top_scol));
-			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.34f,	pos.y-block_menu_icon_size.y*0.34f, 0, u2,	v2,	top_scol));
-			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.34f,	pos.y+block_menu_icon_size.y*0.34f, 0, u1,	v2,	top_scol));
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.34f,	pos.y+block_menu_icon_size.y*0.34f, 0, u1,	v2,	top_scol));
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.34f,	pos.y-block_menu_icon_size.y*0.34f, 0, u1,	v1,	top_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.34f,	pos.y-block_menu_icon_size.y*0.34f, 0, u2,	v1,	top_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.34f,	pos.y+block_menu_icon_size.y*0.34f, 0, u2,	v2,	top_scol));
 		}
 		else
 		{
@@ -488,15 +488,15 @@ class Player
 			float v1 = Block::v_sides_start[id];
 			float v2 = Block::v_sides_end[id];
 			
-			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.35f,	pos.y+block_menu_icon_size.y*0.27f-block_menu_icon_size.y*0.05f,	0, u1,	v1,	front_scol));
-			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.35f,	pos.y-block_menu_icon_size.y*0.18f,									0, u2,	v1,	front_scol));
-			block_menu_verts.push_back(Vertex(pos.x, 								pos.y,																0, u2,	v2,	front_scol));
-			block_menu_verts.push_back(Vertex(pos.x,								pos.y+block_menu_icon_size.y*0.45f-block_menu_icon_size.y*0.05f,	0, u1,	v2,	front_scol));
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.35f,	pos.y+block_menu_icon_size.y*0.27f-block_menu_icon_size.y*0.05f,	0, u1,	v2,	front_scol));
+			block_menu_verts.push_back(Vertex(pos.x-block_menu_icon_size.x*0.35f,	pos.y-block_menu_icon_size.y*0.18f,									0, u1,	v1,	front_scol));
+			block_menu_verts.push_back(Vertex(pos.x, 								pos.y,																0, u2,	v1,	front_scol));
+			block_menu_verts.push_back(Vertex(pos.x,								pos.y+block_menu_icon_size.y*0.45f-block_menu_icon_size.y*0.05f,	0, u2,	v2,	front_scol));
 
-			block_menu_verts.push_back(Vertex(pos.x,								pos.y+block_menu_icon_size.y*0.45f-block_menu_icon_size.y*0.05f,	0, u1,	v1,	left_scol));
-			block_menu_verts.push_back(Vertex(pos.x,								pos.y,																0, u2,	v1,	left_scol));
-			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.35f, 	pos.y-block_menu_icon_size.y*0.18f,									0, u2,	v2,	left_scol));
-			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.35f,	pos.y+block_menu_icon_size.y*0.27f-block_menu_icon_size.y*0.05f,	0, u1,	v2,	left_scol));
+			block_menu_verts.push_back(Vertex(pos.x,								pos.y+block_menu_icon_size.y*0.45f-block_menu_icon_size.y*0.05f,	0, u1,	v2,	left_scol));
+			block_menu_verts.push_back(Vertex(pos.x,								pos.y,																0, u1,	v1,	left_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.35f, 	pos.y-block_menu_icon_size.y*0.18f,									0, u2,	v1,	left_scol));
+			block_menu_verts.push_back(Vertex(pos.x+block_menu_icon_size.x*0.35f,	pos.y+block_menu_icon_size.y*0.27f-block_menu_icon_size.y*0.05f,	0, u2,	v2,	left_scol));
 
 			u1 = Block::u_top_start[id];
 			u2 = Block::u_top_end[id];

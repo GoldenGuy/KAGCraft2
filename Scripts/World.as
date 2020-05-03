@@ -17,10 +17,11 @@ uint32 map_height = world_height * chunk_height;
 uint32 map_width_depth = map_width * map_depth;
 uint32 map_size = map_width_depth * map_height;
 
-float sample_frequency = 0.02f;
-float fractal_frequency = 0.02f;
-float add_height = 0.16f;
-float dirt_start = 0.16f;
+float initial_plane = 0.0017;
+float initial_plane_max_height = 0.35f;
+float initial_plane_add_max = 0.16f;
+float hills_spread = 0.048f;
+
 float tree_frequency = 0.06f;
 float grass_frequency = 0.08f;
 
@@ -55,7 +56,82 @@ class World
         
         uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
         map = _map;
-        for(float y = 0.0f; y < map_height; y += 1.0f)
+        for(float z = 0.0f; z < map_depth; z += 1.0f)
+        {
+            for(float x = 0.0f; x < map_width; x += 1.0f)
+            {
+                float initial_plane_height = noise.Fractal(x * initial_plane, z * initial_plane);
+                float hills = ((1-noise.Sample(x * hills_spread, z * hills_spread)) * (1-noise.Sample((x+map_width) * hills_spread, z * hills_spread)) * (1-noise.Sample(x * hills_spread, (z+map_depth) * hills_spread)) * (1-noise.Sample((x+map_width) * hills_spread, (z+map_depth) * hills_spread)));
+
+                float real_height = ((float(map_height)*initial_plane_max_height + float(map_height)*initial_plane_max_height*initial_plane_height) + (float(map_height)*0.65f*hills));
+                float stone = ((float(map_height)*initial_plane_max_height + float(map_height)*initial_plane_max_height*initial_plane_height) + (float(map_height)*0.65f*Maths::Pow(hills, 0.6f))) - float(map_height)*0.12f;
+
+                for(float y = 0.0f; y < map_height; y += 1.0f)
+                {
+                    if(y > real_height)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        if(y < stone)
+                        {
+                            map[y][z][x] = Block::stone;
+                            continue;
+                        }
+                        else 
+                        {
+                            if(y+1.0f > real_height)
+                            {
+                                // living stuff
+                                {
+                                    bool make_tree = noise.Sample((map_width+x)*tree_frequency, z*tree_frequency) > 0.7;
+                                    if(make_tree && rand.NextRanged(70) > 2) make_tree = false;
+
+                                    bool make_grass = noise.Sample(x*grass_frequency, (map_depth+z)*grass_frequency) > 0.6;
+                                    if(make_grass && rand.NextRanged(50) > 40) make_grass = false;
+                                    bool make_flower = rand.NextRanged(24) == 1;
+                                    bool flower_type = rand.NextRanged(4) >= 2;
+
+                                    if(make_tree)
+                                    {
+                                        trees.push_back(Vec3f(x,y+1,z));
+                                        map[y][z][x] = Block::dirt;
+                                        continue;
+                                    }
+                                    else if(make_grass)
+                                    {
+                                        if(make_flower)
+                                        {
+                                            if(flower_type)
+                                            {
+                                                map[y+1][z][x] = Block::tulip;
+                                            }
+                                            else
+                                            {
+                                                map[y+1][z][x] = Block::edelweiss;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            map[y+1][z][x] = Block::grass;
+                                        }
+                                    }
+                                    map[y][z][x] = Block::grass_dirt;
+                                }
+                                continue;
+                            }
+                            else
+                            {
+                                map[y][z][x] = Block::dirt;
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /*for(float y = 0.0f; y < map_height; y += 1.0f)
         {
             float h_diff = y/float(map_height);
             for(float z = 0.0f; z < map_depth; z += 1.0f)
@@ -125,7 +201,7 @@ class World
                     getNet().server_KeepConnectionsAlive();
                 }
             }
-        }
+        }*/
         Debug("Making trees...", 2);
         for(int i = 0; i < trees.size(); i++)
         {
@@ -262,16 +338,48 @@ class World
         for(uint32 i = start; i < end; i++)
         {
             pos = getPosFromWorldIndex(i);
-            UpdateBlockFaces(pos.x, pos.y, pos.z);
+            //UpdateBlockFaces(pos.x, pos.y, pos.z);
+            SetBlockFaces(map[pos.y][pos.z][pos.x], pos.x, pos.y, pos.z);
             getNet().server_KeepConnectionsAlive();
         }
     }
 
-    void UpdateBlockFaces(int x, int y, int z)
+    void SetBlockFaces(uint8 block, int x, int y, int z)
     {
-        if(map[y][z][x] == Block::air || Block::plant[map[y][z][x]])
+        if(Block::see_through[block])
+        {
+            //faces_bits[y][z][x] = 64;
+
+            if(z > 0) faces_bits[y][z-1][x] += 2;
+            if(z < map_depth-1) faces_bits[y][z+1][x] += 1;
+            if(y < map_height-1) faces_bits[y+1][z][x] += 8;
+            if(y > 0) faces_bits[y-1][z][x] += 4;
+            if(x < map_width-1) faces_bits[y][z][x+1] += 32;
+            if(x > 0) faces_bits[y][z][x-1] += 16;
+        }
+        /*if(map[y][z][x] == Block::air || Block::plant[map[y][z][x]])
         {
             faces_bits[y][z][x] = 64;
+            return;
+        }
+        
+        uint8 faces = 0;
+
+        if(z > 0 && Block::see_through[map[y][z-1][x]]) faces += 1;
+        if(z < map_depth-1 && Block::see_through[map[y][z+1][x]]) faces += 2;
+        if(y < map_height-1 && Block::see_through[map[y+1][z][x]]) faces += 4;
+        if(y > 0 && Block::see_through[map[y-1][z][x]]) faces += 8;
+        if(x < map_width-1 && Block::see_through[map[y][z][x+1]]) faces += 16;
+        if(x > 0 && Block::see_through[map[y][z][x-1]]) faces += 32;
+
+        faces_bits[y][z][x] = faces;*/
+    }
+
+    void UpdateBlockFaces(int x, int y, int z)
+    {
+        if(map[y][z][x] == Block::air)// || Block::plant[map[y][z][x]])
+        {
+            faces_bits[y][z][x] = 0;
             return;
         }
         
@@ -360,6 +468,7 @@ class World
                 }
                 pos = getPosFromWorldIndex(start+index);
                 map[pos.y][pos.z][pos.x] = block_id;
+                SetBlockFaces(block_id, pos.x, pos.y, pos.z);
                 index++;
             }
         }

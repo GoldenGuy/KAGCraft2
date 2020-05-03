@@ -78,18 +78,31 @@ bool isLoading(CRules@ this)
 	{
 		if(!faces_generated)
 		{
-			if(gf_packet == 0)
+			if(isServer())
 			{
-				Debug("Generating block faces.");
-				loading_string = "Generating block faces.";
-				world.FacesSetUp();
-			}
-			if(gf_packet < gf_amount_of_packets)
-			{
-				world.GenerateBlockFaces(gf_packet);
-				gf_packet++;
-				Debug(gf_packet+"/"+gf_amount_of_packets+".", 3);
-				loading_string = "Generating faces. "+gf_packet+"/"+gf_amount_of_packets;
+				if(gf_packet == 0)
+				{
+					Debug("Generating block faces.");
+					loading_string = "Generating block faces.";
+					world.FacesSetUp();
+					gf_packet++;
+					return true;
+				}
+				if(gf_packet < gf_amount_of_packets)
+				{
+					world.GenerateBlockFaces(gf_packet);
+					gf_packet++;
+					Debug(gf_packet+"/"+gf_amount_of_packets+".", 3);
+					loading_string = "Generating faces. "+gf_packet+"/"+gf_amount_of_packets;
+					return true;
+				}
+				else
+				{
+					Debug("Done.");
+					loading_string = "Setting up chunks.";
+					faces_generated = true;
+					return true;
+				}
 			}
 			else
 			{

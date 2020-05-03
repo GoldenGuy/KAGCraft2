@@ -49,6 +49,7 @@ void onInit(CRules@ this)
 		World _world;
 		@world = @_world;
 		world.ClientMapSetUp();
+		world.FacesSetUp();
 	}
 }
 
@@ -351,7 +352,7 @@ void Render(int id)
 	GUI::DrawShadowedText("dir_x: "+my_player.dir_x, Vec2f(20,80), color_white);
 }
 
-int max_generate = 2;
+int max_generate = 3;
 
 // hook doesnt work
 
