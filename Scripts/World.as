@@ -4,6 +4,7 @@
 const uint32 chunk_width = 14;
 const uint32 chunk_depth = 14;
 const uint32 chunk_height = 14;
+const uint32 chunk_size = chunk_width*chunk_depth*chunk_height;
 
 uint32 world_width = 32;
 uint32 world_depth = 32;
@@ -216,6 +217,7 @@ class World
     {
         uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
         map = _map;
+        chunks.clear();
     }
 
     void SetUpMaterial()
@@ -320,10 +322,12 @@ class World
         if(inWorldBounds(x, y, z)) map[y][z][x] = block_id;
     }
 
-    void SetUpChunks()
+    void SetUpChunks(uint32 chs_packet)
     {
-        chunks.clear();
-        for(int i = 0; i < world_size; i++)
+        uint32 start = chs_packet*(world_width_depth);
+        uint32 end = start+(world_width_depth);
+
+        for(int i = start; i < end; i++)
         {
             Chunk chunk(this, i);
             chunks.push_back(@chunk);
@@ -948,7 +952,7 @@ void server_SetBlock(uint8 block, const Vec3f&in pos)
 
 // map sending and receiving
 
-uint32 ms_packet_size = chunk_width*chunk_depth*chunk_height*8; // 16 chunks per packet
+uint32 ms_packet_size = chunk_width*chunk_depth*chunk_height*16; // 16 chunks per packet
 uint32 amount_of_packets = map_size / ms_packet_size;
 
 // server

@@ -7,7 +7,7 @@ const float eye_height = 1.7f;
 const float player_height = 1.85f;
 const float player_radius = 0.35f;
 const float player_diameter = player_radius*2;
-bool fly = false;
+bool fly = true;
 bool hold_frustum = false;
 bool thirdperson = false;
 float sensitivity = 0.16;
@@ -355,8 +355,8 @@ class Player
 			}
 		}
 
-		CollisionResponse(pos, vel);
-		//pos+=vel;
+		//CollisionResponse(pos, vel);
+		pos+=vel;
 
 		//pos = Vec3f(Maths::Clamp(pos.x, player_diameter/1.9f, map_width-player_diameter/1.9f), Maths::Clamp(pos.y, 0, map_height-player_height), Maths::Clamp(pos.z, player_diameter/1.9f, map_depth-player_diameter/1.9f));
 

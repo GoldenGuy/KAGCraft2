@@ -93,8 +93,9 @@ bool isLoading(CRules@ this)
 				{
 					world.GenerateBlockFaces(gf_packet);
 					gf_packet++;
-					Debug(gf_packet+"/"+gf_amount_of_packets+".", 3);
-					loading_string = "Generating faces. "+gf_packet+"/"+gf_amount_of_packets;
+					Debug("Generating block faces. "+gf_packet+"/"+gf_amount_of_packets+".", 3);
+					int percent = (float(gf_packet)/float(gf_amount_of_packets))*100;
+					loading_string = "Generating block faces. "+percent+"%";
 					return true;
 				}
 				else
@@ -117,8 +118,13 @@ bool isLoading(CRules@ this)
 		{
 			if(!chunks_set_up)
 			{
-				Debug("Setting up chunks.");
-				world.SetUpChunks();
+				world.SetUpChunks(chunks_packets);
+				chunks_packets++;
+				Debug("Setting up chunks. "+chunks_packets+"/"+max_chunks_packets);
+				int percent = (float(chunks_packets)/float(max_chunks_packets))*100;
+				loading_string = "Setting up chunks. "+percent+"%";
+				if(chunks_packets < max_chunks_packets) return true;
+
 				loading_string = "Setting up tree.";
 				Debug("Done.");
 				chunks_set_up = true;
@@ -198,3 +204,6 @@ class BlockToPlace
 		block = _block;
 	}
 }
+
+int chunks_packets = 0;
+int max_chunks_packets = world_height;
