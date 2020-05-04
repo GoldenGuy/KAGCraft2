@@ -952,7 +952,7 @@ void server_SetBlock(uint8 block, const Vec3f&in pos)
 
 // map sending and receiving
 
-uint32 ms_packet_size = chunk_width*chunk_depth*chunk_height*16; // 16 chunks per packet
+uint32 ms_packet_size = chunk_width*chunk_depth*chunk_height*8; // 16 chunks per packet
 uint32 amount_of_packets = map_size / ms_packet_size;
 
 // server
