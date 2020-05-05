@@ -3,6 +3,7 @@
 namespace Loading
 {
 	bool isLoading = false;
+	bool mapParamsReady = false;
 	int state = 0;
 	string loading_string = "Init.";
 
@@ -10,7 +11,8 @@ namespace Loading
 	{
 		init,
 		intro,
-		not_asked_for_map,
+		waiting_for_map_params,
+		ask_for_map,
 		map_unserialization,
 		block_faces_gen,
 		chunk_gen,
@@ -46,6 +48,12 @@ namespace Loading
 		{
 			case init:
 			{
+				map_packets.clear();
+				current_map_packet = 0;
+				current_block_faces_packet = 0;
+				current_chunks_packet = 0;
+				mapParamsReady = false;
+				
 				@camera = @Camera();
 				
 				block_queue.clear();
@@ -74,27 +82,43 @@ namespace Loading
 				else
 				{
 					@world = @World();
-					world.ClientMapSetUp();
 					world.SetUpMaterial();
 				}
 
-				state = not_asked_for_map;
-				loading_string = "Asking for map.";
+				Debug("Asking for map.");
+				CBitStream to_send;
+				to_send.write_netid(getLocalPlayer().getNetworkID());
+				this.SendCommand(this.getCommandID("C_RequestMapParams"), to_send, false);
+
+				state = waiting_for_map_params;
+				loading_string = "Waiting for map parameters.";
 				return;
 			}
 
-			case not_asked_for_map:
+			case waiting_for_map_params:
 			{
-				if(getLocalPlayer() !is null && getLocalPlayerBlob() !is null)
+				if(mapParamsReady)
 				{
-					Debug("Asking for map.");
-					CBitStream to_send;
-					to_send.write_netid(getLocalPlayer().getNetworkID());
-					this.SendCommand(this.getCommandID("C_RequestMap"), to_send, false);
-
-					state = map_unserialization;
-					loading_string = "Loading map.";
+					world.ClientMapSetUp();
+					state = ask_for_map;
+					loading_string = "Asking for map.";
+					return;
 				}
+				else
+				{
+					return;
+				}
+			}
+
+			case ask_for_map:
+			{
+				Debug("Asking for map.");
+				CBitStream to_send;
+				to_send.write_netid(getLocalPlayer().getNetworkID());
+				this.SendCommand(this.getCommandID("C_RequestMap"), to_send, false);
+
+				state = map_unserialization;
+				loading_string = "Loading map.";
 				return;
 			}
 

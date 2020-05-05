@@ -31,6 +31,11 @@ void onInit(CRules@ this)
 
 void onTick(CRules@ this)
 {
+	if(getLocalPlayer() is null || getLocalPlayerBlob() is null)
+	{
+		return;
+	}
+	
 	HitBoxes.clear();
 	this.set_f32("interGameTime", getGameTime());
 	this.set_f32("interFrameTime", 0);
@@ -134,7 +139,45 @@ void onTick(CRules@ this)
 void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 {
 	//Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
-	if(cmd == this.getCommandID("S_SendMapPacket"))
+
+	if(cmd == this.getCommandID("S_SendMapParams"))
+	{
+		chunk_width = params.read_u32();
+		chunk_depth = params.read_u32();
+		chunk_height = params.read_u32();
+		chunk_size = chunk_width*chunk_depth*chunk_height;
+
+		world_width = params.read_u32();
+		world_depth = params.read_u32();
+		world_height = params.read_u32();
+		world_width_depth = world_width * world_depth;
+		world_size = world_width_depth * world_height;
+
+		map_width = world_width * chunk_width;
+		map_depth = world_depth * chunk_depth;
+		map_height = world_height * chunk_height;
+		map_width_depth = map_width * map_depth;
+		map_size = map_width_depth * map_height;
+
+		map_packet_size = chunk_width*chunk_depth*chunk_height*8;
+		map_packets_amount = map_size / map_packet_size;
+
+		block_faces_packets_amount = map_packets_amount;
+		block_faces_packet_size = map_size / block_faces_packets_amount;
+
+		chunks_packets_amount = world_depth*world_height;
+		chunks_packet_size = world_size / chunks_packets_amount;
+
+		uint8 sky_color_R = params.read_u8();
+		uint8 sky_color_G = params.read_u8();
+		uint8 sky_color_B = params.read_u8();
+		sky_color = SColor(255, sky_color_R, sky_color_G, sky_color_B);
+
+		Fill[0].col = Fill[1].col = Fill[2].col = Fill[3].col = sky_color;
+
+		Loading::mapParamsReady = true;
+	}
+	else if(cmd == this.getCommandID("S_SendMapPacket"))
 	{
 		//ready_unser = true;
 		//map_packet.Clear();
@@ -224,7 +267,7 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 
 		Sound3D(sound_name, Vec3f(x,y,z));
 	}
-	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_RequestMapPacket") || cmd == this.getCommandID("C_ChangeBlock"))
+	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_ChangeBlock"))
 	{
 		return;
 	}

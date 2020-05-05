@@ -2,10 +2,10 @@
 #include "Blocks.as"
 //#include "Particles3D.as"
 
-const uint32 chunk_width = 14;
-const uint32 chunk_depth = 14;
-const uint32 chunk_height = 14;
-const uint32 chunk_size = chunk_width*chunk_depth*chunk_height;
+uint32 chunk_width = 14;
+uint32 chunk_depth = 14;
+uint32 chunk_height = 14;
+uint32 chunk_size = chunk_width*chunk_depth*chunk_height;
 
 uint32 world_width = 32;
 uint32 world_depth = 32;
@@ -62,7 +62,7 @@ uint32 current_block_faces_packet;
 
 uint32 chunks_packets_amount = world_depth*world_height;
 uint32 chunks_packet_size = world_size / chunks_packets_amount;
-uint32 current_chunks_packet = 0;
+uint32 current_chunks_packet;
 
 class World
 {
@@ -734,7 +734,7 @@ class Chunk
     World@ _world;
     int x, y, z, world_x, world_y, world_z, world_x_bounds, world_y_bounds, world_z_bounds;
     int index, world_index;
-    bool visible, rebuild, empty, drop;
+    bool visible, rebuild, empty;
     SMesh mesh;
     Vertex[] verts;
     uint16[] indices;
@@ -755,10 +755,12 @@ class Chunk
         world_x = x*chunk_width; world_z = z*chunk_depth; world_y = y*chunk_height;
         world_x_bounds = world_x+chunk_width; world_z_bounds = world_z+chunk_depth; world_y_bounds = world_y+chunk_height;
         box = AABB(Vec3f(world_x, world_y, world_z), Vec3f(world_x_bounds, world_y_bounds, world_z_bounds));
-        visible = false;
-        drop = false;
 
-        for (int _y = world_y; _y < world_y_bounds; _y++)
+        GenerateMesh();
+        
+        //visible = false;
+
+        /*for (int _y = world_y; _y < world_y_bounds; _y++)
 		{
 			for (int _z = world_z; _z < world_z_bounds; _z++)
 			{
@@ -780,7 +782,7 @@ class Chunk
             }
         }
         rebuild = false;
-        empty = true;
+        empty = true;*/
     }
 
     void GenerateMesh()
@@ -829,23 +831,13 @@ class Chunk
             mesh.SetIndices(indices);
             mesh.SetDirty(SMesh::VERTEX_INDEX);
             mesh.BuildMesh();
-            //drop = true;
-            //mesh.DropMesh();
-            //mesh.DropMeshBuffer();
         }
-        AddSector(AABB(Vec3f(world_x, world_y, world_z), Vec3f(world_x_bounds, world_y_bounds, world_z_bounds)), 0x50A8360D, 20);
+        //AddSector(AABB(Vec3f(world_x, world_y, world_z), Vec3f(world_x_bounds, world_y_bounds, world_z_bounds)), 0x50A8360D, 20);
     }
 
     void SetVisible()
     {
         visible = true;
-    }
-
-    void DropMesh()
-    {
-        //mesh.DropMesh();
-        //mesh.DropMeshBuffer();
-        drop = false;
     }
 
     void addFaces(uint8 block, uint8 face_info, const Vec3f&in pos)
