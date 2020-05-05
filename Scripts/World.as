@@ -1,5 +1,6 @@
 
 #include "Blocks.as"
+//#include "Particles3D.as"
 
 const uint32 chunk_width = 14;
 const uint32 chunk_depth = 14;
@@ -18,6 +19,10 @@ uint32 map_height = world_height * chunk_height;
 uint32 map_width_depth = map_width * map_depth;
 uint32 map_size = map_width_depth * map_height;
 
+SColor sky_color = 0xFF89A2ED;
+
+// map gen
+
 float initial_plane = 0.0017;
 float initial_plane_max_height = 0.35f;
 float initial_plane_add_max = 0.16f;
@@ -26,7 +31,38 @@ float hills_spread = 0.048f;
 float tree_frequency = 0.06f;
 float grass_frequency = 0.08f;
 
-SColor sky_color = 0xFF89A2ED;
+// map sending and receiving
+
+uint32 map_packet_size = chunk_width*chunk_depth*chunk_height*8; // 16 chunks per packet
+uint32 map_packets_amount = map_size / map_packet_size;
+
+// server
+
+MapSender[] players_to_send;
+class MapSender
+{
+    CPlayer@ player;
+    uint32 packet_number = 0;
+
+    MapSender(CPlayer@ _player, uint32 _packet_number)
+    {
+        @player = @_player;
+        packet_number = _packet_number;
+    }
+}
+
+// client
+
+CBitStream@[] map_packets;
+uint32 current_map_packet;
+
+uint32 block_faces_packets_amount = map_packets_amount;
+uint32 block_faces_packet_size = map_size / block_faces_packets_amount;
+uint32 current_block_faces_packet;
+
+uint32 chunks_packets_amount = world_depth*world_height;
+uint32 chunks_packet_size = world_size / chunks_packets_amount;
+uint32 current_chunks_packet = 0;
 
 class World
 {
@@ -38,6 +74,13 @@ class World
 
     Noise@ noise;
     Random@ rand;
+
+    World()
+    {
+        map.clear();
+        faces_bits.clear();
+        chunks.clear();
+    }
 
     void GenerateMap()
     {
@@ -79,7 +122,7 @@ class World
                     {
                         if(y < stone)
                         {
-                            map[y][z][x] = Block::stone;
+                            setBlock(x, y, z, Block::stone);
                             continue;
                         }
                         else 
@@ -99,7 +142,7 @@ class World
                                     if(make_tree)
                                     {
                                         trees.push_back(Vec3f(x,y+1,z));
-                                        map[y][z][x] = Block::dirt;
+                                        setBlock(x, y, z, Block::dirt);
                                         continue;
                                     }
                                     else if(make_grass)
@@ -108,25 +151,25 @@ class World
                                         {
                                             if(flower_type)
                                             {
-                                                map[y+1][z][x] = Block::tulip;
+                                                setBlock(x, y+1, z, Block::tulip);
                                             }
                                             else
                                             {
-                                                map[y+1][z][x] = Block::edelweiss;
+                                                setBlock(x, y+1, z, Block::edelweiss);
                                             }
                                         }
                                         else
                                         {
-                                            map[y+1][z][x] = Block::grass;
+                                            setBlock(x, y+1, z, Block::grass);
                                         }
                                     }
-                                    map[y][z][x] = Block::grass_dirt;
+                                    setBlock(x, y, z, Block::grass_dirt);
                                 }
                                 continue;
                             }
                             else
                             {
-                                map[y][z][x] = Block::dirt;
+                                setBlock(x, y, z, Block::dirt);
                                 continue;
                             }
                         }
@@ -134,77 +177,7 @@ class World
                 }
             }
         }
-        /*for(float y = 0.0f; y < map_height; y += 1.0f)
-        {
-            float h_diff = y/float(map_height);
-            for(float z = 0.0f; z < map_depth; z += 1.0f)
-            {
-                for(float x = 0.0f; x < map_width; x += 1.0f)
-                {
-                    bool make_tree = noise.Sample((map_width+x)*tree_frequency, z*tree_frequency) > 0.7;
-                    if(make_tree && rand.NextRanged(70) > 2) make_tree = false;
-
-                    bool make_grass = noise.Sample(x*grass_frequency, (map_depth+z)*grass_frequency) > 0.6;
-                    if(make_grass && rand.NextRanged(50) > 40) make_grass = false;
-                    bool make_flower = rand.NextRanged(24) == 1;
-                    bool flower_type = rand.NextRanged(4) >= 2;
-                    
-                    float h = noise.Sample(x * sample_frequency, z * sample_frequency) * (noise.Fractal(x * fractal_frequency, z * fractal_frequency)/2.0f) + add_height;//+Maths::Pow(y / float(map_height), 1.1024f)-0.5;
-                    if(y == 0)
-                    {
-                        map[y][z][x] = Block::bedrock;
-                    }
-                    else if(h > h_diff)
-                    {
-                        if(h-h_diff <= dirt_start)
-                        {
-                            if(h-something > h_diff)
-                                map[y][z][x] = Block::dirt;
-                            else
-                            {
-                                if(make_tree)
-                                {
-                                    trees.push_back(Vec3f(x,y+1,z));
-                                    map[y][z][x] = Block::dirt;
-                                }
-                                else if(make_grass)
-                                {
-                                    if(make_flower)
-                                    {
-                                        if(flower_type)
-                                        {
-                                            map[y+1][z][x] = Block::tulip;
-                                        }
-                                        else
-                                        {
-                                            map[y+1][z][x] = Block::edelweiss;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        map[y+1][z][x] = Block::grass;
-                                    }
-                                    map[y][z][x] = Block::grass_dirt;
-                                }
-                                else map[y][z][x] = Block::grass_dirt;
-                            }
-                        }
-                        else
-                        {
-                            if(h-h_diff > dirt_start+0.06)
-                            {
-                                map[y][z][x] = Block::hard_stone;
-                            }
-                            else
-                            {
-                                map[y][z][x] = Block::stone;
-                            }
-                        }
-                    }
-                    getNet().server_KeepConnectionsAlive();
-                }
-            }
-        }*/
+        
         Debug("Making trees...", 2);
         for(int i = 0; i < trees.size(); i++)
         {
@@ -217,7 +190,19 @@ class World
     {
         uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
         map = _map;
+
+        uint8[][][] _faces_bits(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
+        faces_bits = _faces_bits;
+
+        @noise = @Noise(XORRandom(10000000));
+
         chunks.clear();
+    }
+
+    void FacesSetUp()
+    {
+        uint8[][][] _faces_bits(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
+        faces_bits = _faces_bits;
     }
 
     void SetUpMaterial()
@@ -248,13 +233,6 @@ class World
         //mapMaterial.SetFlag(SMaterial::ANTI_ALIASING, true);
         //mapMaterial.SetAntiAliasing(AntiAliasing::OFF);
     }
-    
-    void FacesSetUp()
-    {
-        uint8[][][] _faces_bits(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
-        faces_bits = _faces_bits;
-        @noise = @Noise(XORRandom(10000000));
-    }
 
     void MakeTree(Vec3f pos)
 	{
@@ -263,49 +241,49 @@ class World
 			tree_type = Block::log_birch;
 		if(inWorldBounds(pos.x, pos.y, pos.z))
 		{
-			SetBlock(pos.x, pos.y, pos.z, tree_type);
+			setBlockSafe(pos.x, pos.y, pos.z, tree_type);
 			pos.y += 1;
 			if(inWorldBounds(pos.x, pos.y, pos.z))
 			{
-				SetBlock(pos.x, pos.y, pos.z, tree_type);
+				setBlockSafe(pos.x, pos.y, pos.z, tree_type);
 				pos.y += 1;
 				if(inWorldBounds(pos.x, pos.y, pos.z))
 				{
-					SetBlock(pos.x, pos.y, pos.z, tree_type);
+					setBlockSafe(pos.x, pos.y, pos.z, tree_type);
 					
 					for(int _z = -2; _z <= 2; _z++)
 						for(int _x = -2; _x <= 2; _x++)
 							if(!(_x == 0 && _z == 0))
-								SetBlock(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
+								setBlockSafe(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
 					
 					pos.y += 1;
 					if(inWorldBounds(pos.x, pos.y, pos.z))
 					{
-						SetBlock(pos.x, pos.y, pos.z, tree_type);
+						setBlockSafe(pos.x, pos.y, pos.z, tree_type);
 						
 						for(int _z = -2; _z <= 2; _z++)
 							for(int _x = -2; _x <= 2; _x++)
 								if(!(_x == 0 && _z == 0))
-									SetBlock(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
+									setBlockSafe(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
 						
 						pos.y += 1;
 						if(inWorldBounds(pos.x, pos.y, pos.z))
 						{
-							SetBlock(pos.x, pos.y, pos.z, tree_type);
+							setBlockSafe(pos.x, pos.y, pos.z, tree_type);
 							
 							for(int _z = -1; _z <= 1; _z++)
 								for(int _x = -1; _x <= 1; _x++)
 									if(!(_x == 0 && _z == 0))
-										SetBlock(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
+										setBlockSafe(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
 							
 							pos.y += 1;
 							if(inWorldBounds(pos.x, pos.y, pos.z))
 							{
-								SetBlock(pos.x+1, pos.y, pos.z, Block::leaves);
-								SetBlock(pos.x-1, pos.y, pos.z, Block::leaves);
-								SetBlock(pos.x, pos.y, pos.z, Block::leaves);
-								SetBlock(pos.x, pos.y, pos.z+1, Block::leaves);
-								SetBlock(pos.x, pos.y, pos.z-1, Block::leaves);
+								setBlockSafe(pos.x+1, pos.y, pos.z, Block::leaves);
+								setBlockSafe(pos.x-1, pos.y, pos.z, Block::leaves);
+								setBlockSafe(pos.x, pos.y, pos.z, Block::leaves);
+								setBlockSafe(pos.x, pos.y, pos.z+1, Block::leaves);
+								setBlockSafe(pos.x, pos.y, pos.z-1, Block::leaves);
 								getNet().server_KeepConnectionsAlive();
 							}
 						}
@@ -317,15 +295,233 @@ class World
 		getNet().server_KeepConnectionsAlive();
 	}
 
-    void SetBlock(int x, int y, int z, uint8 block_id)
+    void BlockUpdate(int x, int y, int z, uint8 new_block, uint8 old_block)
+    {
+        if(isClient())
+        {
+            if(!Block::solid[new_block] && !Block::plant[new_block])
+            {
+                if(Block::plant[old_block])
+                {
+                    PlaySound3D("cut_grass2.ogg", x, y, z);
+                }
+                else if(Block::solid[old_block])
+                {
+                    switch(old_block)
+                    {
+                        case Block::grass_dirt:
+                        case Block::dirt:
+                        {
+                            PlaySound3D("destroy_dirt.ogg", x, y, z);
+                            break;
+                        }
+                        case Block::crate:
+                        case Block::log_birch:
+                        case Block::log:
+                        case Block::planks_birch:
+                        case Block::planks:
+                        case Block::log_palm:
+                        {
+                            PlaySound3D("destroy_wood.ogg", x, y, z);
+                            break;
+                        }
+                        case Block::leaves:
+                        case Block::wool_red:
+                        case Block::wool_orange:
+                        case Block::wool_yellow:
+                        case Block::wool_green:
+                        case Block::wool_cyan:
+                        case Block::wool_blue:
+                        case Block::wool_darkblue:
+                        case Block::wool_purple:
+                        case Block::wool_white:
+                        case Block::wool_gray:
+                        case Block::wool_black:
+                        case Block::wool_brown:
+                        case Block::wool_pink:
+                        {
+                            PlaySound3D("cut_grass1.ogg", x, y, z);
+                            break;
+                        }
+                        case Block::glass:
+                        {
+                            PlaySound3D("GlassBreak2.ogg", x, y, z);
+                            break;
+                        }
+                        case Block::hard_stone:
+                        case Block::metal_shiny:
+                        case Block::metal:
+                        case Block::gearbox:
+                        case Block::fence:
+                        {
+                            PlaySound3D("destroy_stone.ogg", x, y, z);
+                            break;
+                        }
+                        case Block::gold:
+                        {
+                            PlaySound3D("destroy_gold.ogg", x, y, z);
+                            break;
+                        }
+                        case Block::sand:
+                        {
+                            PlaySound3D("sand_fall.ogg", x, y, z);
+                            break;
+                        }
+                        case Block::water:
+                        case Block::watersecond:
+                        {
+                            PlaySound3D("WaterBubble2.ogg", x, y, z);
+                            break;
+                        }
+
+                        default:
+                        {
+                            PlaySound3D("destroy_wall.ogg", x, y, z);
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                switch(new_block)
+                {
+                    case Block::grass_dirt:
+                    case Block::dirt:
+                    case Block::sand:
+                    {
+                        PlaySound3D("dig_dirt1.ogg", x, y, z);
+                        break;
+                    }
+                    case Block::crate:
+                    case Block::log_birch:
+                    case Block::log:
+                    case Block::planks_birch:
+                    case Block::planks:
+                    case Block::log_palm:
+                    {
+                        PlaySound3D("build_ladder.ogg", x, y, z);
+                        break;
+                    }
+                    case Block::wool_red:
+                    case Block::wool_orange:
+                    case Block::wool_yellow:
+                    case Block::wool_green:
+                    case Block::wool_cyan:
+                    case Block::wool_blue:
+                    case Block::wool_darkblue:
+                    case Block::wool_purple:
+                    case Block::wool_white:
+                    case Block::wool_gray:
+                    case Block::wool_black:
+                    case Block::wool_brown:
+                    case Block::wool_pink:
+                    {
+                        PlaySound3D("thud.ogg", x, y, z);
+                        break;
+                    }
+                    case Block::leaves:
+                    case Block::grass:
+                    case Block::tulip:
+                    case Block::edelweiss:
+                    {
+                        PlaySound3D("dig_dirt2.ogg", x, y, z);
+                        break;
+                    }
+                    case Block::glass:
+                    {
+                        PlaySound3D("dry_hit.ogg", x, y, z);
+                        break;
+                    }
+                    case Block::hard_stone:
+                    case Block::metal_shiny:
+                    case Block::metal:
+                    case Block::gearbox:
+                    case Block::fence:
+                    case Block::gold:
+                    {
+                        PlaySound3D("dig_stone1.ogg", x, y, z);
+                        break;
+                    }
+                    case Block::water:
+                    case Block::watersecond:
+                    {
+                        PlaySound3D("wetfall1.ogg", x, y, z);
+                        break;
+                    }
+
+                    default:
+                    {
+                        PlaySound3D("build_wall2.ogg", x, y, z);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if(isServer())
+        {
+            if(Block::solid[new_block])
+            {
+                uint8 block_below = getBlockSafe(x, y-1, z);
+                if(block_below < Block::blocks_count)
+                {
+                    if(block_below == Block::grass_dirt)
+                    {
+                        server_SetBlock(Block::dirt, x, y-1, z);
+                    }
+                }
+            }
+            else if(!Block::plant[new_block])
+            {
+                uint8 block_above = getBlockSafe(x, y+1, z);
+                if(block_above < Block::blocks_count)
+                {
+                    if(Block::plant[block_above])
+                    {
+                        server_SetBlock(Block::air, x, y+1, z);
+                    }
+                }
+            }
+            else
+            {
+                uint8 block_below = getBlockSafe(x, y-1, z);
+                if(block_below < Block::blocks_count)
+                {
+                    if(block_below == Block::dirt)
+                    {
+                        server_SetBlock(Block::grass_dirt, x, y-1, z);
+                    }
+                }
+            }
+        }
+    }
+
+    void setBlockSafe(int x, int y, int z, uint8 block_id)
     {
         if(inWorldBounds(x, y, z)) map[y][z][x] = block_id;
     }
 
-    void SetUpChunks(uint32 chs_packet)
+    void setBlock(int x, int y, int z, uint8 block_id)
     {
-        uint32 start = chs_packet*(world_width_depth);
-        uint32 end = start+(world_width_depth);
+        map[y][z][x] = block_id;
+    }
+
+    uint8 getBlock(int x, int y, int z)
+    {
+        return map[y][z][x];
+    }
+
+    uint8 getBlockSafe(int x, int y, int z)
+    {
+        if(inWorldBounds(x, y, z)) return map[y][z][x];
+        return 255;
+    }
+
+    void SetUpChunks(uint32 chunk_packet)
+    {
+        uint32 start = chunk_packet*chunks_packet_size;
+        uint32 end = start+chunks_packet_size;
 
         for(int i = start; i < end; i++)
         {
@@ -335,18 +531,17 @@ class World
         }
     }
 
-    void GenerateBlockFaces(uint32 _gf_packet)
+    void GenerateBlockFaces(uint32 block_faces_packet)
     {
-        uint32 start = _gf_packet*gf_packet_size;
-        uint32 end = start+gf_packet_size;
+        uint32 start = block_faces_packet*block_faces_packet_size;
+        uint32 end = start+block_faces_packet_size;
         Vec3f pos;
         uint8 block_id;
 
         for(uint32 i = start; i < end; i++)
         {
             pos = getPosFromWorldIndex(i);
-            //UpdateBlockFaces(pos.x, pos.y, pos.z);
-            SetBlockFaces(map[pos.y][pos.z][pos.x], pos.x, pos.y, pos.z);
+            SetBlockFaces(getBlock(pos.x, pos.y, pos.z), pos.x, pos.y, pos.z);
             getNet().server_KeepConnectionsAlive();
         }
     }
@@ -355,8 +550,6 @@ class World
     {
         if(Block::see_through[block])
         {
-            //faces_bits[y][z][x] = 64;
-
             if(z > 0) faces_bits[y][z-1][x] += 2;
             if(z < map_depth-1) faces_bits[y][z+1][x] += 1;
             if(y < map_height-1) faces_bits[y+1][z][x] += 8;
@@ -364,22 +557,6 @@ class World
             if(x < map_width-1) faces_bits[y][z][x+1] += 32;
             if(x > 0) faces_bits[y][z][x-1] += 16;
         }
-        /*if(map[y][z][x] == Block::air || Block::plant[map[y][z][x]])
-        {
-            faces_bits[y][z][x] = 64;
-            return;
-        }
-        
-        uint8 faces = 0;
-
-        if(z > 0 && Block::see_through[map[y][z-1][x]]) faces += 1;
-        if(z < map_depth-1 && Block::see_through[map[y][z+1][x]]) faces += 2;
-        if(y < map_height-1 && Block::see_through[map[y+1][z][x]]) faces += 4;
-        if(y > 0 && Block::see_through[map[y-1][z][x]]) faces += 8;
-        if(x < map_width-1 && Block::see_through[map[y][z][x+1]]) faces += 16;
-        if(x > 0 && Block::see_through[map[y][z][x-1]]) faces += 32;
-
-        faces_bits[y][z][x] = faces;*/
     }
 
     void UpdateBlockFaces(int x, int y, int z)
@@ -413,10 +590,10 @@ class World
         return Vec3f(index % map_width, index / map_width_depth, (index / map_width) % map_depth);
     }
 
-    void Serialize(CBitStream@ to_send, uint32 packet)
+    void Serialize(CBitStream@ to_send, uint32 map_packet)
     {
-        uint32 start = packet*ms_packet_size;
-        uint32 end = start+ms_packet_size;
+        uint32 start = map_packet*map_packet_size;
+        uint32 end = start+map_packet_size;
         Vec3f pos;
         uint8 block_id;
 
@@ -456,20 +633,20 @@ class World
 
     void UnSerialize(CBitStream@ to_read, uint32 packet)
     {
-        uint32 start = packet*ms_packet_size;
-        uint32 end = start+ms_packet_size;
+        uint32 start = packet*map_packet_size;
+        uint32 end = start+map_packet_size;
         Vec3f pos;
         uint8 block_id;
 
         uint32 index = 0;
 
-        while(index < ms_packet_size)
+        while(index < map_packet_size)
         {
             uint32 amount = to_read.read_u32();
             uint8 block_id = to_read.read_u8();
             for(uint32 j = 0; j < amount; j++)
             {
-                if(index == ms_packet_size)
+                if(index == map_packet_size)
                 {
                     return;
                 }
@@ -480,45 +657,6 @@ class World
             }
         }
     }
-
-    // old and slow way of map sending
-
-    /*void Serialize(CBitStream@ to_send, uint32 packet)
-    {
-        uint32 start = packet*ms_packet_size;
-        uint32 end = start+ms_packet_size;
-        Vec3f pos;
-        uint8 block_id;
-
-        for(uint32 i = start; i < end; i++)
-        {
-            pos = getPosFromWorldIndex(i);
-            block_id = map[pos.y][pos.z][pos.x];
-
-            to_send.write_u8(block_id);
-            getNet().server_KeepConnectionsAlive();
-        }
-    }
-
-    void UnSerialize(uint32 packet)
-    {
-        uint32 start = packet*ms_packet_size;
-        uint32 end = start+ms_packet_size;
-        Vec3f pos;
-        uint8 block_id;
-
-        // skip 16 uint8's
-        //map_packet.SetBitIndex(16*8*2);
-
-        for(uint32 i = start; i < end; i++)
-        {
-            block_id = map_packet.read_uint8();
-            pos = getPosFromWorldIndex(i);
-            map[pos.y][pos.z][pos.x] = block_id;
-
-            getNet().server_KeepConnectionsAlive();
-        }
-    }*/
 
     Chunk@ getChunk(int x, int y, int z)
     {
@@ -683,6 +821,7 @@ class Chunk
         if(verts.size() == 0)
         {
             empty = true;
+            mesh.Clear();
         }
         else
         {
@@ -690,7 +829,7 @@ class Chunk
             mesh.SetIndices(indices);
             mesh.SetDirty(SMesh::VERTEX_INDEX);
             mesh.BuildMesh();
-            drop = true;
+            //drop = true;
             //mesh.DropMesh();
             //mesh.DropMeshBuffer();
         }
@@ -931,52 +1070,63 @@ const SColor right_scol = SColor(debug_alpha, right_col, right_col, right_col);
 const SColor front_scol = SColor(debug_alpha, front_col, front_col, front_col);
 const SColor back_scol = SColor(debug_alpha, back_col, back_col, back_col);
 
-void server_SetBlock(uint8 block, const Vec3f&in pos)
+void client_SetBlock(CPlayer@ player, uint8 block, const Vec3f&in pos)
 {
     if(!world.inWorldBounds(pos.x, pos.y, pos.z)) return;
+
+    //uint8 old_block = world.getBlock(pos.x, pos.y, pos.z);
+    //world.setBlock(pos.x, pos.y, pos.z, block);
+    //world.UpdateBlocksAndChunks(pos.x, pos.y, pos.z);
     
     if(!isServer())
     {
         CBitStream to_send;
+        to_send.write_netid(player.getNetworkID());
         to_send.write_u8(block);
         to_send.write_f32(pos.x);
 		to_send.write_f32(pos.y);
 		to_send.write_f32(pos.z);
-        getRules().SendCommand(getRules().getCommandID("C_ChangeBlock"), to_send, true);
+        getRules().SendCommand(getRules().getCommandID("C_ChangeBlock"), to_send, false);
         //return;
     }
-    
-    world.map[pos.y][pos.z][pos.x] = block;
-    world.UpdateBlocksAndChunks(pos.x, pos.y, pos.z);
-}
-
-// map sending and receiving
-
-uint32 ms_packet_size = chunk_width*chunk_depth*chunk_height*8; // 16 chunks per packet
-uint32 amount_of_packets = map_size / ms_packet_size;
-
-// server
-
-MapSender[] players_to_send;
-class MapSender
-{
-    CPlayer@ player;
-    uint32 packet_number = 0;
-
-    MapSender(CPlayer@ _player, uint32 _packet_number)
+    else
     {
-        @player = @_player;
-        packet_number = _packet_number;
+        uint8 old_block = world.getBlock(pos.x, pos.y, pos.z);
+        world.setBlock(pos.x, pos.y, pos.z, block);
+        world.UpdateBlocksAndChunks(pos.x, pos.y, pos.z);
+        world.BlockUpdate(pos.x, pos.y, pos.z, block, old_block);
     }
 }
 
-// client
+void server_SetBlock(uint8 block, int x, int y, int z)
+{
+    if(!world.inWorldBounds(x, y, z)) return;
 
-//CBitStream map_packet;
-CBitStream@[] map_packets;
-uint32 got_packets;
-bool ready_unser;
+    uint8 old_block = world.getBlock(x, y, z);
+    world.setBlock(x, y, z, block);
+    world.BlockUpdate(x, y, z, block, old_block);
 
-uint32 gf_amount_of_packets = amount_of_packets;
-uint32 gf_packet_size = map_size / gf_amount_of_packets;
-uint32 gf_packet;
+    if(!isClient())
+    {
+        CBitStream to_send;
+        to_send.write_u8(block);
+        to_send.write_f32(x);
+		to_send.write_f32(y);
+		to_send.write_f32(z);
+        getRules().SendCommand(getRules().getCommandID("S_ChangeBlock"), to_send, true);
+    }
+    else
+    {
+        world.UpdateBlocksAndChunks(x, y, z);
+    }
+}
+
+void PlaySound3D(string name, int x, int y, int z)
+{
+    CBitStream to_send;
+    to_send.write_string(name);
+    to_send.write_f32(x);
+    to_send.write_f32(y);
+    to_send.write_f32(z);
+    getRules().SendCommand(getRules().getCommandID("C_PlaySound3D"), to_send);
+}

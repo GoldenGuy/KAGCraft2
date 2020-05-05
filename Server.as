@@ -52,9 +52,9 @@ void onTick(CRules@ this)
 			world.Serialize(@to_send, packet_num);
 			this.SendCommand(this.getCommandID("S_SendMapPacket"), to_send, players_to_send[0].player);
 			packet_num++;
-			Debug("Sending map packet, "+packet_num+"/"+amount_of_packets+".", 3);
+			//Debug("Sending map packet, "+packet_num+"/"+amount_of_packets+".", 3);
 			players_to_send.removeAt(0);
-			if(packet_num < amount_of_packets)
+			if(packet_num < map_packets_amount)
 			{
 				players_to_send.push_back(MapSender(player, packet_num));
 			}
@@ -64,6 +64,12 @@ void onTick(CRules@ this)
 			players_to_send.removeAt(0);
 		}
 	}
+
+	/*if(getGameTime() > 50)
+	{
+		if(getGameTime() % 5 == 2) server_SetBlock(Block::grass_dirt, map_width/2, map_height-4, map_depth/2);
+		else if(getGameTime() % 6 == 4) server_SetBlock(Block::air, map_width/2, map_height-4, map_depth/2);
+	}*/
 }
 
 void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
@@ -111,12 +117,36 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 	}
 	else if(cmd == this.getCommandID("C_ChangeBlock"))
 	{
-		uint8 block = params.read_u8();
-		float x = params.read_f32();
-		float y = params.read_f32();
-		float z = params.read_f32();
+		uint16 netid = params.read_netid();
+		CPlayer@ player = getPlayerByNetworkId(netid);
+		if(player !is null)
+		{
+			ServerPlayer@ splayer = getServerPlayer(player);
+			if(splayer !is null)
+			{
+				if(!splayer.Frozen)
+				{
+					uint8 block = params.read_u8();
+					float x = params.read_f32();
+					float y = params.read_f32();
+					float z = params.read_f32();
 
-		world.map[y][z][x] = block;
+					if(world.inWorldBounds(x, y, z))
+					{
+						uint8 old_block = world.getBlock(x, y, z);
+						world.setBlock(x, y, z, block);
+						world.BlockUpdate(x, y, z, block, old_block);
+
+						CBitStream to_send;
+						to_send.write_u8(block);
+						to_send.write_f32(x);
+						to_send.write_f32(y);
+						to_send.write_f32(z);
+						getRules().SendCommand(getRules().getCommandID("S_ChangeBlock"), to_send, true);
+					}
+				}
+			}
+		}
 	}
 }
 

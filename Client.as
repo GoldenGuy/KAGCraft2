@@ -2,9 +2,9 @@
 #define CLIENT_ONLY
 
 #include "Debug.as"
+#include "Vec3f.as"
 #include "World.as"
 #include "Tree.as"
-#include "Vec3f.as"
 #include "ClientLoading.as"
 #include "FrameTime.as"
 #include "Raycast.as"
@@ -12,6 +12,8 @@
 #include "Player.as"
 #include "Scoreboard.as"
 #include "UtilitySectors.as"
+
+#include "Sound3D.as"
 
 World@ world;
 
@@ -23,35 +25,8 @@ Player@[] other_players;
 void onInit(CRules@ this)
 {
 	Debug("Client init");
-	this.set_bool("ClientLoading", true);
-	block_queue.clear();
 
-	Texture::createFromFile("Block_Textures", "Textures/Blocks_Jenny.png");
-	Texture::createFromFile("Block_Digger", "Textures/Digging.png");
-	Texture::createFromFile("Sky_Texture", "Textures/SkyBox.png");
-	Texture::createFromFile("BLOCK_MOUSE", "Textures/BlockMouse.png");
-	Texture::createFromFile("DEBUG", "Textures/Debug.png");
-	Texture::createFromFile("SOLID", "Sprites/pixel.png");
-	InitBlocks();
-	this.addCommandID("pick_block");
-	this.addCommandID("pick_block_reset");
-
-	Camera _camera;
-	@camera = @_camera;
-
-	if(this.exists("world"))
-	{
-		this.get("world", @world);
-		ask_map = true;
-		map_ready = true;
-	}
-	else
-	{
-		World _world;
-		@world = @_world;
-		world.ClientMapSetUp();
-		world.FacesSetUp();
-	}
+	Loading::isLoading = true;
 }
 
 void onTick(CRules@ this)
@@ -59,17 +34,14 @@ void onTick(CRules@ this)
 	HitBoxes.clear();
 	this.set_f32("interGameTime", getGameTime());
 	this.set_f32("interFrameTime", 0);
-	if(isLoading(this))
+
+	if(Loading::isLoading)
 	{
-		this.set_bool("ClientLoading", true);
+		Loading::Progress(this);
 		return;
 	}
 	else
 	{
-		if(this.get_bool("ClientLoading"))
-		{
-			this.set_bool("ClientLoading", false);
-		}
 		// game here
 		camera.tick_update();
 		my_player.Update();
@@ -222,50 +194,37 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 			}
 		}
 	}
-	else if(cmd == this.getCommandID("C_ChangeBlock"))
+	else if(cmd == this.getCommandID("S_ChangeBlock"))
 	{
 		uint8 block = params.read_u8();
 		float x = params.read_f32();
 		float y = params.read_f32();
 		float z = params.read_f32();
 
-		if(this.get_bool("ClientLoading"))
+		if(Loading::isLoading)
 		{
-			block_queue.push_back(BlockToPlace(Vec3f(x,y,z), block));
+			Loading::addBlockToQueue(Vec3f(x,y,z), block);
 		}
 		else
 		{
-			world.map[y][z][x] = block;
+			//world.map[y][z][x] = block;
+    		//world.UpdateBlocksAndChunks(x, y, z);
+			uint8 old_block = world.getBlock(x, y, z);
+			world.setBlock(x, y, z, block);
     		world.UpdateBlocksAndChunks(x, y, z);
+			world.BlockUpdate(x, y, z, block, old_block);
 		}
 	}
-	else if(cmd == this.getCommandID("pick_block"))
+	else if(cmd == this.getCommandID("C_PlaySound3D"))
 	{
-		uint16 netid = params.read_netid();
-		CPlayer@ _player = getPlayerByNetworkId(netid);
-		if(_player is getLocalPlayer())
-		{
-			uint8 _block = params.read_u8();
-			my_player.hand_block = _block;
-			getHUD().ClearMenus(true);
-			getControls().setMousePosition(getDriver().getScreenCenterPos());
-			block_menu = false;
-			block_menu_created = false;
-		}
+		string sound_name = params.read_string();
+		float x = params.read_f32();
+		float y = params.read_f32();
+		float z = params.read_f32();
+
+		Sound3D(sound_name, Vec3f(x,y,z));
 	}
-	else if(cmd == this.getCommandID("pick_block_reset"))
-	{
-		uint16 netid = params.read_netid();
-		CPlayer@ _player = getPlayerByNetworkId(netid);
-		if(_player is getLocalPlayer())
-		{
-			getHUD().ClearMenus(true);
-			getControls().setMousePosition(getDriver().getScreenCenterPos());
-			block_menu = false;
-			block_menu_created = false;
-		}
-	}
-	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_RequestMapPacket"))
+	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_RequestMapPacket") || cmd == this.getCommandID("C_ChangeBlock"))
 	{
 		return;
 	}
@@ -359,30 +318,8 @@ void Render(int id)
 	GUI::DrawShadowedText("dir_x: "+my_player.dir_x, Vec2f(20,80), color_white);
 }
 
-int max_generate = 4;
+int max_generate = 3;
 int generated = 0;
-
-// hook doesnt work
-
-/*void onNewPlayerJoin(CRules@ this, CPlayer@ player)
-{
-	if(player is null || player is getLocalPlayer()) return;
-
-	for(int i = 0; i < other_players.size(); i++)
-	{
-		Player@ _player = other_players[i];
-		if(_player.player is player)
-		{
-			Debug("onNewPlayerJoin: Player already in list!", 3);
-			return;
-		}
-	}
-
-	Player new_player();
-	new_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
-	new_player.SetPlayer(player);
-	other_players.push_back(@new_player);
-}*/
 
 void onPlayerLeave(CRules@ this, CPlayer@ player)
 {
@@ -402,17 +339,17 @@ void onPlayerLeave(CRules@ this, CPlayer@ player)
 void onRender(CRules@ this)
 {
 	if(getLocalPlayer() is null) return;
-	if(this.get_bool("ClientLoading"))
+	if(Loading::isLoading)
 	{
-		float percent = 0;
-		if(!ask_map) percent = 1;
-		else if(!map_ready) percent = float(got_packets)/float(amount_of_packets);
-		else if(!faces_generated) percent = float(gf_packet)/float(gf_amount_of_packets);
+		float percent;
+		if(Loading::state == Loading::map_unserialization) percent = float(current_map_packet)/float(map_packets_amount);
+		else if(Loading::state == Loading::block_faces_gen) percent = float(current_block_faces_packet)/float(block_faces_packets_amount);
+		else if(Loading::state == Loading::chunk_gen) percent = float(current_chunks_packet)/float(chunks_packets_amount);
 		else percent = 1;
 
 		GUI::DrawProgressBar(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-16), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+16), percent);
 		GUI::SetFont("menu");
-		GUI::DrawTextCentered(loading_string, Vec2f(getScreenWidth()/2, getScreenHeight()/2), color_white);
+		GUI::DrawTextCentered(Loading::loading_string, Vec2f(getScreenWidth()/2, getScreenHeight()/2), color_white);
 	}
 	else if(block_menu)
 	{

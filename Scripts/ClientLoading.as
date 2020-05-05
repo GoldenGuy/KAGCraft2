@@ -1,209 +1,202 @@
 
-bool ask_map = false;
-bool map_ready = false;
-bool map_renderable = false;
-bool faces_generated = false;
-bool chunks_set_up = false;
-bool tree_set_up = false;
-bool player_ready = false;
-int intro = 0; // later...
-int ask_map_in = 0;
 
-string loading_string;
-
-bool isLoading(CRules@ this)
+namespace Loading
 {
-    if(!ask_map)
+	bool isLoading = false;
+	int state = 0;
+	string loading_string = "Init.";
+
+	enum val
 	{
-		ask_map_in++;
-		if(ask_map_in == 15)
-		{
-			ready_unser = false;
-			got_packets = 0;
-			gf_packet = 0;
-			Debug("Asking for map.");
-			loading_string = "Asking for map.";
-			CBitStream to_send;
-			to_send.write_netid(getLocalPlayer().getNetworkID());
-			this.SendCommand(this.getCommandID("C_RequestMap"), to_send, false);
-			ask_map = true;
-			ask_map_in = 0;
-		}
-		return true;
+		init,
+		intro,
+		not_asked_for_map,
+		map_unserialization,
+		block_faces_gen,
+		chunk_gen,
+		octree_gen,
+		set_player,
+		done
 	}
-	if(!map_ready)
+
+	BlockToPlace[] block_queue;
+
+	class BlockToPlace
 	{
-		if(got_packets >= amount_of_packets)
+		Vec3f pos;
+		uint8 block;
+
+		BlockToPlace(){}
+
+		BlockToPlace(const Vec3f&in _pos, uint8 _block)
 		{
-			map_ready = true;
+			pos = _pos;
+			block = _block;
 		}
-		else
-		{
-			if(map_packets.size() > 0)
-			{
-				world.UnSerialize(map_packets[0], got_packets);
-				map_packets.removeAt(0);
-				got_packets++;
-				int percent = (float(got_packets)/float(amount_of_packets))*100;
-				loading_string = "Loading map. "+percent+"%";
-				//return true;
-			}
-		}
-		/*if(got_packets >= amount_of_packets)
-		{
-			map_ready = true;
-		}
-		if(ready_unser)
-		{
-			ready_unser = false;
-			world.UnSerialize(got_packets);
-			got_packets++;
-			loading_string = "Unserializing map packet. "+got_packets+"/"+amount_of_packets;
-			if(got_packets >= amount_of_packets)
-			{
-				loading_string = "Generating block faces.";
-				map_ready = true;
-				return true;
-			}
-			else
-			{
-				CBitStream to_send;
-				to_send.write_netid(getLocalPlayer().getNetworkID());
-				to_send.write_u32(got_packets);
-				this.SendCommand(this.getCommandID("C_RequestMapPacket"), to_send, false);
-			}
-		}*/
-		return true;
 	}
-	else if(!map_renderable)
+
+	void addBlockToQueue(const Vec3f&in _pos, uint8 _block)
 	{
-		if(!faces_generated)
+		block_queue.push_back(BlockToPlace(_pos, _block));
+	}
+
+	void Progress(CRules@ this)
+	{
+		switch(state)
 		{
-			if(isServer())
+			case init:
 			{
-				if(gf_packet == 0)
+				@camera = @Camera();
+				
+				block_queue.clear();
+
+				Texture::createFromFile("Block_Textures", "Textures/Blocks_Jenny.png");
+				Texture::createFromFile("Block_Digger", "Textures/Digging.png");
+				Texture::createFromFile("Sky_Texture", "Textures/SkyBox.png");
+				Texture::createFromFile("BLOCK_MOUSE", "Textures/BlockMouse.png");
+				Texture::createFromFile("DEBUG", "Textures/Debug.png");
+				Texture::createFromFile("SOLID", "Sprites/pixel.png");
+
+				InitBlocks();
+
+				Sound::SetListenerPosition(Vec2f_zero);
+				Sound::SetCutOff(220);
+
+				if(this.exists("world"))
 				{
-					Debug("Generating block faces.");
-					loading_string = "Generating block faces.";
+					this.get("world", @world);
 					world.FacesSetUp();
-					gf_packet++;
-					return true;
-				}
-				if(gf_packet < gf_amount_of_packets)
-				{
-					world.GenerateBlockFaces(gf_packet);
-					gf_packet++;
-					Debug("Generating block faces. "+gf_packet+"/"+gf_amount_of_packets+".", 3);
-					int percent = (float(gf_packet)/float(gf_amount_of_packets))*100;
-					loading_string = "Generating block faces. "+percent+"%";
-					return true;
+					world.SetUpMaterial();
+
+					state = block_faces_gen;
+					return;
 				}
 				else
 				{
-					Debug("Done.");
-					loading_string = "Setting up chunks.";
-					faces_generated = true;
-					return true;
+					@world = @World();
+					world.ClientMapSetUp();
+					world.SetUpMaterial();
 				}
+
+				state = not_asked_for_map;
+				loading_string = "Asking for map.";
+				return;
 			}
-			else
+
+			case not_asked_for_map:
 			{
-				Debug("Done.");
-				loading_string = "Setting up chunks.";
-				faces_generated = true;
+				if(getLocalPlayer() !is null && getLocalPlayerBlob() !is null)
+				{
+					Debug("Asking for map.");
+					CBitStream to_send;
+					to_send.write_netid(getLocalPlayer().getNetworkID());
+					this.SendCommand(this.getCommandID("C_RequestMap"), to_send, false);
+
+					state = map_unserialization;
+					loading_string = "Loading map.";
+				}
+				return;
 			}
-			return true;
-		}
-		else
-		{
-			if(!chunks_set_up)
+
+			case map_unserialization:
 			{
-				world.SetUpChunks(chunks_packets);
-				chunks_packets++;
-				Debug("Setting up chunks. "+chunks_packets+"/"+max_chunks_packets);
-				int percent = (float(chunks_packets)/float(max_chunks_packets))*100;
+				if(map_packets.size() > 0)
+				{
+					world.UnSerialize(map_packets[0], current_map_packet);
+					map_packets.removeAt(0);
+					current_map_packet++;
+				}
+				else if(current_map_packet >= map_packets_amount)
+				{
+					state = chunk_gen;
+					loading_string = "Setting up chunks.";
+					return;
+				}
+
+				int percent = (float(current_map_packet)/float(map_packets_amount))*100;
+				loading_string = "Loading map. "+percent+"%";
+
+				return;
+			}
+
+			case block_faces_gen:
+			{
+				world.GenerateBlockFaces(current_block_faces_packet);
+				current_block_faces_packet++;
+				if(current_block_faces_packet >= block_faces_packets_amount)
+				{
+					state = chunk_gen;
+					loading_string = "Setting up chunks.";
+					return;
+				}
+
+				int percent = (float(current_block_faces_packet)/float(block_faces_packets_amount))*100;
+				loading_string = "Setting up block faces. "+percent+"%";
+
+				return;
+			}
+
+			case chunk_gen:
+			{
+				world.SetUpChunks(current_chunks_packet);
+				current_chunks_packet++;
+				if(current_chunks_packet >= chunks_packets_amount)
+				{
+					state = octree_gen;
+					loading_string = "Setting up tree.";
+					return;
+				}
+
+				int percent = (float(current_chunks_packet)/float(chunks_packets_amount))*100;
 				loading_string = "Setting up chunks. "+percent+"%";
-				if(chunks_packets < max_chunks_packets) return true;
 
-				loading_string = "Setting up tree.";
-				Debug("Done.");
-				chunks_set_up = true;
-				return true;
+				return;
 			}
-			else if(!tree_set_up)
+
+			case octree_gen:
 			{
-				Debug("Setting up tree.");
 				SetUpTree();
-				Debug("Done.");
-				loading_string = "Done.";
-				tree_set_up = true;
-				map_renderable = true;
-				return true;
+				loading_string = "Setting up player.";
+				state = set_player;
+
+				return;
+			}
+
+			case set_player:
+			{
+				@my_player = @Player();
+				
+				my_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
+				my_player.SetBlob(getLocalPlayerBlob());
+				my_player.SetPlayer(getLocalPlayer());
+				my_player.GenerateBlockMenu();
+
+				getControls().setMousePosition(Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f));
+
+				Render::SetFog(sky_color, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, false);
+
+				for(int i = 0; i < block_queue.size(); i++)
+				{
+					Vec3f pos = block_queue[i].pos;
+					uint8 block = block_queue[i].block;
+					world.setBlockSafe(pos.x, pos.y, pos.z, block);
+					world.UpdateBlocksAndChunks(pos.x, pos.y, pos.z);
+				}
+				block_queue.clear();
+
+				Render::addScript(Render::layer_background, "Client.as", "Render", 1);
+
+				loading_string = "Done!";
+				state = done;
+
+				return;
+			}
+
+			case done:
+			{
+				isLoading = false;
+				return;
 			}
 		}
 	}
-    else if(!player_ready)
-    {
-        world.SetUpMaterial();
-		
-		Player _my_player();
-        @my_player = @_my_player;
-		
-        my_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
-		my_player.SetBlob(getLocalPlayerBlob());
-		my_player.SetPlayer(getLocalPlayer());
-		my_player.GenerateBlockMenu();
-		getControls().setMousePosition(Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f));
-        player_ready = true;
-
-		Render::SetFog(sky_color, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, false);
-		Render::addScript(Render::layer_background, "Client.as", "Render", 1);
-
-		for(int i = 0; i < block_queue.size(); i++)
-		{
-			Vec3f pos = block_queue[i].pos;
-			uint8 block = block_queue[i].block;
-			world.map[pos.y][pos.z][pos.x] = block;
-    		world.UpdateBlocksAndChunks(pos.x, pos.y, pos.z);
-		}
-		block_queue.clear();
-
-		return true;
-    }
-    return false;
 }
-
-/*MapPackets[] block_queue;
-
-class MapPackets
-{
-	CBitStream@ stream;
-	uint8 block;
-
-	BlockToPlace(){}
-
-	BlockToPlace(const Vec3f&in _pos, uint8 _block)
-	{
-		pos = _pos;
-		block = _block;
-	}
-}*/
-
-BlockToPlace[] block_queue;
-
-class BlockToPlace
-{
-	Vec3f pos;
-	uint8 block;
-
-	BlockToPlace(){}
-
-	BlockToPlace(const Vec3f&in _pos, uint8 _block)
-	{
-		pos = _pos;
-		block = _block;
-	}
-}
-
-int chunks_packets = 0;
-int max_chunks_packets = world_height;

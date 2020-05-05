@@ -56,3 +56,15 @@ class ServerPlayer
 		}
 	}
 }
+
+ServerPlayer@ getServerPlayer(CPlayer@ player)
+{
+	for(int i = 0; i < players.size(); i++)
+	{
+		if(players[i].player is player)
+		{
+			return @players[i];
+		}
+	}
+	return null;
+}

@@ -10,6 +10,8 @@ void onInit(CRules@ this)
 	this.addCommandID("C_PlayerUpdate");
 	this.addCommandID("S_PlayerUpdate");
 
+	this.addCommandID("C_PlaySound3D");
+
 	CMap@ map = getMap();
 	map.topBorder = map.bottomBorder = map.leftBorder = map.rightBorder = map.legacyTileVariations = map.legacyTileEffects = map.legacyTileDestroy = map.legacyTileMinimap = false;
 	SColor col = 0x00000000;

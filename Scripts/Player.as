@@ -150,7 +150,7 @@ class Player
 								}
 								if(place)
 								{
-									server_SetBlock(hand_block, hit_pos);
+									client_SetBlock(player, hand_block, hit_pos);
 								}
 							}
 							else
@@ -181,7 +181,7 @@ class Player
 									}
 									if(place)
 									{
-										server_SetBlock(hand_block, prev_hit_pos);
+										client_SetBlock(player, hand_block, prev_hit_pos);
 									}
 								}
 								else
@@ -204,7 +204,7 @@ class Player
 								dig_timer += Block::dig_speed[block];
 								if(dig_timer >= max_dig_time)
 								{
-									server_SetBlock(Block::air, hit_pos);
+									client_SetBlock(player, Block::air, hit_pos);
 									digging = false;
 								}
 							}
@@ -219,14 +219,14 @@ class Player
 							dig_timer = 0;
 							digging_pos = hit_pos;
 						}
-						/*server_SetBlock(Block::air, hit_pos);
+						/*client_SetBlock(Block::air, hit_pos);
 
-						server_SetBlock(Block::air, hit_pos+Vec3f(0,0,1));
-						server_SetBlock(Block::air, hit_pos-Vec3f(0,0,1));
-						server_SetBlock(Block::air, hit_pos+Vec3f(1,0,0));
-						server_SetBlock(Block::air, hit_pos-Vec3f(1,0,0));
-						server_SetBlock(Block::air, hit_pos+Vec3f(0,1,0));
-						server_SetBlock(Block::air, hit_pos-Vec3f(0,1,0));*/
+						client_SetBlock(Block::air, hit_pos+Vec3f(0,0,1));
+						client_SetBlock(Block::air, hit_pos-Vec3f(0,0,1));
+						client_SetBlock(Block::air, hit_pos+Vec3f(1,0,0));
+						client_SetBlock(Block::air, hit_pos-Vec3f(1,0,0));
+						client_SetBlock(Block::air, hit_pos+Vec3f(0,1,0));
+						client_SetBlock(Block::air, hit_pos-Vec3f(0,1,0));*/
 					}
 					else if(digging)
 					{
@@ -355,8 +355,8 @@ class Player
 			}
 		}
 
-		//CollisionResponse(pos, vel);
-		pos+=vel;
+		CollisionResponse(pos, vel);
+		//pos+=vel;
 
 		//pos = Vec3f(Maths::Clamp(pos.x, player_diameter/1.9f, map_width-player_diameter/1.9f), Maths::Clamp(pos.y, 0, map_height-player_height), Maths::Clamp(pos.z, player_diameter/1.9f, map_depth-player_diameter/1.9f));
 
