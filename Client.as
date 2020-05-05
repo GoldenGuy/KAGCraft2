@@ -24,8 +24,6 @@ Player@[] other_players;
 
 void onInit(CRules@ this)
 {
-	Debug("Client init");
-
 	Loading::isLoading = true;
 }
 
@@ -138,8 +136,6 @@ void onTick(CRules@ this)
 
 void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 {
-	//Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
-
 	if(cmd == this.getCommandID("S_SendMapParams"))
 	{
 		chunk_width = params.read_u32();
@@ -179,10 +175,6 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 	}
 	else if(cmd == this.getCommandID("S_SendMapPacket"))
 	{
-		//ready_unser = true;
-		//map_packet.Clear();
-		//map_packet = params;
-		//map_packet.SetBitIndex(params.getBitIndex());
 		CBitStream map_packet;
 		map_packet = params;
 		map_packet.SetBitIndex(params.getBitIndex());
@@ -216,7 +208,6 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 					new_player.SetPlayer(_player);
 					other_players.push_back(@new_player);
 				}
-				
 			}
 			else
 			{
@@ -250,8 +241,6 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 		}
 		else
 		{
-			//world.map[y][z][x] = block;
-    		//world.UpdateBlocksAndChunks(x, y, z);
 			uint8 old_block = world.getBlock(x, y, z);
 			world.setBlock(x, y, z, block);
     		world.UpdateBlocksAndChunks(x, y, z);

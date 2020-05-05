@@ -6,7 +6,6 @@
 #include "World.as"
 #include "Vec3f.as"
 #include "ServerPlayer.as"
-#include "UtilitySectors.as"
 
 World@ world;
 
@@ -14,19 +13,18 @@ ServerPlayer@[] players;
 
 void onInit(CRules@ this)
 {
-	Debug("Server init");
-
 	players_to_send.clear();
 
 	InitBlocks();
 
-	Debug("Loading params from config file.");
 	LoadServerParams();
 
 	World temp;
 	temp.GenerateMap();
 	if(isClient()) this.set("world", @temp);
 	@world = @temp;
+	
+	print("Server started.");
 }
 
 void onTick(CRules@ this)
@@ -55,7 +53,6 @@ void onTick(CRules@ this)
 			world.Serialize(@to_send, packet_num);
 			this.SendCommand(this.getCommandID("S_SendMapPacket"), to_send, players_to_send[0].player);
 			packet_num++;
-			//Debug("Sending map packet, "+packet_num+"/"+amount_of_packets+".", 3);
 			players_to_send.removeAt(0);
 			if(packet_num < map_packets_amount)
 			{
@@ -67,17 +64,10 @@ void onTick(CRules@ this)
 			players_to_send.removeAt(0);
 		}
 	}
-
-	/*if(getGameTime() > 50)
-	{
-		if(getGameTime() % 5 == 2) server_SetBlock(Block::grass_dirt, map_width/2, map_height-4, map_depth/2);
-		else if(getGameTime() % 6 == 4) server_SetBlock(Block::air, map_width/2, map_height-4, map_depth/2);
-	}*/
 }
 
 void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 {
-	//Debug("Command: "+cmd+" : "+this.getNameFromCommandID(cmd), 1);
 	if(cmd == this.getCommandID("C_RequestMapParams"))
 	{
 		uint16 netid = params.read_netid();
@@ -103,8 +93,6 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 		uint16 netid = params.read_netid();
 		if(isClient())
 		{
-			Debug("Localhost, ignore.");
-			//this.SendCommand(this.getCommandID("S_SendMapPacket"), CBitStream(), true);
 			return;
 		}
 		else
@@ -172,7 +160,6 @@ void onNewPlayerJoin(CRules@ this, CPlayer@ player)
 	CBlob@ blob = server_CreateBlob("husk");
 	if(blob !is null)
 	{
-		Debug("Creating player blob.");
 		blob.server_SetPlayer(player);
 	}
 
@@ -181,7 +168,6 @@ void onNewPlayerJoin(CRules@ this, CPlayer@ player)
 		ServerPlayer@ _player = players[i];
 		if(_player.player is player)
 		{
-			Debug("onNewPlayerJoin: Player already in list!", 3);
 			return;
 		}
 	}
@@ -197,7 +183,6 @@ void onPlayerLeave(CRules@ this, CPlayer@ player)
 	CBlob@ blob = player.getBlob();
 	if(blob !is null)
 	{
-		Debug("Removing player blob.");
 		blob.server_Die();
 	}
 

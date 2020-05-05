@@ -100,7 +100,7 @@ class Player
 
 		if(blob !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null && !block_menu)
 		{
-			Vec2f ScrMid = d.getScreenCenterPos();//Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f);
+			Vec2f ScrMid = d.getScreenCenterPos();
 			Vec2f dir = (c.getMouseScreenPos() - ScrMid);
 			
 			dir_x += dir.x*sensitivity;
@@ -115,11 +115,8 @@ class Player
 								Maths::Sin(dir_y*piboe),
 								Maths::Cos((dir_x)*piboe)*Maths::Cos(dir_y*piboe));
 
-			if(isDebug())
-			{
-				if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
-				if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
-			}
+			if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
+			if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
 			if(c.isKeyJustPressed(KEY_F5)) thirdperson = !thirdperson;
 
 			{
@@ -145,6 +142,8 @@ class Player
 									{
 										place = false;
 										Sound::Play("NoAmmo.ogg");
+										AddSector(AABB(hit_pos, hit_pos+Vec3f(1,1,1)), 0x60FF0000, 20);
+										AddSector(AABB(_pos-Vec3f(player_radius,0,player_radius), _pos+Vec3f(player_radius,player_height,player_radius)), 0x60FF0000, 20);
 										break;
 									}
 								}
@@ -176,6 +175,8 @@ class Player
 										{
 											place = false;
 											Sound::Play("NoAmmo.ogg");
+											AddSector(AABB(hit_pos, hit_pos+Vec3f(1,1,1)), 0x60FF0000, 20);
+											AddSector(AABB(_pos-Vec3f(player_radius,0,player_radius), _pos+Vec3f(player_radius,player_height,player_radius)), 0x60FF0000, 20);
 											break;
 										}
 									}
@@ -219,14 +220,6 @@ class Player
 							dig_timer = 0;
 							digging_pos = hit_pos;
 						}
-						/*client_SetBlock(Block::air, hit_pos);
-
-						client_SetBlock(Block::air, hit_pos+Vec3f(0,0,1));
-						client_SetBlock(Block::air, hit_pos-Vec3f(0,0,1));
-						client_SetBlock(Block::air, hit_pos+Vec3f(1,0,0));
-						client_SetBlock(Block::air, hit_pos-Vec3f(1,0,0));
-						client_SetBlock(Block::air, hit_pos+Vec3f(0,1,0));
-						client_SetBlock(Block::air, hit_pos-Vec3f(0,1,0));*/
 					}
 					else if(digging)
 					{

@@ -2,7 +2,6 @@
 void SetUpTree()
 {
     tree.Init();
-    Debug("Tree is generated.");
 }
 
 Root tree;

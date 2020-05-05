@@ -186,13 +186,10 @@ void InitBlocks()
 
     Block::allowed_to_build[Block::air] = false;
     Block::allowed_to_build[Block::bedrock] = false;
-
-    Debug("Blocks are created.");
 }
 
 void AddBlock(const string&in name, bool _solid, bool _see_through, int allsides)
 {
-    Debug("name: "+name, 2);
     Block::block_names.push_back(name);
     Block::solid.push_back(_solid);
     Block::see_through.push_back(_see_through);
@@ -205,7 +202,6 @@ void AddBlock(const string&in name, bool _solid, bool _see_through, int allsides
 
 void AddBlock(const string&in name, bool _solid, bool _see_through, int sides, int top_and_bottom)
 {
-    Debug("name: "+name, 2);
     Block::block_names.push_back(name);
     Block::solid.push_back(_solid);
     Block::see_through.push_back(_see_through);
@@ -218,7 +214,6 @@ void AddBlock(const string&in name, bool _solid, bool _see_through, int sides, i
 
 void AddBlock(const string&in name, bool _solid, bool _see_through, int sides, int top, int bottom)
 {
-    Debug("name: "+name, 2);
     Block::block_names.push_back(name);
     Block::solid.push_back(_solid);
     Block::see_through.push_back(_see_through);
@@ -231,7 +226,6 @@ void AddBlock(const string&in name, bool _solid, bool _see_through, int sides, i
 
 void AddPlantBlock(const string&in name, int sides)
 {
-    Debug("name: "+name, 2);
     Block::block_names.push_back(name);
     Block::solid.push_back(false);
     Block::see_through.push_back(true);

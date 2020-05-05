@@ -85,7 +85,6 @@ namespace Loading
 					world.SetUpMaterial();
 				}
 
-				Debug("Asking for map.");
 				CBitStream to_send;
 				to_send.write_netid(getLocalPlayer().getNetworkID());
 				this.SendCommand(this.getCommandID("C_RequestMapParams"), to_send, false);
@@ -112,7 +111,6 @@ namespace Loading
 
 			case ask_for_map:
 			{
-				Debug("Asking for map.");
 				CBitStream to_send;
 				to_send.write_netid(getLocalPlayer().getNetworkID());
 				this.SendCommand(this.getCommandID("C_RequestMap"), to_send, false);

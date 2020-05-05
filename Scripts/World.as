@@ -84,13 +84,12 @@ class World
 
     void GenerateMap()
     {
-        Debug("Generating map.");
+        print("Generating map.");
         map.clear();
-        Debug("map_size: "+map_size, 2);
 
         uint32 seed = (114748346*Time_Local()+Time_Local()) % 500000;
 
-        Debug("map seed: "+seed, 2);
+        print("Map seed: "+seed);
 
         @noise = @Noise(seed);
         @rand = @Random(seed);
@@ -178,12 +177,12 @@ class World
             }
         }
         
-        Debug("Making trees...", 2);
+        print("Planting trees...");
         for(int i = 0; i < trees.size(); i++)
         {
             MakeTree(trees[i]);
         }
-        Debug("Map generated.");
+        print("Map generated.");
     }
 
     void ClientMapSetUp()
@@ -207,31 +206,14 @@ class World
 
     void SetUpMaterial()
     {
-        //SMaterial@ _mapMaterial = SMaterial();
-        //@mapMaterial = @_mapMaterial;
         map_material.AddTexture("Block_Textures", 0);
-        //mapMaterial.AddTexture("detail_map", 1);
-        //mapMaterial.AddTexture("nm", 1);
         map_material.DisableAllFlags();
         map_material.SetFlag(SMaterial::COLOR_MASK, true);
         map_material.SetFlag(SMaterial::ZBUFFER, true);
         map_material.SetFlag(SMaterial::ZWRITE_ENABLE, true);
         map_material.SetFlag(SMaterial::BACK_FACE_CULLING, true);
-        map_material.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF); //TRANSPARENT_ALPHA_CHANNEL_REF
+        map_material.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
         map_material.SetFlag(SMaterial::FOG_ENABLE, true);
-
-        //mapMaterial.SetFlag(SMaterial::GOURAUD_SHADING, true);
-
-        //mapMaterial.SetFlag(SMaterial::LIGHTING, true);
-
-        //mapMaterial.SetLayerAnisotropicFilter(0, 0);
-        //mapMaterial.SetFlag(SMaterial::ANISOTROPIC_FILTER, true);
-        //mapMaterial.SetLayerLODBias(0, 1);
-        //mapMaterial.SetFlag(SMaterial::USE_MIP_MAPS, true);
-        //mapMaterial.RegenMipMap(0);
-
-        //mapMaterial.SetFlag(SMaterial::ANTI_ALIASING, true);
-        //mapMaterial.SetAntiAliasing(AntiAliasing::OFF);
     }
 
     void MakeTree(Vec3f pos)
@@ -561,7 +543,7 @@ class World
 
     void UpdateBlockFaces(int x, int y, int z)
     {
-        if(map[y][z][x] == Block::air)// || Block::plant[map[y][z][x]])
+        if(map[y][z][x] == Block::air)
         {
             faces_bits[y][z][x] = 0;
             return;
@@ -687,14 +669,6 @@ class World
         return true;
     }
 
-    void clearVisibility()
-    {
-        for(int i = 0; i < world_size; i++)
-        {
-            chunks[i].visible = false;
-        }
-    }
-
     bool isTileSolid(int x, int y, int z)
     {
         if(!inWorldBounds(x, y, z)) return false;
@@ -734,7 +708,7 @@ class Chunk
     World@ _world;
     int x, y, z, world_x, world_y, world_z, world_x_bounds, world_y_bounds, world_z_bounds;
     int index, world_index;
-    bool visible, rebuild, empty;
+    bool rebuild, empty;
     SMesh mesh;
     Vertex[] verts;
     uint16[] indices;
@@ -747,9 +721,6 @@ class Chunk
         @_world = @reference;
         mesh.Clear();
         mesh.SetHardwareMapping(SMesh::STATIC);
-        //mesh.BuildMesh();
-        //mesh.DropMesh();
-        //mesh.DropMeshBuffer();
         index = _index;
         x = _index % world_width; z = (_index / world_width) % world_depth; y = _index / world_width_depth;
         world_x = x*chunk_width; world_z = z*chunk_depth; world_y = y*chunk_height;
@@ -757,32 +728,6 @@ class Chunk
         box = AABB(Vec3f(world_x, world_y, world_z), Vec3f(world_x_bounds, world_y_bounds, world_z_bounds));
 
         GenerateMesh();
-        
-        //visible = false;
-
-        /*for (int _y = world_y; _y < world_y_bounds; _y++)
-		{
-			for (int _z = world_z; _z < world_z_bounds; _z++)
-			{
-				for (int _x = world_x; _x < world_x_bounds; _x++)
-				{
-                    //int index = _world.getIndex(_x, _y, _z);
-                    //Vec3f(x,y,z).Print();
-                    if(_world.map[_y][_z][_x] == Block::air)
-                    {
-                        continue;
-                    }
-                    else if(_world.faces_bits[_y][_z][_x] > 0)
-                    {
-                        rebuild = true;
-                        empty = false;
-                        return;
-                    }
-                }
-            }
-        }
-        rebuild = false;
-        empty = true;*/
     }
 
     void GenerateMesh()
@@ -798,8 +743,6 @@ class Chunk
 			{
 				for (int _x = world_x; _x < world_x_bounds; _x++)
 				{
-                    //int index = _world.getIndex(_x, _y, _z);
-
                     int faces = _world.faces_bits[_y][_z][_x];
 
                     if(faces == 0) continue;
@@ -808,7 +751,6 @@ class Chunk
 
                     if(block == Block::air) continue;
 
-                    //Block@ b = Blocks[block];
                     if(Block::plant[block])
                     {
                         addPlantFaces(block, Vec3f(_x,_y,_z));
@@ -832,12 +774,6 @@ class Chunk
             mesh.SetDirty(SMesh::VERTEX_INDEX);
             mesh.BuildMesh();
         }
-        //AddSector(AABB(Vec3f(world_x, world_y, world_z), Vec3f(world_x_bounds, world_y_bounds, world_z_bounds)), 0x50A8360D, 20);
-    }
-
-    void SetVisible()
-    {
-        visible = true;
     }
 
     void addFaces(uint8 block, uint8 face_info, const Vec3f&in pos)
@@ -1042,7 +978,6 @@ class Chunk
 
     void Render()
     {
-        //Render::RawQuads("Block_Textures", verts);
         mesh.RenderMesh();
     }
 }
@@ -1065,10 +1000,6 @@ const SColor back_scol = SColor(debug_alpha, back_col, back_col, back_col);
 void client_SetBlock(CPlayer@ player, uint8 block, const Vec3f&in pos)
 {
     if(!world.inWorldBounds(pos.x, pos.y, pos.z)) return;
-
-    //uint8 old_block = world.getBlock(pos.x, pos.y, pos.z);
-    //world.setBlock(pos.x, pos.y, pos.z, block);
-    //world.UpdateBlocksAndChunks(pos.x, pos.y, pos.z);
     
     if(!isServer())
     {
@@ -1079,7 +1010,6 @@ void client_SetBlock(CPlayer@ player, uint8 block, const Vec3f&in pos)
 		to_send.write_f32(pos.y);
 		to_send.write_f32(pos.z);
         getRules().SendCommand(getRules().getCommandID("C_ChangeBlock"), to_send, false);
-        //return;
     }
     else
     {
