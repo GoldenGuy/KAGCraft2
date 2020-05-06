@@ -138,38 +138,38 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 {
 	if(cmd == this.getCommandID("S_SendMapParams"))
 	{
-		chunk_width = params.read_u32();
-		chunk_depth = params.read_u32();
-		chunk_height = params.read_u32();
-		chunk_size = chunk_width*chunk_depth*chunk_height;
+		world.chunk_width = params.read_u32();
+		world.chunk_depth = params.read_u32();
+		world.chunk_height = params.read_u32();
+		world.chunk_size = world.chunk_width*world.chunk_depth*world.chunk_height;
 
-		world_width = params.read_u32();
-		world_depth = params.read_u32();
-		world_height = params.read_u32();
-		world_width_depth = world_width * world_depth;
-		world_size = world_width_depth * world_height;
+		world.world_width = params.read_u32();
+		world.world_depth = params.read_u32();
+		world.world_height = params.read_u32();
+		world.world_width_depth = world.world_width * world.world_depth;
+		world.world_size = world.world_width_depth * world.world_height;
 
-		map_width = world_width * chunk_width;
-		map_depth = world_depth * chunk_depth;
-		map_height = world_height * chunk_height;
-		map_width_depth = map_width * map_depth;
-		map_size = map_width_depth * map_height;
+		world.map_width = world.world_width * world.chunk_width;
+		world.map_depth = world.world_depth * world.chunk_depth;
+		world.map_height = world.world_height * world.chunk_height;
+		world.map_width_depth = world.map_width * world.map_depth;
+		world.map_size = world.map_width_depth * world.map_height;
 
-		map_packet_size = chunk_width*chunk_depth*chunk_height*8;
-		map_packets_amount = map_size / map_packet_size;
+		world.map_packet_size = world.chunk_width*world.chunk_depth*world.chunk_height*8;
+		world.map_packets_amount = world.map_size / world.map_packet_size;
 
-		block_faces_packets_amount = map_packets_amount;
-		block_faces_packet_size = map_size / block_faces_packets_amount;
+		world.block_faces_packets_amount = world.map_packets_amount;
+		world.block_faces_packet_size = world.map_size / world.block_faces_packets_amount;
 
-		chunks_packets_amount = world_depth*world_height;
-		chunks_packet_size = world_size / chunks_packets_amount;
+		world.chunks_packets_amount = world.world_depth*world.world_height;
+		world.chunks_packet_size = world.world_size / world.chunks_packets_amount;
 
 		uint8 sky_color_R = params.read_u8();
 		uint8 sky_color_G = params.read_u8();
 		uint8 sky_color_B = params.read_u8();
-		sky_color = SColor(255, sky_color_R, sky_color_G, sky_color_B);
+		world.sky_color = SColor(255, sky_color_R, sky_color_G, sky_color_B);
 
-		Fill[0].col = Fill[1].col = Fill[2].col = Fill[3].col = sky_color;
+		Fill[0].col = Fill[1].col = Fill[2].col = Fill[3].col = world.sky_color;
 
 		Loading::mapParamsReady = true;
 	}
@@ -178,7 +178,7 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 		CBitStream map_packet;
 		map_packet = params;
 		map_packet.SetBitIndex(params.getBitIndex());
-		map_packets.push_back(@map_packet);
+		world.map_packets.push_back(@map_packet);
 	}
 	else if(cmd == this.getCommandID("S_PlayerUpdate"))
 	{
@@ -204,7 +204,7 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 				if(!exists)
 				{
 					Player new_player();
-					new_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
+					new_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
 					new_player.SetPlayer(_player);
 					other_players.push_back(@new_player);
 				}
@@ -374,9 +374,9 @@ void onRender(CRules@ this)
 	if(Loading::isLoading)
 	{
 		float percent;
-		if(Loading::state == Loading::map_unserialization) percent = float(current_map_packet)/float(map_packets_amount);
-		else if(Loading::state == Loading::block_faces_gen) percent = float(current_block_faces_packet)/float(block_faces_packets_amount);
-		else if(Loading::state == Loading::chunk_gen) percent = float(current_chunks_packet)/float(chunks_packets_amount);
+		if(Loading::state == Loading::map_unserialization) percent = float(world.current_map_packet)/float(world.map_packets_amount);
+		else if(Loading::state == Loading::block_faces_gen) percent = float(world.current_block_faces_packet)/float(world.block_faces_packets_amount);
+		else if(Loading::state == Loading::chunk_gen) percent = float(world.current_chunks_packet)/float(world.chunks_packets_amount);
 		else percent = 1;
 
 		GUI::DrawProgressBar(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-16), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+16), percent);
@@ -430,8 +430,8 @@ Vertex[] SkyBox = {	Vertex(-1, -1, 1, 0.25f, 0.5f, color_white), // front face
 					Vertex(1, -1, -1, 0.5f, 0.75f, color_white)
 };
 
-Vertex[] Fill = {	Vertex(0, 0, 0, 0, 0, sky_color),
-					Vertex(getScreenWidth(), 0, 0, 1, 0, sky_color),
-					Vertex(getScreenWidth(), getScreenHeight(), 0, 1, 1, sky_color),
-					Vertex(0, getScreenHeight(), 0, 0, 1, sky_color)
+Vertex[] Fill = {	Vertex(0, 0, 0, 0, 0, color_white),
+					Vertex(getScreenWidth(), 0, 0, 1, 0, color_white),
+					Vertex(getScreenWidth(), getScreenHeight(), 0, 1, 1, color_white),
+					Vertex(0, getScreenHeight(), 0, 0, 1, color_white)
 };

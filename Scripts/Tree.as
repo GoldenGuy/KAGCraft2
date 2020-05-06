@@ -33,27 +33,27 @@ class Root
 
     void Init()
     {
-        box = AABB(Vec3f(0, 0, 0), Vec3f(map_width, map_height, map_depth));
+        box = AABB(Vec3f(0, 0, 0), Vec3f(world.map_width, world.map_height, world.map_depth));
 
-        @BRxz =     @Branch(Vec3f(0,                0, 0),              Vec3f(map_width/4,      map_height, map_depth/4));
-        @BRx1z =    @Branch(Vec3f(map_width/4,      0, 0),              Vec3f(map_width/2,      map_height, map_depth/4));
-        @BRxz1 =    @Branch(Vec3f(0,                0, map_depth/4),    Vec3f(map_width/4,      map_height, map_depth/2));
-        @BRx1z1 =   @Branch(Vec3f(map_width/4,      0, map_depth/4),    Vec3f(map_width/2,      map_height, map_depth/2));
+        @BRxz =     @Branch(Vec3f(0,                0, 0),              Vec3f(world.map_width/4,      world.map_height, world.map_depth/4));
+        @BRx1z =    @Branch(Vec3f(world.map_width/4,      0, 0),              Vec3f(world.map_width/2,      world.map_height, world.map_depth/4));
+        @BRxz1 =    @Branch(Vec3f(0,                0, world.map_depth/4),    Vec3f(world.map_width/4,      world.map_height, world.map_depth/2));
+        @BRx1z1 =   @Branch(Vec3f(world.map_width/4,      0, world.map_depth/4),    Vec3f(world.map_width/2,      world.map_height, world.map_depth/2));
 
-        @BRx2z =    @Branch(Vec3f(map_width/2,      0, 0),              Vec3f(map_width/4*3,    map_height, map_depth/4));
-        @BRx3z =    @Branch(Vec3f(map_width/4*3,    0, 0),              Vec3f(map_width,        map_height, map_depth/4));
-        @BRx2z1 =   @Branch(Vec3f(map_width/2,      0, map_depth/4),    Vec3f(map_width/4*3,    map_height, map_depth/2));
-        @BRx3z1 =   @Branch(Vec3f(map_width/4*3,    0, map_depth/4),    Vec3f(map_width,        map_height, map_depth/2));
+        @BRx2z =    @Branch(Vec3f(world.map_width/2,      0, 0),              Vec3f(world.map_width/4*3,    world.map_height, world.map_depth/4));
+        @BRx3z =    @Branch(Vec3f(world.map_width/4*3,    0, 0),              Vec3f(world.map_width,        world.map_height, world.map_depth/4));
+        @BRx2z1 =   @Branch(Vec3f(world.map_width/2,      0, world.map_depth/4),    Vec3f(world.map_width/4*3,    world.map_height, world.map_depth/2));
+        @BRx3z1 =   @Branch(Vec3f(world.map_width/4*3,    0, world.map_depth/4),    Vec3f(world.map_width,        world.map_height, world.map_depth/2));
 
-        @BRxz2 =    @Branch(Vec3f(0,                0, map_depth/2),    Vec3f(map_width/4,      map_height, map_depth/4*3));
-        @BRx1z2 =   @Branch(Vec3f(map_width/4,      0, map_depth/2),    Vec3f(map_width/2,      map_height, map_depth/4*3));
-        @BRxz3 =    @Branch(Vec3f(0,                0, map_depth/4*3),  Vec3f(map_width/4,      map_height, map_depth));
-        @BRx1z3 =   @Branch(Vec3f(map_width/4,      0, map_depth/4*3),  Vec3f(map_width/2,      map_height, map_depth));
+        @BRxz2 =    @Branch(Vec3f(0,                0, world.map_depth/2),    Vec3f(world.map_width/4,      world.map_height, world.map_depth/4*3));
+        @BRx1z2 =   @Branch(Vec3f(world.map_width/4,      0, world.map_depth/2),    Vec3f(world.map_width/2,      world.map_height, world.map_depth/4*3));
+        @BRxz3 =    @Branch(Vec3f(0,                0, world.map_depth/4*3),  Vec3f(world.map_width/4,      world.map_height, world.map_depth));
+        @BRx1z3 =   @Branch(Vec3f(world.map_width/4,      0, world.map_depth/4*3),  Vec3f(world.map_width/2,      world.map_height, world.map_depth));
 
-        @BRx2z2 =   @Branch(Vec3f(map_width/2,      0, map_depth/2),    Vec3f(map_width/4*3,    map_height, map_depth/4*3));
-        @BRx3z2 =   @Branch(Vec3f(map_width/4*3,    0, map_depth/2),    Vec3f(map_width,        map_height, map_depth/4*3));
-        @BRx2z3 =   @Branch(Vec3f(map_width/2,      0, map_depth/4*3),  Vec3f(map_width/4*3,    map_height, map_depth));
-        @BRx3z3 =   @Branch(Vec3f(map_width/4*3,    0, map_depth/4*3),  Vec3f(map_width,        map_height, map_depth));
+        @BRx2z2 =   @Branch(Vec3f(world.map_width/2,      0, world.map_depth/2),    Vec3f(world.map_width/4*3,    world.map_height, world.map_depth/4*3));
+        @BRx3z2 =   @Branch(Vec3f(world.map_width/4*3,    0, world.map_depth/2),    Vec3f(world.map_width,        world.map_height, world.map_depth/4*3));
+        @BRx2z3 =   @Branch(Vec3f(world.map_width/2,      0, world.map_depth/4*3),  Vec3f(world.map_width/4*3,    world.map_height, world.map_depth));
+        @BRx3z3 =   @Branch(Vec3f(world.map_width/4*3,    0, world.map_depth/4*3),  Vec3f(world.map_width,        world.map_height, world.map_depth));
     }
 
     void Check()
@@ -113,13 +113,13 @@ class Branch
     {
         box = AABB(pos_start, pos_end);
 
-        if(pos_end.y-pos_start.y <= chunk_height*2)
+        if(pos_end.y-pos_start.y <= world.chunk_height*2)
         {
             // leaf, fill chunks here
 
             leaf = true;
 
-            Vec3f chunk_pos_start = pos_start/Vec3f(chunk_width, chunk_height, chunk_depth);
+            Vec3f chunk_pos_start = pos_start/Vec3f(world.chunk_width, world.chunk_height, world.chunk_depth);
 
             @CHxyz =     world.getChunk(chunk_pos_start.x, chunk_pos_start.y, chunk_pos_start.z);
             @CHx1yz =    world.getChunk(chunk_pos_start.x+1, chunk_pos_start.y, chunk_pos_start.z);

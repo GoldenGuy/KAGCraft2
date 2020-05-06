@@ -2,42 +2,6 @@
 #include "Blocks.as"
 //#include "Particles3D.as"
 
-uint32 chunk_width = 14;
-uint32 chunk_depth = 14;
-uint32 chunk_height = 14;
-uint32 chunk_size = chunk_width*chunk_depth*chunk_height;
-
-uint32 world_width = 32;
-uint32 world_depth = 32;
-uint32 world_height = 8;
-uint32 world_width_depth = world_width * world_depth;
-uint32 world_size = world_width_depth * world_height;
-
-uint32 map_width = world_width * chunk_width;
-uint32 map_depth = world_depth * chunk_depth;
-uint32 map_height = world_height * chunk_height;
-uint32 map_width_depth = map_width * map_depth;
-uint32 map_size = map_width_depth * map_height;
-
-SColor sky_color = 0xFF89A2ED;
-
-// map gen
-
-float initial_plane = 0.0017;
-float initial_plane_max_height = 0.35f;
-float initial_plane_add_max = 0.16f;
-float hills_spread = 0.048f;
-
-float tree_frequency = 0.06f;
-float grass_frequency = 0.08f;
-
-// map sending and receiving
-
-uint32 map_packet_size = chunk_width*chunk_depth*chunk_height*8; // 16 chunks per packet
-uint32 map_packets_amount = map_size / map_packet_size;
-
-// server
-
 MapSender[] players_to_send;
 class MapSender
 {
@@ -51,21 +15,55 @@ class MapSender
     }
 }
 
-// client
-
-CBitStream@[] map_packets;
-uint32 current_map_packet;
-
-uint32 block_faces_packets_amount = map_packets_amount;
-uint32 block_faces_packet_size = map_size / block_faces_packets_amount;
-uint32 current_block_faces_packet;
-
-uint32 chunks_packets_amount = world_depth*world_height;
-uint32 chunks_packet_size = world_size / chunks_packets_amount;
-uint32 current_chunks_packet;
-
 class World
 {
+    uint32 chunk_width = 14;
+    uint32 chunk_depth = 14;
+    uint32 chunk_height = 14;
+    uint32 chunk_size = chunk_width*chunk_depth*chunk_height;
+
+    uint32 world_width = 32;
+    uint32 world_depth = 32;
+    uint32 world_height = 8;
+    uint32 world_width_depth = world_width * world_depth;
+    uint32 world_size = world_width_depth * world_height;
+
+    uint32 map_width = world_width * chunk_width;
+    uint32 map_depth = world_depth * chunk_depth;
+    uint32 map_height = world_height * chunk_height;
+    uint32 map_width_depth = map_width * map_depth;
+    uint32 map_size = map_width_depth * map_height;
+
+    SColor sky_color = 0xFF89A2ED;
+
+    // map gen
+
+    float initial_plane = 0.0017;
+    float initial_plane_max_height = 0.35f;
+    float initial_plane_add_max = 0.16f;
+    float hills_spread = 0.048f;
+
+    float tree_frequency = 0.06f;
+    float grass_frequency = 0.08f;
+
+    // map sending and receiving
+
+    uint32 map_packet_size = chunk_width*chunk_depth*chunk_height*8; // 16 chunks per packet
+    uint32 map_packets_amount = map_size / map_packet_size;
+
+    // client
+
+    CBitStream@[] map_packets;
+    uint32 current_map_packet;
+
+    uint32 block_faces_packets_amount = map_packets_amount;
+    uint32 block_faces_packet_size = map_size / block_faces_packets_amount;
+    uint32 current_block_faces_packet;
+
+    uint32 chunks_packets_amount = world_depth*world_height;
+    uint32 chunks_packet_size = world_size / chunks_packets_amount;
+    uint32 current_chunks_packet;
+    
     // y z x
     uint8[][][] map;
     uint8[][][] faces_bits;
@@ -80,6 +78,55 @@ class World
         map.clear();
         faces_bits.clear();
         chunks.clear();
+    }
+
+    void LoadMapParams()
+    {
+        ConfigFile cfg = ConfigFile();
+        if (!cfg.loadFile(CFileMatcher("KCServerConfig.cfg").getFirst()))
+        {
+            error("Could not find config file! Using default parameters.");
+            return;
+        }
+        else
+        {
+            print("Loading map parameters.");
+            chunk_width = cfg.read_u32("chunk_width");
+            chunk_depth = cfg.read_u32("chunk_depth");
+            chunk_height = cfg.read_u32("chunk_height");
+            chunk_size = chunk_width*chunk_depth*chunk_height;
+
+            world_width = cfg.read_u32("world_width");
+            world_depth = cfg.read_u32("world_depth");
+            world_height = cfg.read_u32("world_height");
+            world_width_depth = world_width * world_depth;
+            world_size = world_width_depth * world_height;
+
+            map_width = world_width * chunk_width;
+            map_depth = world_depth * chunk_depth;
+            map_height = world_height * chunk_height;
+            map_width_depth = map_width * map_depth;
+            map_size = map_width_depth * map_height;
+
+            map_packet_size = chunk_width*chunk_depth*chunk_height*8;
+            map_packets_amount = map_size / map_packet_size;
+            block_faces_packets_amount = map_packets_amount;
+            block_faces_packet_size = map_size / block_faces_packets_amount;
+            chunks_packets_amount = world_depth*world_height;
+            chunks_packet_size = world_size / chunks_packets_amount;
+
+            uint8 sky_color_R = cfg.read_u8("sky_color_R");
+            uint8 sky_color_G = cfg.read_u8("sky_color_G");
+            uint8 sky_color_B = cfg.read_u8("sky_color_B");
+            sky_color = SColor(255, sky_color_R, sky_color_G, sky_color_B);
+
+            initial_plane = cfg.read_f32("initial_plane");
+            initial_plane_max_height = cfg.read_f32("initial_plane_max_height");
+            initial_plane_add_max = cfg.read_f32("initial_plane_add_max");
+            hills_spread = cfg.read_f32("hills_spread");
+            tree_frequency = cfg.read_f32("tree_frequency");
+            grass_frequency = cfg.read_f32("grass_frequency");
+        }
     }
 
     void GenerateMap()
@@ -190,8 +237,8 @@ class World
         uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
         map = _map;
 
-        uint8[][][] _faces_bits(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
-        faces_bits = _faces_bits;
+        //uint8[][][] _faces_bits(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
+        //faces_bits = _faces_bits;
 
         @noise = @Noise(XORRandom(10000000));
 
@@ -523,6 +570,29 @@ class World
         for(uint32 i = start; i < end; i++)
         {
             pos = getPosFromWorldIndex(i);
+            if(!inWorldBounds(pos.x, pos.y, pos.z))
+            {
+                pos.Print();
+
+                print("block_faces_packet: "+block_faces_packet);
+
+                print("block_faces_packets_amount: "+block_faces_packets_amount);
+				print("block_faces_packet_size: "+block_faces_packet_size);
+
+                print("chunk_width: "+chunk_width);
+                print("chunk_height: "+chunk_height);
+                print("chunk_depth: "+chunk_depth);
+
+                print("world_width: "+world_width);
+                print("world_height: "+world_height);
+                print("world_depth: "+world_depth);
+
+                print("map_width: "+map_width);
+                print("map_height: "+map_height);
+                print("map_depth: "+map_depth);
+
+                return;
+            }
             SetBlockFaces(getBlock(pos.x, pos.y, pos.z), pos.x, pos.y, pos.z);
             getNet().server_KeepConnectionsAlive();
         }
@@ -722,9 +792,9 @@ class Chunk
         mesh.Clear();
         mesh.SetHardwareMapping(SMesh::STATIC);
         index = _index;
-        x = _index % world_width; z = (_index / world_width) % world_depth; y = _index / world_width_depth;
-        world_x = x*chunk_width; world_z = z*chunk_depth; world_y = y*chunk_height;
-        world_x_bounds = world_x+chunk_width; world_z_bounds = world_z+chunk_depth; world_y_bounds = world_y+chunk_height;
+        x = _index % _world.world_width; z = (_index / _world.world_width) % _world.world_depth; y = _index / _world.world_width_depth;
+        world_x = x*_world.chunk_width; world_z = z*_world.chunk_depth; world_y = y*_world.chunk_height;
+        world_x_bounds = world_x+_world.chunk_width; world_z_bounds = world_z+_world.chunk_depth; world_y_bounds = world_y+_world.chunk_height;
         box = AABB(Vec3f(world_x, world_y, world_z), Vec3f(world_x_bounds, world_y_bounds, world_z_bounds));
 
         GenerateMesh();

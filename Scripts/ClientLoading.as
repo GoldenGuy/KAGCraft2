@@ -48,10 +48,6 @@ namespace Loading
 		{
 			case init:
 			{
-				map_packets.clear();
-				current_map_packet = 0;
-				current_block_faces_packet = 0;
-				current_chunks_packet = 0;
 				mapParamsReady = false;
 				
 				@camera = @Camera();
@@ -73,6 +69,15 @@ namespace Loading
 				if(this.exists("world"))
 				{
 					this.get("world", @world);
+
+					//world.LoadMapParams();
+
+					world.map_packets.clear();
+					world.current_map_packet = 0;
+					world.current_block_faces_packet = 0;
+					world.current_chunks_packet = 0;
+					Fill[0].col = Fill[1].col = Fill[2].col = Fill[3].col = world.sky_color;
+
 					world.FacesSetUp();
 					world.SetUpMaterial();
 
@@ -82,6 +87,13 @@ namespace Loading
 				else
 				{
 					@world = @World();
+
+					world.map_packets.clear();
+					world.current_map_packet = 0;
+					world.current_block_faces_packet = 0;
+					world.current_chunks_packet = 0;
+					Fill[0].col = Fill[1].col = Fill[2].col = Fill[3].col = world.sky_color;
+
 					world.SetUpMaterial();
 				}
 
@@ -99,6 +111,7 @@ namespace Loading
 				if(mapParamsReady)
 				{
 					world.ClientMapSetUp();
+					world.FacesSetUp();
 					state = ask_for_map;
 					loading_string = "Asking for map.";
 					return;
@@ -122,20 +135,20 @@ namespace Loading
 
 			case map_unserialization:
 			{
-				if(map_packets.size() > 0)
+				if(world.map_packets.size() > 0)
 				{
-					world.UnSerialize(map_packets[0], current_map_packet);
-					map_packets.removeAt(0);
-					current_map_packet++;
+					world.UnSerialize(world.map_packets[0], world.current_map_packet);
+					world.map_packets.removeAt(0);
+					world.current_map_packet++;
 				}
-				else if(current_map_packet >= map_packets_amount)
+				else if(world.current_map_packet >= world.map_packets_amount)
 				{
 					state = chunk_gen;
 					loading_string = "Setting up chunks.";
 					return;
 				}
 
-				int percent = (float(current_map_packet)/float(map_packets_amount))*100;
+				int percent = (float(world.current_map_packet)/float(world.map_packets_amount))*100;
 				loading_string = "Loading map. "+percent+"%";
 
 				return;
@@ -143,16 +156,16 @@ namespace Loading
 
 			case block_faces_gen:
 			{
-				world.GenerateBlockFaces(current_block_faces_packet);
-				current_block_faces_packet++;
-				if(current_block_faces_packet >= block_faces_packets_amount)
+				world.GenerateBlockFaces(world.current_block_faces_packet);
+				world.current_block_faces_packet++;
+				if(world.current_block_faces_packet >= world.block_faces_packets_amount)
 				{
 					state = chunk_gen;
 					loading_string = "Setting up chunks.";
 					return;
 				}
 
-				int percent = (float(current_block_faces_packet)/float(block_faces_packets_amount))*100;
+				int percent = (float(world.current_block_faces_packet)/float(world.block_faces_packets_amount))*100;
 				loading_string = "Setting up block faces. "+percent+"%";
 
 				return;
@@ -160,16 +173,16 @@ namespace Loading
 
 			case chunk_gen:
 			{
-				world.SetUpChunks(current_chunks_packet);
-				current_chunks_packet++;
-				if(current_chunks_packet >= chunks_packets_amount)
+				world.SetUpChunks(world.current_chunks_packet);
+				world.current_chunks_packet++;
+				if(world.current_chunks_packet >= world.chunks_packets_amount)
 				{
 					state = octree_gen;
 					loading_string = "Setting up tree.";
 					return;
 				}
 
-				int percent = (float(current_chunks_packet)/float(chunks_packets_amount))*100;
+				int percent = (float(world.current_chunks_packet)/float(world.chunks_packets_amount))*100;
 				loading_string = "Setting up chunks. "+percent+"%";
 
 				return;
@@ -188,14 +201,14 @@ namespace Loading
 			{
 				@my_player = @Player();
 				
-				my_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
+				my_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
 				my_player.SetBlob(getLocalPlayerBlob());
 				my_player.SetPlayer(getLocalPlayer());
 				my_player.GenerateBlockMenu();
 
 				getControls().setMousePosition(Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f));
 
-				Render::SetFog(sky_color, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, false);
+				Render::SetFog(world.sky_color, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, false);
 
 				for(int i = 0; i < block_queue.size(); i++)
 				{

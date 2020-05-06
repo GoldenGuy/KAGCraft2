@@ -65,7 +65,7 @@ uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_d
 			{
 				side_dist.x += delta_dist.x;
 				ray_world_pos.x += step.x;
-				if(ray_world_pos.x >= map_width || ray_world_pos.x < 0)
+				if(ray_world_pos.x >= world.map_width || ray_world_pos.x < 0)
 				{
 					hit_pos = ray_pos + ray_dir * (side_dist.x-delta_dist.x);
 					return Raycast::S_OOB_X;
@@ -76,7 +76,7 @@ uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_d
 			{
 				side_dist.z += delta_dist.z;
 				ray_world_pos.z += step.z;
-				if(ray_world_pos.z >= map_depth || ray_world_pos.z < 0)
+				if(ray_world_pos.z >= world.map_depth || ray_world_pos.z < 0)
 				{
 					hit_pos = ray_pos + ray_dir * (side_dist.z-delta_dist.z);
 					return Raycast::S_OOB_Z;
@@ -90,7 +90,7 @@ uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_d
 			{
 				side_dist.y += delta_dist.y;
 				ray_world_pos.y += step.y;
-				if(ray_world_pos.y >= map_height || ray_world_pos.y < 0)
+				if(ray_world_pos.y >= world.map_height || ray_world_pos.y < 0)
 				{
 					hit_pos = ray_pos + ray_dir * (side_dist.y-delta_dist.y);
 					return Raycast::S_OOB_Y;
@@ -101,7 +101,7 @@ uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_d
 			{
 				side_dist.z += delta_dist.z;
 				ray_world_pos.z += step.z;
-				if(ray_world_pos.z >= map_depth || ray_world_pos.z < 0)
+				if(ray_world_pos.z >= world.map_depth || ray_world_pos.z < 0)
 				{
 					hit_pos = ray_pos + ray_dir * (side_dist.z-delta_dist.z);
 					return Raycast::S_OOB_Z;
@@ -182,7 +182,7 @@ uint8 RaycastWorld_Previous(const Vec3f&in ray_pos, const Vec3f&in ray_dir, floa
 			{
 				side_dist.x += delta_dist.x;
 				ray_world_pos.x += step.x;
-				if(ray_world_pos.x >= map_width || ray_world_pos.x < 0)
+				if(ray_world_pos.x >= world.map_width || ray_world_pos.x < 0)
 				{
 					return Raycast::S_OOB_X;
 				}
@@ -191,7 +191,7 @@ uint8 RaycastWorld_Previous(const Vec3f&in ray_pos, const Vec3f&in ray_dir, floa
 			{
 				side_dist.z += delta_dist.z;
 				ray_world_pos.z += step.z;
-				if(ray_world_pos.z >= map_depth || ray_world_pos.z < 0)
+				if(ray_world_pos.z >= world.map_depth || ray_world_pos.z < 0)
 				{
 					return Raycast::S_OOB_Z;
 				}
@@ -203,7 +203,7 @@ uint8 RaycastWorld_Previous(const Vec3f&in ray_pos, const Vec3f&in ray_dir, floa
 			{
 				side_dist.y += delta_dist.y;
 				ray_world_pos.y += step.y;
-				if(ray_world_pos.y >= map_height || ray_world_pos.y < 0)
+				if(ray_world_pos.y >= world.map_height || ray_world_pos.y < 0)
 				{
 					return Raycast::S_OOB_Y;
 				}
@@ -212,7 +212,7 @@ uint8 RaycastWorld_Previous(const Vec3f&in ray_pos, const Vec3f&in ray_dir, floa
 			{
 				side_dist.z += delta_dist.z;
 				ray_world_pos.z += step.z;
-				if(ray_world_pos.z >= map_depth || ray_world_pos.z < 0)
+				if(ray_world_pos.z >= world.map_depth || ray_world_pos.z < 0)
 				{
 					return Raycast::S_OOB_Z;
 				}
@@ -277,7 +277,7 @@ uint8 RaycastWorld(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_dis
 			{
 				side_dist.x += delta_dist.x;
 				ray_world_pos.x += step.x;
-				if(ray_world_pos.x >= map_width || ray_world_pos.x < 0)
+				if(ray_world_pos.x >= world.map_width || ray_world_pos.x < 0)
 				{
 					return Raycast::S_OOB_X;
 				}
@@ -286,7 +286,7 @@ uint8 RaycastWorld(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_dis
 			{
 				side_dist.z += delta_dist.z;
 				ray_world_pos.z += step.z;
-				if(ray_world_pos.z >= map_depth || ray_world_pos.z < 0)
+				if(ray_world_pos.z >= world.map_depth || ray_world_pos.z < 0)
 				{
 					return Raycast::S_OOB_Z;
 				}
@@ -298,7 +298,7 @@ uint8 RaycastWorld(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_dis
 			{
 				side_dist.y += delta_dist.y;
 				ray_world_pos.y += step.y;
-				if(ray_world_pos.y >= map_height || ray_world_pos.y < 0)
+				if(ray_world_pos.y >= world.map_height || ray_world_pos.y < 0)
 				{
 					return Raycast::S_OOB_Y;
 				}
@@ -307,7 +307,7 @@ uint8 RaycastWorld(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_dis
 			{
 				side_dist.z += delta_dist.z;
 				ray_world_pos.z += step.z;
-				if(ray_world_pos.z >= map_depth || ray_world_pos.z < 0)
+				if(ray_world_pos.z >= world.map_depth || ray_world_pos.z < 0)
 				{
 					return Raycast::S_OOB_Z;
 				}

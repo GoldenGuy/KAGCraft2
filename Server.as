@@ -17,12 +17,12 @@ void onInit(CRules@ this)
 
 	InitBlocks();
 
-	LoadServerParams();
+	@world = @World();
 
-	World temp;
-	temp.GenerateMap();
-	if(isClient()) this.set("world", @temp);
-	@world = @temp;
+	world.LoadMapParams();
+	world.GenerateMap();
+
+	if(isClient()) this.set("world", @world);
 	
 	print("Server started.");
 }
@@ -54,7 +54,7 @@ void onTick(CRules@ this)
 			this.SendCommand(this.getCommandID("S_SendMapPacket"), to_send, players_to_send[0].player);
 			packet_num++;
 			players_to_send.removeAt(0);
-			if(packet_num < map_packets_amount)
+			if(packet_num < world.map_packets_amount)
 			{
 				players_to_send.push_back(MapSender(player, packet_num));
 			}
@@ -75,15 +75,15 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 		if(player !is null)
 		{
 			CBitStream to_send;
-			to_send.write_u32(chunk_width);
-			to_send.write_u32(chunk_depth);
-			to_send.write_u32(chunk_height);
-			to_send.write_u32(world_width);
-			to_send.write_u32(world_depth);
-			to_send.write_u32(world_height);
-			to_send.write_u8(sky_color.getRed());
-			to_send.write_u8(sky_color.getGreen());
-			to_send.write_u8(sky_color.getBlue());
+			to_send.write_u32(world.chunk_width);
+			to_send.write_u32(world.chunk_depth);
+			to_send.write_u32(world.chunk_height);
+			to_send.write_u32(world.world_width);
+			to_send.write_u32(world.world_depth);
+			to_send.write_u32(world.world_height);
+			to_send.write_u8(world.sky_color.getRed());
+			to_send.write_u8(world.sky_color.getGreen());
+			to_send.write_u8(world.sky_color.getBlue());
 			this.SendCommand(this.getCommandID("S_SendMapParams"), to_send, player);
 		}
 		
@@ -173,7 +173,7 @@ void onNewPlayerJoin(CRules@ this, CPlayer@ player)
 	}
 
 	ServerPlayer new_player();
-	new_player.pos = Vec3f(map_width/2, map_height-4, map_depth/2);
+	new_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
 	new_player.SetPlayer(player);
 	players.push_back(@new_player);
 }
@@ -194,50 +194,5 @@ void onPlayerLeave(CRules@ this, CPlayer@ player)
 			players.removeAt(i);
 			return;
 		}
-	}
-}
-
-void LoadServerParams()
-{
-	ConfigFile cfg = ConfigFile();
-	if (!cfg.loadFile(CFileMatcher("KCServerConfig.cfg").getFirst()))
-	{
-		error("Could not find config file! Using default parameters.");
-		return;
-	}
-	else
-	{
-		print("Loading map parameters.");
-		chunk_width = cfg.read_u32("chunk_width");
-		chunk_depth = cfg.read_u32("chunk_depth");
-		chunk_height = cfg.read_u32("chunk_height");
-		chunk_size = chunk_width*chunk_depth*chunk_height;
-
-		world_width = cfg.read_u32("world_width");
-		world_depth = cfg.read_u32("world_depth");
-		world_height = cfg.read_u32("world_height");
-		world_width_depth = world_width * world_depth;
-		world_size = world_width_depth * world_height;
-
-		map_width = world_width * chunk_width;
-		map_depth = world_depth * chunk_depth;
-		map_height = world_height * chunk_height;
-		map_width_depth = map_width * map_depth;
-		map_size = map_width_depth * map_height;
-
-		map_packet_size = chunk_width*chunk_depth*chunk_height*8;
-		map_packets_amount = map_size / map_packet_size;
-
-		uint8 sky_color_R = cfg.read_u8("sky_color_R");
-		uint8 sky_color_G = cfg.read_u8("sky_color_G");
-		uint8 sky_color_B = cfg.read_u8("sky_color_B");
-		sky_color = SColor(255, sky_color_R, sky_color_G, sky_color_B);
-
-		initial_plane = cfg.read_f32("initial_plane");
-		initial_plane_max_height = cfg.read_f32("initial_plane_max_height");
-		initial_plane_add_max = cfg.read_f32("initial_plane_add_max");
-		hills_spread = cfg.read_f32("hills_spread");
-		tree_frequency = cfg.read_f32("tree_frequency");
-		grass_frequency = cfg.read_f32("grass_frequency");
 	}
 }
