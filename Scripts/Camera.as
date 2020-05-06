@@ -105,8 +105,8 @@ class Camera
 		float[] another_temp_mat;
 		Matrix::MakeIdentity(another_temp_mat);
 		
-		Matrix::SetRotationDegrees(temp_mat, 0, next_dir_x, 0);
-		Matrix::SetRotationDegrees(another_temp_mat, next_dir_y, 0, 0);
+		Matrix::SetRotationDegrees(temp_mat, 0, dir_x, 0);
+		Matrix::SetRotationDegrees(another_temp_mat, dir_y, 0, 0);
 		temp_mat = Matrix_Multiply(temp_mat, another_temp_mat);
 		temp_mat = Matrix_Multiply(projection, temp_mat);
 

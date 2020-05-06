@@ -383,7 +383,7 @@ void onRender(CRules@ this)
 		GUI::SetFont("menu");
 		GUI::DrawTextCentered(Loading::loading_string, Vec2f(getScreenWidth()/2, getScreenHeight()/2), color_white);
 	}
-	else if(block_menu)
+	else if(block_menu_open)
 	{
 		Render::SetTransformScreenspace();
 		Render::SetBackfaceCull(false);

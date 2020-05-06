@@ -1,20 +1,23 @@
 
-const float acceleration = 0.04f;
+const float acceleration = 0.06f;
 const float jump_acceleration = 0.35f;
-const float friction = 0.8f;
-const float air_friction = 0.9f;
+const float friction = 0.75f;
+const float air_friction = 0.8f;
 const float eye_height = 1.7f;
 const float player_height = 1.85f;
 const float player_radius = 0.35f;
 const float player_diameter = player_radius*2;
+const float arm_distance = 5.0f;
+const float max_dig_time = 100;
+const float mouse_sensitivity = 0.16;
+bool thirdperson = false;
+bool block_menu_open = false;
 bool fly = true;
 bool hold_frustum = false;
-bool thirdperson = false;
-float sensitivity = 0.16;
 
-float max_dig_time = 100;
-bool block_menu = false;
-bool block_menu_created = false;
+Vec3f block_mouse_pos = Vec3f();
+bool draw_block_mouse = false;
+
 Vec2f block_menu_start = Vec2f_zero;
 Vec2f block_menu_end = Vec2f_zero;
 Vec2f block_menu_size = Vec2f(8,5);
@@ -24,15 +27,14 @@ Vec2f block_menu_mouse = Vec2f_zero;
 Vec2f picked_block_pos = Vec2f_zero;
 uint8[] block_menu_blocks;
 Vertex[] block_menu_verts;
-bool draw_block_mouse = false;
-Vec3f block_mouse_pos = Vec3f();
 
 class Player
 {
-    Vec3f pos, vel, old_pos;
+    Vec3f pos, vel, old_pos, moving_vec;
 	CBlob@ blob;
 	CPlayer@ player;
     bool onGround = false;
+	bool Jump = false;
 	bool Crouch = false;
 	bool Frozen = false;
 	float dir_x = 0.01f;
@@ -57,326 +59,33 @@ class Player
 
     void Update()
     {
-        float temp_friction = friction;
-		draw_block_mouse = false;
-		
+        HandleKeyboard();
+		UpdatePhysics();
+		HandleCamera();
+	}
+
+	void HandleCamera()
+	{
 		CControls@ c = getControls();
 		Driver@ d = getDriver();
 
-		if(c.isKeyJustPressed(KEY_KEY_E))
-		{
-			block_menu = !block_menu;
-			if(!block_menu)
-			{
-				c.setMousePosition(d.getScreenCenterPos());
-			}
-			else
-			{
-				for(int i = 0; i < block_menu_blocks.size(); i++)
-				{
-					if(block_menu_blocks[i] == hand_block)
-					{
-						picked_block_pos = block_menu_start + Vec2f((i % block_menu_size.x) * block_menu_tile_size.x, int(i / block_menu_size.x) * block_menu_tile_size.y);
-					}
-				}
-			}
-		}
-		if(block_menu)
-		{
-			block_menu_mouse = c.getMouseScreenPos()-block_menu_start;
-			block_menu_mouse = Vec2f(Maths::Clamp(int(block_menu_mouse.x/block_menu_tile_size.x), 0, block_menu_size.x-1), Maths::Clamp(int(block_menu_mouse.y/block_menu_tile_size.y), 0, block_menu_size.y-1));
-			// check for click
-			if(blob !is null && blob.isKeyJustPressed(key_action1))
-			{
-				int index = block_menu_mouse.x + block_menu_mouse.y*block_menu_size.x;
-				hand_block = block_menu_blocks[index];
-
-				picked_block_pos = block_menu_start + Vec2f((index % block_menu_size.x) * block_menu_tile_size.x, int(index / block_menu_size.x) * block_menu_tile_size.y);
-			}
-			block_menu_mouse.x *= block_menu_tile_size.x;
-			block_menu_mouse.y *= block_menu_tile_size.y;
-			block_menu_mouse += block_menu_start;
-		}
-
-		if(blob !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null && !block_menu)
+		if(blob !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null && !block_menu_open)
 		{
 			Vec2f ScrMid = d.getScreenCenterPos();
 			Vec2f dir = (c.getMouseScreenPos() - ScrMid);
 			
-			dir_x += dir.x*sensitivity;
+			dir_x += dir.x*mouse_sensitivity;
 			if(dir_x < 0) dir_x += 360;
 			dir_x = dir_x % 360;
-			dir_y = Maths::Clamp(dir_y-(dir.y*sensitivity),-90,90);
+			dir_y = Maths::Clamp(dir_y-(dir.y*mouse_sensitivity),-90,90);
 			
-			Vec2f asuREEEEEE = /*Vec2f(3,26);*/Vec2f(0,0);
-			c.setMousePosition(ScrMid-asuREEEEEE);
+			c.setMousePosition(ScrMid/*-Vec2f(3,26)*/);
 
 			look_dir = Vec3f(	Maths::Sin((dir_x)*piboe)*Maths::Cos(dir_y*piboe),
 								Maths::Sin(dir_y*piboe),
 								Maths::Cos((dir_x)*piboe)*Maths::Cos(dir_y*piboe));
-
-			if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
-			if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
-			if(c.isKeyJustPressed(KEY_F5)) thirdperson = !thirdperson;
-
-			{
-				Vec3f hit_pos;
-				uint8 check = RaycastWorld(pos+Vec3f(0,eye_height,0), look_dir, 5, hit_pos);
-				if(check == Raycast::S_HIT)
-				{
-					draw_block_mouse = true;
-					block_mouse_pos = hit_pos;
-					DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
-					if(blob.isKeyJustPressed(key_action2))
-					{
-						uint8 block = world.map[hit_pos.y][hit_pos.z][hit_pos.x];
-						if(block == Block::grass)
-						{
-							if(!testAABBAABB(AABB(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius)), AABB(hit_pos, hit_pos+Vec3f(1,1,1))))
-							{
-								bool place = true;
-								for(int i = 0; i < other_players.size(); i++)
-								{
-									Vec3f _pos = other_players[i].pos;
-									if(testAABBAABB(AABB(_pos-Vec3f(player_radius,0,player_radius), _pos+Vec3f(player_radius,player_height,player_radius)), AABB(hit_pos, hit_pos+Vec3f(1,1,1))))
-									{
-										place = false;
-										Sound::Play("NoAmmo.ogg");
-										AddSector(AABB(hit_pos, hit_pos+Vec3f(1,1,1)), 0x45FF0000, 20);
-										AddSector(AABB(_pos-Vec3f(player_radius,0,player_radius), _pos+Vec3f(player_radius,player_height,player_radius)), 0x45FF0000, 20);
-										break;
-									}
-								}
-								if(place)
-								{
-									client_SetBlock(player, hand_block, hit_pos);
-								}
-							}
-							else
-							{
-								Sound::Play("NoAmmo.ogg");
-								AddSector(AABB(hit_pos, hit_pos+Vec3f(1,1,1)), 0x45FF0000, 20);
-								AddSector(AABB(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius)), 0x45FF0000, 20);
-							}
-						}
-						else
-						{
-							Vec3f prev_hit_pos;
-							uint8 check2 = RaycastWorld_Previous(pos+Vec3f(0,eye_height,0), look_dir, 5, prev_hit_pos);
-							if(check2 == Raycast::S_HIT)
-							{
-								if(!testAABBAABB(AABB(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius)), AABB(prev_hit_pos, prev_hit_pos+Vec3f(1,1,1))))
-								{
-									bool place = true;
-									for(int i = 0; i < other_players.size(); i++)
-									{
-										Vec3f _pos = other_players[i].pos;
-										if(testAABBAABB(AABB(_pos-Vec3f(player_radius,0,player_radius), _pos+Vec3f(player_radius,player_height,player_radius)), AABB(prev_hit_pos, prev_hit_pos+Vec3f(1,1,1))))
-										{
-											place = false;
-											Sound::Play("NoAmmo.ogg");
-											AddSector(AABB(prev_hit_pos, prev_hit_pos+Vec3f(1,1,1)), 0x45FF0000, 20);
-											AddSector(AABB(_pos-Vec3f(player_radius,0,player_radius), _pos+Vec3f(player_radius,player_height,player_radius)), 0x45FF0000, 20);
-											break;
-										}
-									}
-									if(place)
-									{
-										client_SetBlock(player, hand_block, prev_hit_pos);
-									}
-								}
-								else
-								{
-									Sound::Play("NoAmmo.ogg");
-									AddSector(AABB(prev_hit_pos, prev_hit_pos+Vec3f(1,1,1)), 0x45FF0000, 20);
-									AddSector(AABB(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius)), 0x45FF0000, 20);
-								}
-							}
-						}
-					}
-					else if(blob.isKeyPressed(key_action1))
-					{
-						if(digging)
-						{
-							if(digging_pos == hit_pos)
-							{
-								uint8 block = world.map[hit_pos.y][hit_pos.z][hit_pos.x];
-
-								dig_timer += Block::dig_speed[block];
-								if(dig_timer >= max_dig_time)
-								{
-									client_SetBlock(player, Block::air, hit_pos);
-									digging = false;
-								}
-							}
-							else
-							{
-								digging = false;
-							}
-						}
-						else
-						{
-							digging = true;
-							dig_timer = 0;
-							digging_pos = hit_pos;
-						}
-					}
-					else if(digging)
-					{
-						digging = false;
-						dig_timer = 0;
-					}
-				}
-				else if(digging)
-				{
-					digging = false;
-					dig_timer = 0;
-				}
-			}
-			
-			if(fly)
-			{
-				Vec3f vel_dir;
-				
-				if(blob.isKeyPressed(key_up))
-				{
-					vel_dir.z += 1;
-				}
-				if(blob.isKeyPressed(key_down))
-				{
-					vel_dir.z -= 1;
-				}
-				if(blob.isKeyPressed(key_left))
-				{
-					vel_dir.x -= 1;
-				}
-				if(blob.isKeyPressed(key_right))
-				{
-					vel_dir.x += 1;
-				}
-
-				float temp_acceleration = acceleration*6.0f;
-
-				vel_dir.RotateXZ(-dir_x);
-				vel_dir.Normalize();
-				vel_dir *= temp_acceleration;
-
-				vel += vel_dir;
-
-				if(c.isKeyPressed(KEY_SPACE))
-				{
-					vel.y += temp_acceleration;
-				}
-				if(c.isKeyPressed(KEY_LSHIFT))
-				{
-					vel.y -= temp_acceleration;
-				}
-			}
-			else // do actual movement here
-			{
-				Vec3f vel_dir;
-				
-				if(blob.isKeyPressed(key_up))
-				{
-					vel_dir.z += 1;
-				}
-				if(blob.isKeyPressed(key_down))
-				{
-					vel_dir.z -= 1;
-				}
-				if(blob.isKeyPressed(key_left))
-				{
-					vel_dir.x -= 1;
-				}
-				if(blob.isKeyPressed(key_right))
-				{
-					vel_dir.x += 1;
-				}
-
-				float temp_acceleration = acceleration;
-
-				Crouch = false;
-
-				if(onGround)
-				{
-					if(c.isKeyPressed(KEY_SPACE))
-					{
-						vel.y += jump_acceleration;
-						onGround = false;
-					}
-					else if(c.isKeyPressed(KEY_LSHIFT))
-					{
-						Crouch = true;
-					}
-				}
-				else
-				{
-					temp_friction = air_friction;
-				}
-
-				vel_dir.RotateXZ(-dir_x);
-				vel_dir.Normalize();
-				vel_dir *= temp_acceleration;
-
-				vel += vel_dir;
-			}
-
-			if(c.isKeyJustPressed(KEY_KEY_L))
-			{
-				for(int i = 0; i < chunks_to_render.size(); i++)
-				{
-					Chunk@ chunk = chunks_to_render[i];
-					chunk.rebuild = true;
-				}
-			}
 		}
 
-		if(fly)
-		{
-			vel.x *= friction;
-			vel.z *= friction;
-			vel.y *= friction;
-		}
-		else
-		{
-			vel.x *= temp_friction;
-			vel.z *= temp_friction;
-
-			if(!onGround)
-			{
-				vel.y = Maths::Max(vel.y-0.04f, -0.8f);
-			}
-		}
-
-		CollisionResponse(pos, vel);
-		//pos+=vel;
-
-		//pos = Vec3f(Maths::Clamp(pos.x, player_diameter/1.9f, map_width-player_diameter/1.9f), Maths::Clamp(pos.y, 0, map_height-player_height), Maths::Clamp(pos.z, player_diameter/1.9f, map_depth-player_diameter/1.9f));
-
-		onGround = false;
-
-		Vec3f[] floor_check = {	Vec3f(pos.x-(player_diameter/2.0f), pos.y-0.0002f, pos.z-(player_diameter/2.0f)),
-								Vec3f(pos.x+(player_diameter/2.0f), pos.y-0.0002f, pos.z-(player_diameter/2.0f)),
-								Vec3f(pos.x+(player_diameter/2.0f), pos.y-0.0002f, pos.z+(player_diameter/2.0f)),
-								Vec3f(pos.x-(player_diameter/2.0f), pos.y-0.0002f, pos.z+(player_diameter/2.0f))};
-		
-		for(int i = 0; i < 4; i++)
-		{
-			Vec3f temp_pos = floor_check[i];
-			if(world.isTileSolid(temp_pos.x, temp_pos.y, temp_pos.z) || temp_pos.y <= 0)
-			{
-				DrawHitbox(int(temp_pos.x), int(temp_pos.y), int(temp_pos.z), 0x8800FF00);
-				onGround = true;
-				break;
-			}
-		}
-
-		float vel_len = vel.Length();
-
-		if(vel.x < 0.0001f && vel.x > -0.0001f) vel.x = 0;
-		if(vel.y < 0.0001f && vel.y > -0.0001f) vel.y = 0;
-		if(vel.z < 0.0001f && vel.z > -0.0001f) vel.z = 0;
-		
 		Vec3f cam_pos = pos+Vec3f(0,eye_height,0);
 		Vec3f hit_pos = Vec3f();
 		if(thirdperson)
@@ -389,7 +98,317 @@ class Player
 		}
 		camera.move(cam_pos, false);
 		camera.turn(dir_x, dir_y, 0, false);
-    }
+	}
+
+	void HandleKeyboard()
+	{
+		CControls@ c = getControls();
+		Driver@ d = getDriver();
+
+		if(!Frozen)
+		{
+			// block menu ---
+			if(c.isKeyJustPressed(KEY_KEY_E))
+			{
+				block_menu_open = !block_menu_open;
+				if(!block_menu_open)
+				{
+					c.setMousePosition(d.getScreenCenterPos());
+				}
+				else
+				{
+					for(int i = 0; i < block_menu_blocks.size(); i++)
+					{
+						if(block_menu_blocks[i] == hand_block)
+						{
+							picked_block_pos = block_menu_start + Vec2f((i % block_menu_size.x) * block_menu_tile_size.x, int(i / block_menu_size.x) * block_menu_tile_size.y);
+						}
+					}
+				}
+			}
+			if(block_menu_open)
+			{
+				block_menu_mouse = c.getMouseScreenPos()-block_menu_start;
+				block_menu_mouse = Vec2f(Maths::Clamp(int(block_menu_mouse.x/block_menu_tile_size.x), 0, block_menu_size.x-1), Maths::Clamp(int(block_menu_mouse.y/block_menu_tile_size.y), 0, block_menu_size.y-1));
+				// check for click
+				if(blob !is null && blob.isKeyJustPressed(key_action1))
+				{
+					int index = block_menu_mouse.x + block_menu_mouse.y*block_menu_size.x;
+					hand_block = block_menu_blocks[index];
+
+					picked_block_pos = block_menu_start + Vec2f((index % block_menu_size.x) * block_menu_tile_size.x, int(index / block_menu_size.x) * block_menu_tile_size.y);
+				}
+				block_menu_mouse.x *= block_menu_tile_size.x;
+				block_menu_mouse.y *= block_menu_tile_size.y;
+				block_menu_mouse += block_menu_start;
+			}
+			// ---
+
+			// player controls ---
+			if(blob !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null && !block_menu_open)
+			{
+				// block manipulations ---
+				{
+					draw_block_mouse = false;
+					Vec3f hit_pos;
+					uint8 check = RaycastWorld(pos+Vec3f(0,eye_height,0), look_dir, arm_distance, hit_pos);
+					if(check == Raycast::S_HIT)
+					{
+						uint8 block_looking_at = world.getBlock(hit_pos.x, hit_pos.y, hit_pos.z);
+						draw_block_mouse = true;
+						block_mouse_pos = hit_pos;
+						DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
+						// block placing ---
+						if(blob.isKeyJustPressed(key_action2))
+						{
+							Vec3f pos_to_place = hit_pos;
+							bool place = true;
+							if(block_looking_at != Block::grass) // replace grass block instead of building near it
+							{
+								Vec3f prev_hit_pos;
+								check = RaycastWorld_Previous(pos+Vec3f(0,eye_height,0), look_dir, arm_distance, prev_hit_pos);
+								if(check == Raycast::S_HIT)
+								{
+									pos_to_place = prev_hit_pos;
+								}
+								else
+								{
+									place = false;
+								}
+							}
+							if(place)
+							{
+								if(!testAABBAABB(AABB((pos+vel)-Vec3f(player_radius,0,player_radius), (pos+vel)+Vec3f(player_radius,player_height,player_radius)), AABB(pos_to_place, pos_to_place+Vec3f(1,1,1))))
+								{
+									bool place = true;
+									for(int i = 0; i < other_players.size(); i++)
+									{
+										Vec3f _pos = other_players[i].pos;
+										if(testAABBAABB(AABB(_pos-Vec3f(player_radius,0,player_radius), _pos+Vec3f(player_radius,player_height,player_radius)), AABB(pos_to_place, pos_to_place+Vec3f(1,1,1))))
+										{
+											place = false;
+											Sound::Play("NoAmmo.ogg");
+											AddSector(AABB(pos_to_place, pos_to_place+Vec3f(1,1,1)), 0x45FF0000, 20);
+											AddSector(AABB(_pos-Vec3f(player_radius,0,player_radius), _pos+Vec3f(player_radius,player_height,player_radius)), 0x45FF0000, 20);
+											break;
+										}
+									}
+									if(place)
+									{
+										client_SetBlock(player, hand_block, pos_to_place);
+									}
+								}
+								else
+								{
+									Sound::Play("NoAmmo.ogg");
+									AddSector(AABB(pos_to_place, pos_to_place+Vec3f(1,1,1)), 0x45FF0000, 20);
+									AddSector(AABB(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius)), 0x45FF0000, 20);
+								}
+							}
+						}
+						// ---
+
+						// block digging ---
+						else if(blob.isKeyPressed(key_action1))
+						{
+							if(digging)
+							{
+								if(digging_pos == hit_pos)
+								{
+									dig_timer += Block::dig_speed[block_looking_at];
+									if(dig_timer >= max_dig_time)
+									{
+										client_SetBlock(player, Block::air, hit_pos);
+										digging = false;
+									}
+								}
+								else
+								{
+									digging = false;
+								}
+							}
+							else
+							{
+								digging = true;
+								dig_timer = 0;
+								digging_pos = hit_pos;
+							}
+						}
+						// ---
+						else if(digging)
+						{
+							digging = false;
+							dig_timer = 0;
+						}
+					}
+					else if(digging)
+					{
+						digging = false;
+						dig_timer = 0;
+					}
+				}
+				// ---
+
+				// player movement ---
+				{
+					moving_vec = Vec3f();
+					Crouch = false;
+
+					if(blob.isKeyPressed(key_up))
+					{
+						moving_vec.z += 1;
+					}
+					if(blob.isKeyPressed(key_down))
+					{
+						moving_vec.z -= 1;
+					}
+					if(blob.isKeyPressed(key_left))
+					{
+						moving_vec.x -= 1;
+					}
+					if(blob.isKeyPressed(key_right))
+					{
+						moving_vec.x += 1;
+					}
+					moving_vec.RotateXZ(-dir_x);
+					moving_vec.Normalize();
+					if(fly)
+					{
+						if(c.isKeyPressed(KEY_SPACE))
+						{
+							moving_vec.y += 1;
+						}
+						if(c.isKeyPressed(KEY_LSHIFT))
+						{
+							moving_vec.y -= 1;
+						}
+					}
+					else
+					{
+						if(c.isKeyPressed(KEY_SPACE) && !Jump)
+						{
+							Jump = true;
+						}
+						if(c.isKeyPressed(KEY_LSHIFT))
+						{
+							Crouch = true;
+						}
+					}
+				}
+				// ---
+			}
+			// ---
+
+			// misc
+			{
+				if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
+				if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
+				if(c.isKeyJustPressed(KEY_F5)) thirdperson = !thirdperson;
+			}
+			// ---
+		}
+		else
+		{
+			digging = false;
+		}
+	}
+
+	void UpdatePhysics()
+	{
+		if(!Frozen)
+		{
+			float temp_friction = friction;
+			float temp_acceleration = acceleration;
+			if(fly)
+			{
+				temp_friction = air_friction;
+				temp_acceleration = acceleration*3.0f;
+				moving_vec *= temp_acceleration;
+				vel += moving_vec;
+
+				vel.x *= temp_friction;
+				vel.z *= temp_friction;
+				vel.y *= temp_friction;
+
+				pos += vel;
+			}
+			else
+			{
+				onGround = false;
+
+				Vec3f[] floor_check = {	Vec3f(pos.x-(player_diameter/2.0f), pos.y-0.0002f, pos.z-(player_diameter/2.0f)),
+										Vec3f(pos.x+(player_diameter/2.0f), pos.y-0.0002f, pos.z-(player_diameter/2.0f)),
+										Vec3f(pos.x+(player_diameter/2.0f), pos.y-0.0002f, pos.z+(player_diameter/2.0f)),
+										Vec3f(pos.x-(player_diameter/2.0f), pos.y-0.0002f, pos.z+(player_diameter/2.0f))};
+				
+				Vec2f crouching_pos_min = Vec2f(-1, -1);
+				Vec2f crouching_pos_max = Vec2f(-1, -1);
+
+				for(int i = 0; i < 4; i++)
+				{
+					Vec3f temp_pos = floor_check[i];
+					if(world.isTileSolid(temp_pos.x, temp_pos.y, temp_pos.z) || temp_pos.y <= 0)
+					{
+						onGround = true;
+						if(crouching_pos_min.x == -1)
+						{
+							crouching_pos_min.x = int(temp_pos.x);
+							crouching_pos_min.y = int(temp_pos.z);
+							crouching_pos_max.x = int(temp_pos.x)+1;
+							crouching_pos_max.y = int(temp_pos.z)+1;
+						}
+						else
+						{
+							crouching_pos_min.x = Maths::Min(int(crouching_pos_min.x), int(temp_pos.x));
+							crouching_pos_min.y = Maths::Min(int(crouching_pos_min.y), int(temp_pos.z));
+							crouching_pos_max.x = Maths::Max(int(crouching_pos_max.x), int(temp_pos.x)+1);
+							crouching_pos_max.y = Maths::Max(int(crouching_pos_max.y), int(temp_pos.z)+1);
+						}
+					}
+				}
+				
+				if(onGround)
+				{
+					if(Jump)
+					{
+						vel.y += jump_acceleration;
+						onGround = false;
+						Jump = false;
+					}
+					else if(Crouch)
+					{
+						temp_acceleration *= 0.5f;
+					}
+				}
+				if(!onGround)
+				{
+					temp_friction = air_friction;
+					vel.y = Maths::Max(vel.y-0.04f, -0.8f);
+					Jump = false;
+				}
+				moving_vec *= temp_acceleration;
+				vel += moving_vec;
+				vel.x *= temp_friction;
+				vel.z *= temp_friction;
+
+				if(vel.x < 0.0001f && vel.x > -0.0001f) vel.x = 0;
+				if(vel.y < 0.0001f && vel.y > -0.0001f) vel.y = 0;
+				if(vel.z < 0.0001f && vel.z > -0.0001f) vel.z = 0;
+
+				CollisionResponse(pos, vel);
+
+				if(Crouch && onGround)
+				{
+					crouching_pos_min.x -= player_radius-0.01f;
+					crouching_pos_min.y -= player_radius-0.01f;
+					crouching_pos_max.x += player_radius-0.01f;
+					crouching_pos_max.y += player_radius-0.01f;
+					pos.Print();
+					pos = Vec3f(Maths::Clamp(pos.x, crouching_pos_min.x, crouching_pos_max.x), pos.y, Maths::Clamp(pos.z, crouching_pos_min.y, crouching_pos_max.y));
+				}
+			}
+		}
+	}
 
 	void Serialize(CBitStream@ to_send)
 	{
@@ -534,42 +553,6 @@ class Player
 			block_menu_verts.push_back(Vertex(pos.x,								pos.y,								0, u1,	v2,	top_scol));
 		}
 	}
-
-	/*void CreateBlockMenu()
-	{
-		getHUD().ClearMenus(true);
-		CGridMenu@ menu = CreateGridMenu(getDriver().getScreenCenterPos(), blob, Vec2f(8, 5), "Pick a block.");
-		
-		if (menu !is null)
-		{
-			print("menu not null");
-			CBitStream exitParams;
-			exitParams.write_netid(getLocalPlayer().getNetworkID());
-			menu.SetDefaultCommand(getRules().getCommandID("pick_block_reset"), exitParams);
-			menu.deleteAfterClick = false;
-			for (int i = 1; i < block_counter; i++)
-			{
-				bool current_picked = (i == hand_block);
-				CBitStream params;
-				params.write_netid(getLocalPlayer().getNetworkID());
-				params.write_u8(i);
-				CGridButton@ button = menu.AddButton(Blocks[i].name+"_Icon", "Pick a block.", getRules().getCommandID("pick_block"), Vec2f(1,1), params);
-				if(button !is null)
-				{
-					button.selectOnClick = true;
-					//button.deleteAfterClick = true;
-					button.clickable = true;
-					if(current_picked)
-					{
-						button.clickable = false;
-						button.SetSelected(2);
-					}
-					button.SetHoverText(Blocks[i].name+"."+(current_picked ? " (currently picked)" : ""));
-				}
-			}
-		}
-		block_menu_created = true;
-	}*/
 }
 
 void CollisionResponse(Vec3f&inout position, Vec3f&inout velocity)
