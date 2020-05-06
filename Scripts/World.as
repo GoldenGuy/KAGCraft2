@@ -261,6 +261,8 @@ class World
         map_material.SetFlag(SMaterial::BACK_FACE_CULLING, true);
         map_material.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
         map_material.SetFlag(SMaterial::FOG_ENABLE, true);
+
+        getRules().set("map_material", @map_material);
     }
 
     void MakeTree(Vec3f pos)

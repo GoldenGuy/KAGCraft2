@@ -44,10 +44,19 @@ bool onClientProcessChat(CRules@ this, const string&in text_in, string&out text_
 					string name = tokens[1];
 					if(name == "Classic" || name == "Jenny" || name == "Minecraft" || name == "PublicEnemy" || name == "3x3")
 					{
-						if(Texture::exists("temp")) Texture::destroy("temp");
+						SMaterial@ map_material;
+						getRules().get("map_material", @map_material);
+						map_material.AddTexture("SOLID", 0);
+					
+						/*if(Texture::exists("temp")) Texture::destroy("temp");
 						Texture::createFromFile("temp", "Textures/Blocks_"+name+".png");
 						ImageData@ data = Texture::data("temp");
-						Texture::update("Block_Textures", data);
+						Texture::update("Block_Textures", data);*/
+						Texture::destroy("Block_Textures");
+						Texture::createFromFile("Block_Textures", "Textures/Blocks_"+name+".png");
+
+						map_material.AddTexture("Block_Textures", 0);
+
 						client_AddToChat("Changing block textures to \""+name+"\".", chat_colors::color_green);
 					}
 					else
