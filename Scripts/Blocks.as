@@ -183,6 +183,9 @@ void InitBlocks()
     Block::dig_speed[Block::leaves] = 13;
     Block::dig_speed[Block::stone] = 3;
     Block::dig_speed[Block::hard_stone] = 3;
+    Block::dig_speed[Block::water] = 15;
+    Block::dig_speed[Block::watersecond] = 15;
+    Block::dig_speed[Block::glass] = 20;
 
     Block::allowed_to_build[Block::air] = false;
     Block::allowed_to_build[Block::bedrock] = false;

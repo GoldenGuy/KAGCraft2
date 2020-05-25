@@ -12,7 +12,7 @@ const float max_dig_time = 100;
 const float mouse_sensitivity = 0.16;
 bool thirdperson = false;
 bool block_menu_open = false;
-bool fly = true;
+bool fly = false;
 bool hold_frustum = false;
 
 Vec3f block_mouse_pos = Vec3f();
@@ -37,6 +37,7 @@ class Player
 	bool Jump = false;
 	bool Crouch = false;
 	bool Frozen = false;
+	bool Run = false;
 	float dir_x = 0.01f;
 	float dir_y = 0.01f;
 	Vec3f look_dir;
@@ -253,6 +254,7 @@ class Player
 				{
 					moving_vec = Vec3f();
 					Crouch = false;
+					Run = false;
 
 					if(blob.isKeyPressed(key_up))
 					{
@@ -293,6 +295,10 @@ class Player
 						{
 							Crouch = true;
 						}
+						else if(c.isKeyPressed(KEY_LCONTROL))
+						{
+							Run = true;
+						}
 					}
 				}
 				// ---
@@ -315,6 +321,7 @@ class Player
 
 	void UpdatePhysics()
 	{
+		old_pos = pos;
 		if(!Frozen)
 		{
 			float temp_friction = friction;
@@ -379,6 +386,10 @@ class Player
 					{
 						temp_acceleration *= 0.5f;
 					}
+					if(!Crouch && Run)
+					{
+						temp_acceleration *= 1.8f;
+					}
 				}
 				if(!onGround)
 				{
@@ -408,6 +419,45 @@ class Player
 				}
 			}
 		}
+	}
+
+	void RenderUpdate()
+	{
+		old_pos = old_pos.Lerp(pos, getInterFrameTime());
+	}
+
+	void Render(Vertex[]&inout players_verts)
+	{
+		AABB pl_box = AABB(old_pos-Vec3f(player_radius,0,player_radius), old_pos+Vec3f(player_radius,player_height,player_radius));
+		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.min.z,	0,	1,	color_white));
+		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.max.y,	pl_box.min.z,	1,	1,	color_white));
+		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.max.y,	pl_box.min.z,	1,	0,	color_white));
+		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.min.z,	0,	0,	color_white));
+
+		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.max.z,	0,	1,	color_white));
+		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.max.y,	pl_box.max.z,	1,	1,	color_white));
+		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.max.y,	pl_box.max.z,	1,	0,	color_white));
+		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.max.z,	0,	0,	color_white));
+
+		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.max.z,	0,	1,	color_white));
+		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.max.y,	pl_box.max.z,	1,	1,	color_white));
+		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.max.y,	pl_box.min.z,	1,	0,	color_white));
+		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.min.z,	0,	0,	color_white));
+
+		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.min.z,	0,	1,	color_white));
+		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.max.y,	pl_box.min.z,	1,	1,	color_white));
+		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.max.y,	pl_box.max.z,	1,	0,	color_white));
+		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.max.z,	0,	0,	color_white));
+
+		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.max.y,	pl_box.min.z,	0,	1,	color_white));
+		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.max.y,	pl_box.max.z,	1,	1,	color_white));
+		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.max.y,	pl_box.max.z,	1,	0,	color_white));
+		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.max.y,	pl_box.min.z,	0,	0,	color_white));
+
+		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.max.z,	0,	1,	color_white));
+		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.min.z,	1,	1,	color_white));
+		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.min.z,	1,	0,	color_white));
+		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.max.z,	0,	0,	color_white));
 	}
 
 	void Serialize(CBitStream@ to_send)

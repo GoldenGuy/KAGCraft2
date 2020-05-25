@@ -93,6 +93,7 @@ namespace Loading
 					world.current_block_faces_packet = 0;
 					world.current_chunks_packet = 0;
 					Fill[0].col = Fill[1].col = Fill[2].col = Fill[3].col = world.sky_color;
+					//getRules().set("sky_color", @world.sky_color);
 
 					world.SetUpMaterial();
 				}

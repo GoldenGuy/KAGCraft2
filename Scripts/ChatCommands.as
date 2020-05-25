@@ -1,6 +1,27 @@
 
 bool onServerProcessChat(CRules@ this, const string& in text_in, string& out text_out, CPlayer@ player)
 {
+	if (text_in.substr(0, 1) == "/") // command
+	{
+		/*if (getSecurity().getPlayerSeclev(p).getName() = "Admin")
+		{
+			string[]@ tokens = text_in.split(" ");
+
+			if (tokens.length > 1)
+			{
+				if (tokens[0] == "/sky")
+				{
+					if (tokens.length == 4)
+					{
+						SColor@ old;
+						getRules().set("sky_color", @old);
+						old.set(255, int(tokens[1]), int(tokens[2]), int(tokens[3]));
+					}
+				}
+			}
+		}*/
+		return false;
+	}
 	return true;
 }
 
@@ -10,6 +31,25 @@ bool onClientProcessChat(CRules@ this, const string&in text_in, string&out text_
 	{
 		if(!player.isMyPlayer())
 		{
+			/*if (getSecurity().getPlayerSeclev(p).getName() != "Admin")
+			{
+				return false;
+			}
+
+			string[]@ tokens = text_in.split(" ");
+
+			if (tokens.length > 1)
+			{
+				if (tokens[0] == "/sky")
+				{
+					if (tokens.length == 4)
+					{
+						SColor@ old;
+						getRules().set("sky_color", @old);
+						old.set(255, int(tokens[1]), int(tokens[2]), int(tokens[3]));
+					}
+				}
+			}*/
 			return false;
 		}
 		if(this.get_bool("ClientLoading"))
@@ -47,14 +87,8 @@ bool onClientProcessChat(CRules@ this, const string&in text_in, string&out text_
 						SMaterial@ map_material;
 						getRules().get("map_material", @map_material);
 						map_material.AddTexture("SOLID", 0);
-					
-						/*if(Texture::exists("temp")) Texture::destroy("temp");
-						Texture::createFromFile("temp", "Textures/Blocks_"+name+".png");
-						ImageData@ data = Texture::data("temp");
-						Texture::update("Block_Textures", data);*/
 						Texture::destroy("Block_Textures");
 						Texture::createFromFile("Block_Textures", "Textures/Blocks_"+name+".png");
-
 						map_material.AddTexture("Block_Textures", 0);
 
 						client_AddToChat("Changing block textures to \""+name+"\".", chat_colors::color_green);

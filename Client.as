@@ -249,12 +249,17 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 	}
 	else if(cmd == this.getCommandID("C_PlaySound3D"))
 	{
-		string sound_name = params.read_string();
-		float x = params.read_f32();
-		float y = params.read_f32();
-		float z = params.read_f32();
+		u16 netid = params.read_netid();
+		CPlayer@ _player = getPlayerByNetworkId(netid);
+		if(_player !is null && _player is getLocalPlayer())
+		{
+			string sound_name = params.read_string();
+			float x = params.read_f32();
+			float y = params.read_f32();
+			float z = params.read_f32();
 
-		Sound3D(sound_name, Vec3f(x,y,z));
+			Sound3D(sound_name, Vec3f(x,y,z));
+		}
 	}
 	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_ChangeBlock"))
 	{
@@ -270,6 +275,18 @@ void Render(int id)
 	camera.render_update();
 	rules.set_f32("interFrameTime", Maths::Clamp01(rules.get_f32("interFrameTime")+getRenderApproximateCorrectionFactor()));
 	rules.add_f32("interGameTime", getRenderApproximateCorrectionFactor());
+
+	Vertex[] players_verts;
+	if(thirdperson)
+	{
+		my_player.RenderUpdate();
+		my_player.Render(players_verts);
+	}
+	for(int i = 0; i < other_players.size(); i++)
+	{
+		other_players[i].RenderUpdate();
+		other_players[i].Render(players_verts);
+	}
 
 	Render::SetTransformScreenspace();
 
@@ -295,7 +312,7 @@ void Render(int id)
 	Render::SetAlphaBlend(true);
 	world.map_material.SetVideoMaterial();
 
-	if(!getControls().isKeyPressed(KEY_KEY_K))
+	//if(!getControls().isKeyPressed(KEY_KEY_K))
 	{
 		for(int i = 0; i < chunks_to_render.size(); i++)
 		{
@@ -310,6 +327,7 @@ void Render(int id)
 			}*/
 			chunks_to_render[i].Render();
 		}
+		Render::RawQuads("SOLID", players_verts);
 	}
 
 	Render::SetAlphaBlend(true);
@@ -350,7 +368,7 @@ void Render(int id)
 	GUI::DrawShadowedText("dir_x: "+my_player.dir_x, Vec2f(20,80), color_white);
 }
 
-int max_generate = 3;
+int max_generate = 4;
 int generated = 0;
 
 void onPlayerLeave(CRules@ this, CPlayer@ player)

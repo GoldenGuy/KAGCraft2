@@ -119,6 +119,7 @@ class World
             uint8 sky_color_G = cfg.read_u8("sky_color_G");
             uint8 sky_color_B = cfg.read_u8("sky_color_B");
             sky_color = SColor(255, sky_color_R, sky_color_G, sky_color_B);
+            //getRules().set("sky_color", @sky_color);
 
             initial_plane = cfg.read_f32("initial_plane");
             initial_plane_max_height = cfg.read_f32("initial_plane_max_height");
@@ -230,39 +231,6 @@ class World
             MakeTree(trees[i]);
         }
         print("Map generated.");
-    }
-
-    void ClientMapSetUp()
-    {
-        uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
-        map = _map;
-
-        //uint8[][][] _faces_bits(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
-        //faces_bits = _faces_bits;
-
-        @noise = @Noise(XORRandom(10000000));
-
-        chunks.clear();
-    }
-
-    void FacesSetUp()
-    {
-        uint8[][][] _faces_bits(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
-        faces_bits = _faces_bits;
-    }
-
-    void SetUpMaterial()
-    {
-        map_material.AddTexture("Block_Textures", 0);
-        map_material.DisableAllFlags();
-        map_material.SetFlag(SMaterial::COLOR_MASK, true);
-        map_material.SetFlag(SMaterial::ZBUFFER, true);
-        map_material.SetFlag(SMaterial::ZWRITE_ENABLE, true);
-        map_material.SetFlag(SMaterial::BACK_FACE_CULLING, true);
-        map_material.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
-        map_material.SetFlag(SMaterial::FOG_ENABLE, true);
-
-        getRules().set("map_material", @map_material);
     }
 
     void MakeTree(Vec3f pos)
@@ -528,6 +496,36 @@ class World
         }
     }
 
+    void ClientMapSetUp()
+    {
+        uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
+        map = _map;
+
+        @noise = @Noise(XORRandom(10000000));
+
+        chunks.clear();
+    }
+
+    void FacesSetUp()
+    {
+        uint8[][][] _faces_bits(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
+        faces_bits = _faces_bits;
+    }
+
+    void SetUpMaterial()
+    {
+        map_material.AddTexture("Block_Textures", 0);
+        map_material.DisableAllFlags();
+        map_material.SetFlag(SMaterial::COLOR_MASK, true);
+        map_material.SetFlag(SMaterial::ZBUFFER, true);
+        map_material.SetFlag(SMaterial::ZWRITE_ENABLE, true);
+        map_material.SetFlag(SMaterial::BACK_FACE_CULLING, true);
+        map_material.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
+        map_material.SetFlag(SMaterial::FOG_ENABLE, true);
+
+        getRules().set("map_material", @map_material);
+    }
+
     void setBlockSafe(int x, int y, int z, uint8 block_id)
     {
         if(inWorldBounds(x, y, z)) map[y][z][x] = block_id;
@@ -572,29 +570,6 @@ class World
         for(uint32 i = start; i < end; i++)
         {
             pos = getPosFromWorldIndex(i);
-            if(!inWorldBounds(pos.x, pos.y, pos.z))
-            {
-                pos.Print();
-
-                print("block_faces_packet: "+block_faces_packet);
-
-                print("block_faces_packets_amount: "+block_faces_packets_amount);
-				print("block_faces_packet_size: "+block_faces_packet_size);
-
-                print("chunk_width: "+chunk_width);
-                print("chunk_height: "+chunk_height);
-                print("chunk_depth: "+chunk_depth);
-
-                print("world_width: "+world_width);
-                print("world_height: "+world_height);
-                print("world_depth: "+world_depth);
-
-                print("map_width: "+map_width);
-                print("map_height: "+map_height);
-                print("map_depth: "+map_depth);
-
-                return;
-            }
             SetBlockFaces(getBlock(pos.x, pos.y, pos.z), pos.x, pos.y, pos.z);
             getNet().server_KeepConnectionsAlive();
         }
@@ -1117,10 +1092,14 @@ void server_SetBlock(uint8 block, int x, int y, int z)
 
 void PlaySound3D(string name, int x, int y, int z)
 {
-    CBitStream to_send;
-    to_send.write_string(name);
-    to_send.write_f32(x);
-    to_send.write_f32(y);
-    to_send.write_f32(z);
-    getRules().SendCommand(getRules().getCommandID("C_PlaySound3D"), to_send);
+    if(getLocalPlayer() !is null)
+    {
+        CBitStream to_send;
+        to_send.write_netid(getLocalPlayer().getNetworkID());
+        to_send.write_string(name);
+        to_send.write_f32(x);
+        to_send.write_f32(y);
+        to_send.write_f32(z);
+        getRules().SendCommand(getRules().getCommandID("C_PlaySound3D"), to_send, false);
+    }
 }

@@ -6,6 +6,7 @@
 #include "World.as"
 #include "Vec3f.as"
 #include "ServerPlayer.as"
+#include "MapSavingLoading.as"
 
 World@ world;
 
@@ -64,6 +65,15 @@ void onTick(CRules@ this)
 			players_to_send.removeAt(0);
 		}
 	}
+	/*if(getGameTime() == 100)
+	{
+		StartSaving();
+		return;
+	}
+	if(map_saving || map_loading)
+	{
+		UpdateSL();
+	}*/
 }
 
 void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
