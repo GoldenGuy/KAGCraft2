@@ -149,6 +149,9 @@ class World
         
         uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
         map = _map;
+
+        print("Map size: "+(map_height*map_depth*map_width));
+
         for(float z = 0.0f; z < map_depth; z += 1.0f)
         {
             for(float x = 0.0f; x < map_width; x += 1.0f)
@@ -579,12 +582,12 @@ class World
     {
         if(Block::see_through[block])
         {
-            if(z > 0) faces_bits[y][z-1][x] += 2;
             if(z < map_depth-1) faces_bits[y][z+1][x] += 1;
-            if(y < map_height-1) faces_bits[y+1][z][x] += 8;
+            if(z > 0) faces_bits[y][z-1][x] += 2;
             if(y > 0) faces_bits[y-1][z][x] += 4;
-            if(x < map_width-1) faces_bits[y][z][x+1] += 32;
+            if(y < map_height-1) faces_bits[y+1][z][x] += 8;
             if(x > 0) faces_bits[y][z][x-1] += 16;
+            if(x < map_width-1) faces_bits[y][z][x+1] += 32;
         }
     }
 
