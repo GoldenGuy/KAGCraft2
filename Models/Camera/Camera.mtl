@@ -1,0 +1,9 @@
+# Blender MTL File: 'cameramodel.blend'
+# Material Count: 1
+
+newmtl Body
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 1.000000 1.000000
+d 1.000000
+illum 2
+map_Kd Camera.png

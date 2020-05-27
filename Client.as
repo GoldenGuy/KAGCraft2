@@ -78,7 +78,7 @@ void onTick(CRules@ this)
 
 		tree.Check();
 
-		if(isDebug())
+		//if(isDebug())
 		{
 			if(hold_frustum)
 			{
@@ -352,7 +352,12 @@ void Render(int id)
 		Matrix::SetTranslation(model, camera.frustum_pos.x, camera.frustum_pos.y, camera.frustum_pos.z);
 		Render::SetModelTransform(model);
 		Render::RawQuads("SOLID", frustum_shape);
-		Matrix::MakeIdentity(model);
+
+		//Matrix::MakeIdentity(model);
+		Matrix::SetRotationDegrees(model, -camera.frustum_dir_y, camera.frustum_dir_x, 0);
+		Render::SetModelTransform(model);
+		camera.camera_model.RenderMeshWithMaterial();
+
 		Render::SetModelTransform(model);
 		Render::SetBackfaceCull(true);
 	}

@@ -15,6 +15,9 @@ class Camera
 	float interpolated_dir_x;
 	float interpolated_dir_y;
 	float interpolated_dir_z;
+	float frustum_dir_x;
+	float frustum_dir_y;
+	float frustum_dir_z;
 	Vec3f pos;
 	Vec3f next_pos;
 	Vec3f interpolated_pos;
@@ -25,6 +28,8 @@ class Camera
 	float z_far;
 	
 	Frustum frustum;
+
+	SMesh camera_model;
 	
 	Camera()
 	{
@@ -46,6 +51,11 @@ class Camera
 
 		Matrix::MakePerspective(projection, fov, float(getDriver().getScreenWidth()) / float(getDriver().getScreenHeight()), z_near, z_far);
 		updateFrustum();
+
+		camera_model.LoadObjIntoMesh("Models/Camera/Camera.obj");
+		camera_model.GetMaterial().SetFlag(SMaterial::LIGHTING, false);
+		camera_model.GetMaterial().SetFlag(SMaterial::BILINEAR_FILTER, false);
+		camera_model.BuildMesh();
 	}
 	
 	void move(const Vec3f&in nextpos, bool instantly)
@@ -110,7 +120,12 @@ class Camera
 		temp_mat = Matrix_Multiply(temp_mat, another_temp_mat);
 		temp_mat = Matrix_Multiply(projection, temp_mat);
 
-		if(!hold_frustum) frustum.Update(temp_mat);
+		if(!hold_frustum)
+		{
+			frustum.Update(temp_mat);
+			frustum_dir_x = dir_x;
+			frustum_dir_y = dir_y;
+		}
 	}
 	
 	void makeMatrix()
