@@ -57,6 +57,7 @@ void MakeNickName(string player_name, SMesh&inout mesh)
 	}
 
 	f32 letter_ratio = 1.0f/64.0f;
+	letter_ratio *= 1.7f;
 	f32 letter_heigth = letter_ratio*8;
 	f32 text_start = 0-letter_ratio*size_x/2;
 	f32 text_end = letter_ratio*size_x/2;

@@ -79,6 +79,8 @@ class Player
 			player.getUsername() == "Mazey" ||
 			player.getUsername() == "epsilon" ||
 			player.getUsername() == "dragonfriend18" ||
+			player.getUsername() == "Vamist" ||
+			player.getUsername() == "guift" ||
 			player.getUsername() == "GoldenGuy")
 		{
 			player_material.AddTexture("Textures/skin_"+player.getUsername()+".png", 0);
@@ -92,6 +94,54 @@ class Player
 		player_material.SetFlag(SMaterial::ZBUFFER, true);
 		player_material.SetFlag(SMaterial::ZWRITE_ENABLE, true);
 		player_material.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
+
+		mesh_head.Clear();
+		mesh_head.SetMaterial(player_material);
+		mesh_head.SetVertex(player.getUsername() == "Turtlecake" ? player_head_jenny : player_head);
+		mesh_head.SetIndices(player_IDs);
+		mesh_head.SetDirty(SMesh::VERTEX_INDEX);
+		mesh_head.SetHardwareMapping(SMesh::STATIC);
+		mesh_head.BuildMesh();
+
+		mesh_body.Clear();
+		mesh_body.SetMaterial(player_material);
+		mesh_body.SetVertex(player_body);
+		mesh_body.SetIndices(player_IDs);
+		mesh_body.SetDirty(SMesh::VERTEX_INDEX);
+		mesh_body.SetHardwareMapping(SMesh::STATIC);
+		mesh_body.BuildMesh();
+
+		mesh_arm_right.Clear();
+		mesh_arm_right.SetMaterial(player_material);
+		mesh_arm_right.SetVertex(player_arm_right);
+		mesh_arm_right.SetIndices(player_IDs);
+		mesh_arm_right.SetDirty(SMesh::VERTEX_INDEX);
+		mesh_arm_right.SetHardwareMapping(SMesh::STATIC);
+		mesh_arm_right.BuildMesh();
+
+		mesh_arm_left.Clear();
+		mesh_arm_left.SetMaterial(player_material);
+		mesh_arm_left.SetVertex(player_arm_left);
+		mesh_arm_left.SetIndices(player_IDs);
+		mesh_arm_left.SetDirty(SMesh::VERTEX_INDEX);
+		mesh_arm_left.SetHardwareMapping(SMesh::STATIC);
+		mesh_arm_left.BuildMesh();
+		
+		mesh_leg_right.Clear();
+		mesh_leg_right.SetMaterial(player_material);
+		mesh_leg_right.SetVertex(player_leg_right);
+		mesh_leg_right.SetIndices(player_IDs);
+		mesh_leg_right.SetDirty(SMesh::VERTEX_INDEX);
+		mesh_leg_right.SetHardwareMapping(SMesh::STATIC);
+		mesh_leg_right.BuildMesh();
+		
+		mesh_leg_left.Clear();
+		mesh_leg_left.SetMaterial(player_material);
+		mesh_leg_left.SetVertex(player_leg_left);
+		mesh_leg_left.SetIndices(player_IDs);
+		mesh_leg_left.SetDirty(SMesh::VERTEX_INDEX);
+		mesh_leg_left.SetHardwareMapping(SMesh::STATIC);
+		mesh_leg_left.BuildMesh();
 	}
 
 	void MakeNickname()
@@ -511,14 +561,44 @@ class Player
 
 	void RenderPlayer()
 	{
+		player_material.SetVideoMaterial();
 		
+		float[] model_matr;
+		Matrix::MakeIdentity(model_matr);
+		Matrix::SetTranslation(model_matr, render_pos.x, render_pos.y, render_pos.z);
+		Matrix::SetRotationDegrees(model_matr, 0, dir_x, 0);
+		Render::SetModelTransform(model_matr);
+		mesh_body.RenderMesh();
+
+		Matrix::SetTranslation(model_matr, render_pos.x, render_pos.y+1.5f, render_pos.z);
+		Matrix::SetRotationDegrees(model_matr, -dir_y, dir_x, 0);
+		Render::SetModelTransform(model_matr);
+		mesh_head.RenderMesh();
+
+		f32 vem_mult = vel.Length()*120.0f;
+		f32 limb_rotation = Maths::Cos(getInterGameTime()/3.5f)*vem_mult;
+
+		Matrix::SetRotationDegrees(model_matr, limb_rotation, dir_x, 0);
+		Render::SetModelTransform(model_matr);
+		mesh_arm_left.RenderMesh();
+		Matrix::SetRotationDegrees(model_matr, -limb_rotation, dir_x, 0);
+		Render::SetModelTransform(model_matr);
+		mesh_arm_right.RenderMesh();
+
+		Matrix::SetTranslation(model_matr, render_pos.x, render_pos.y+0.75f, render_pos.z);
+		Matrix::SetRotationDegrees(model_matr, limb_rotation, dir_x, 0);
+		Render::SetModelTransform(model_matr);
+		mesh_leg_left.RenderMesh();
+		Matrix::SetRotationDegrees(model_matr, -limb_rotation, dir_x, 0);
+		Render::SetModelTransform(model_matr);
+		mesh_leg_right.RenderMesh();
 	}
 
 	void RenderNickname()
 	{
 		float[] billboard_model;
 		Matrix::MakeIdentity(billboard_model);
-		Matrix::SetTranslation(billboard_model, render_pos.x, render_pos.y+player_height+0.2f, render_pos.z);
+		Matrix::SetTranslation(billboard_model, render_pos.x, render_pos.y+player_height+0.4f, render_pos.z);
 		Matrix::SetRotationDegrees(billboard_model, -camera.interpolated_dir_y, camera.interpolated_dir_x, 0);
 		Render::SetModelTransform(billboard_model);
 		Render::SetAlphaBlend(true);
