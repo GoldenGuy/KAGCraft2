@@ -313,7 +313,7 @@ void Render(int id)
 					generated++;
 				}
 			}*/
-			//chunks_to_render[i].Render();
+			chunks_to_render[i].Render();
 		}
 		//Render::RawQuads("SOLID", players_verts);
 	}
@@ -331,9 +331,9 @@ void Render(int id)
 		Render::SetModelTransform(model);
 	}
 
-	world.map_material.SetVideoMaterial();
+	//world.map_material.SetVideoMaterial();
 	//Vertex[] players_verts;
-	//if(thirdperson)
+	if(thirdperson)
 	{
 		my_player.RenderUpdate();
 		//my_player.Render(players_verts);
