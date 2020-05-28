@@ -33,7 +33,7 @@ Vertex[] block_menu_verts;
 
 class Player
 {
-    Vec3f pos, vel, old_pos, moving_vec;
+    Vec3f pos, vel, old_pos, render_pos, moving_vec;
 	CBlob@ blob;
 	CPlayer@ player;
     bool onGround = false;
@@ -50,6 +50,8 @@ class Player
 	uint8 hand_block = Block::stone;
 
 	NickName nn;
+	
+	SMesh mesh_nn;
 	
 	SMesh mesh_head;
 	SMesh mesh_body;
@@ -72,7 +74,7 @@ class Player
 
 	void MakeNickname()
 	{
-		nn = NickName(player.getUsername());
+		nn = NickName(player.getUsername(), mesh_nn);
 	}
 
 	void MakeModel()
@@ -446,7 +448,7 @@ class Player
 
 	void RenderUpdate()
 	{
-		old_pos = old_pos.Lerp(pos, getInterFrameTime());
+		render_pos = old_pos.Lerp(pos, getInterFrameTime());
 	}
 
 	/*void Render(Vertex[]&inout players_verts)
@@ -487,12 +489,14 @@ class Player
 	{
 		float[] billboard_model;
 		Matrix::MakeIdentity(billboard_model);
-		//Matrix::SetTranslation(billboard_model, old_pos.x, old_pos.y, old_pos.z);
-		//Matrix::SetRotationDegrees(billboard_model, -camera.frustum_dir_y, camera.frustum_dir_x-45, 0);
+		Matrix::SetTranslation(billboard_model, render_pos.x, render_pos.y+player_height+0.2f, render_pos.z);
+		Matrix::SetRotationDegrees(billboard_model, -camera.interpolated_dir_y, camera.interpolated_dir_x, 0);
 		Render::SetModelTransform(billboard_model);
 		//camera.camera_model.RenderMeshWithMaterial();
 		//nn.Mesh.BuildMesh();
-		nn.Mesh.RenderMesh();
+		//nn.Mesh.RenderMesh();
+		//nn.Render();
+		mesh_nn.RenderMeshWithMaterial();
 	}
 
 	void Serialize(CBitStream@ to_send)

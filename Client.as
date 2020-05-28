@@ -273,8 +273,6 @@ void Render(int id)
 {
 	CRules@ rules = getRules();
 	camera.render_update();
-	rules.set_f32("interFrameTime", Maths::Clamp01(rules.get_f32("interFrameTime")+getRenderApproximateCorrectionFactor()));
-	rules.add_f32("interGameTime", getRenderApproximateCorrectionFactor());
 
 	Render::SetTransformScreenspace();
 
@@ -367,6 +365,9 @@ void Render(int id)
 		Render::SetBackfaceCull(true);
 	}
 	Render::SetAlphaBlend(false);
+
+	rules.set_f32("interFrameTime", Maths::Clamp01(rules.get_f32("interFrameTime")+getRenderApproximateCorrectionFactor()));
+	rules.add_f32("interGameTime", getRenderApproximateCorrectionFactor());
 
 	Render::SetTransformScreenspace();
 	

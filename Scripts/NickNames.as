@@ -6,11 +6,11 @@ u8[] sizes = {3,1,4,5,5,5,5,2,4,4,4,5,1,5,1,5,5,5,5,5,5,5,5,5,5,5,1,1,4,5,4,5,6,
 class NickName
 {
 	string player_name;
-	SMesh Mesh;
+	//SMesh Mesh;
 	Vertex[] Vertexes;
 	u16[] IDs;
 	NickName(){}
-	NickName(string _player_name)
+	NickName(string _player_name, SMesh&inout mesh_nn)
 	{
 		//_player_name = " !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_\`abcdefghijklmnopqrstuvwxyz{|}~"; //
 		player_name = _player_name+"_NN";
@@ -70,7 +70,7 @@ class NickName
 			ImageData@ nickname_img = Texture::data(_player_name+"_NN");
 			size_x = nickname_img.width();
 		}
-		f32 letter_ratio = 10000.0f/64.0f;
+		f32 letter_ratio = 1.0f/64.0f;
 		f32 letter_heigth = letter_ratio*8;
 		f32 text_start = 0-letter_ratio*size_x/2;
 		f32 text_end = letter_ratio*size_x/2;
@@ -83,27 +83,34 @@ class NickName
 		IDs = v_ids;
 
 		SMaterial material;
-		material.AddTexture("Block_Textures", 0);//material.AddTexture(_player_name+"_NN", 0);
+		material.AddTexture(_player_name+"_NN", 0);
         material.DisableAllFlags();
 		material.SetFlag(SMaterial::COLOR_MASK, true);
 		material.SetFlag(SMaterial::ZBUFFER, true);
         material.SetFlag(SMaterial::ZWRITE_ENABLE, true);
+		material.SetFlag(SMaterial::BLEND_OPERATION, true);
 		material.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
 
 		print("aaaaa");
-		Mesh.Clear();
-		Mesh.SetMaterial(material);
-		Mesh.SetVertex(_Vertexes);
-		Mesh.SetIndices(v_ids);
-		Mesh.SetDirty(SMesh::VERTEX_INDEX);
-		Mesh.SetHardwareMapping(SMesh::DYNAMIC);
-		Mesh.BuildMesh();
+		mesh_nn.Clear();
+		mesh_nn.SetMaterial(material);
+		mesh_nn.SetVertex(_Vertexes);
+		mesh_nn.SetIndices(v_ids);
+		mesh_nn.SetDirty(SMesh::VERTEX_INDEX);
+		mesh_nn.SetHardwareMapping(SMesh::DYNAMIC);
+		mesh_nn.BuildMesh();
+		//mesh_nn.RenderMesh();
 
 		//Mesh.LoadObjIntoMesh("Models/Camera/Camera.obj");
 		//Mesh.GetMaterial().SetFlag(SMaterial::LIGHTING, false);
 		//Mesh.GetMaterial().SetFlag(SMaterial::BILINEAR_FILTER, false);
 		//Mesh.BuildMesh();
 	}
+
+	//void Render()
+	//{
+		//this.Mesh.RenderMesh();
+	//}
 }
 
 int figureOutTextureLength(string player_name)
