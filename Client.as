@@ -12,7 +12,6 @@
 #include "Player.as"
 #include "Scoreboard.as"
 #include "UtilitySectors.as"
-
 #include "Sound3D.as"
 
 World@ world;
@@ -21,6 +20,8 @@ Camera@ camera;
 
 Player@ my_player;
 Player@[] other_players;
+
+Vertex[] diggers; // ...maybe change the name...
 
 void onInit(CRules@ this)
 {
@@ -33,29 +34,31 @@ void onTick(CRules@ this)
 	{
 		return;
 	}
-	
-	HitBoxes.clear();
-	this.set_f32("interGameTime", getGameTime());
-	this.set_f32("interFrameTime", 0);
 
 	if(Loading::isLoading)
 	{
 		Loading::Progress(this);
 		return;
 	}
-	else
+	else // game here
 	{
-		// game here
+		this.set_f32("interGameTime", getGameTime());
+		this.set_f32("interFrameTime", 0);
+
+		HitBoxes.clear();
+		
 		camera.tick_update();
 		my_player.Update();
 
-		/*for(int i = 0; i < other_players.size(); i++)
+		// sync your player
+		if(!isServer() && getPlayersCount() > 1)
 		{
-			Vec3f pos = other_players[i].pos;
-			AABB _box(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius));
-			DrawHitbox(_box, 0x88FFFFFF);
-		}*/
+			CBitStream to_send;
+			my_player.Serialize(@to_send);
+			this.SendCommand(this.getCommandID("C_PlayerUpdate"), to_send, false);
+		}
 
+		// draw block digging cursors for each player
 		diggers.clear();
 		if(my_player.digging)
 		{
@@ -69,67 +72,20 @@ void onTick(CRules@ this)
 			}
 		}
 
-		if(!isServer() && getPlayersCount() > 1)
-		{
-			CBitStream to_send;
-			my_player.Serialize(@to_send);
-			this.SendCommand(this.getCommandID("C_PlayerUpdate"), to_send, false);
-		}
+		tree.Check(); // gather chunks to render in to an array
 
-		tree.Check();
-
-		//if(isDebug())
+		// draw frustum shape
+		if(hold_frustum)
 		{
-			if(hold_frustum)
+			camera.frustum.GenerateShape();
+			
+			/*for(int i = 0; i < chunks_to_render.size(); i++)
 			{
-				Vec3f FLU = camera.frustum.getFarLeftUp();
-				Vec3f FLD = camera.frustum.getFarLeftDown();
-				Vec3f FRU = camera.frustum.getFarRightUp();
-				Vec3f FRD = camera.frustum.getFarRightDown();
-				Vec3f NLU = camera.frustum.getNearLeftUp();
-				Vec3f NLD = camera.frustum.getNearLeftDown();
-				Vec3f NRU = camera.frustum.getNearRightUp();
-				Vec3f NRD = camera.frustum.getNearRightDown();
-
-				frustum_shape.clear();
-
-				frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 0, 0, 0x45AA00AA));
-				frustum_shape.push_back(Vertex(FRU.x, FRU.y, FRU.z, 1, 0, 0x45AA00AA));
-				frustum_shape.push_back(Vertex(FRD.x, FRD.y, FRD.z,	1, 1, 0x45AA00AA));
-				frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z, 0, 1, 0x45AA00AA));
-
-				frustum_shape.push_back(Vertex(NLU.x, NLU.y, NLU.z, 0, 0, 0x45AA00AA));
-				frustum_shape.push_back(Vertex(NRU.x, NRU.y, NRU.z, 1, 0, 0x45AA00AA));
-				frustum_shape.push_back(Vertex(NRD.x, NRD.y, NRD.z,	1, 1, 0x45AA00AA));
-				frustum_shape.push_back(Vertex(NLD.x, NLD.y, NLD.z, 0, 1, 0x45AA00AA));
-
-				frustum_shape.push_back(Vertex(NLU.x, NLU.y, NLU.z, 0, 0, 0x4500AAAA));
-				frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 1, 0, 0x4500AAAA));
-				frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z,	1, 1, 0x4500AAAA));
-				frustum_shape.push_back(Vertex(NLD.x, NLD.y, NLD.z, 0, 1, 0x4500AAAA));
-
-				frustum_shape.push_back(Vertex(FRU.x, FRU.y, FRU.z, 0, 0, 0x4500AAAA));
-				frustum_shape.push_back(Vertex(NRU.x, NRU.y, NRU.z, 1, 0, 0x4500AAAA));
-				frustum_shape.push_back(Vertex(NRD.x, NRD.y, NRD.z,	1, 1, 0x4500AAAA));
-				frustum_shape.push_back(Vertex(FRD.x, FRD.y, FRD.z, 0, 1, 0x4500AAAA));
-
-				frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z, 0, 0, 0x45FF00AA));
-				frustum_shape.push_back(Vertex(FRD.x, FRD.y, FRD.z, 1, 0, 0x45FF00AA));
-				frustum_shape.push_back(Vertex(NRD.x, NRD.y, NRD.z,	1, 1, 0x45FF00AA));
-				frustum_shape.push_back(Vertex(NLD.x, NLD.y, NLD.z, 0, 1, 0x45FF00AA));
-
-				frustum_shape.push_back(Vertex(NLU.x, NLU.y, NLU.z, 0, 0, 0x45FF00AA));
-				frustum_shape.push_back(Vertex(NRU.x, NRU.y, NRU.z, 1, 0, 0x45FF00AA));
-				frustum_shape.push_back(Vertex(FRU.x, FRU.y, FRU.z,	1, 1, 0x45FF00AA));
-				frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 0, 1, 0x45FF00AA));
-				
-				for(int i = 0; i < chunks_to_render.size(); i++)
-				{
-					Chunk@ chunk = chunks_to_render[i];
-					DrawHitbox(chunks_to_render[i].box, 0x880000FF);
-				}
-			}
+				Chunk@ chunk = chunks_to_render[i];
+				DrawHitbox(chunks_to_render[i].box, 0x880000FF);
+			}*/
 		}
+
 		UpdateSectors();
 	}
 }
@@ -200,12 +156,14 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 						break;
 					}
 				}
-				// doesnt exists yet
+				// create new player class
 				if(!exists)
 				{
 					Player new_player();
 					new_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
 					new_player.SetPlayer(_player);
+					new_player.MakeNickname();
+					new_player.MakeModel();
 					other_players.push_back(@new_player);
 				}
 			}
@@ -276,96 +234,75 @@ void Render(int id)
 
 	Render::SetTransformScreenspace();
 
-	Render::RawQuads("SOLID", Fill);
+	Render::RawQuads("SOLID", Fill); // fill screen with solid color (sky color)
 
 	Render::SetTransformWorldspace();
-
-	Render::SetZBuffer(false, false);
+	Render::ClearZ();
+	Render::SetZBuffer(true, true);
 	Render::SetAlphaBlend(false);
 	Render::SetBackfaceCull(true);
 	
 	Matrix::MakeIdentity(model);
-	//Matrix::SetTranslation(model, camera.interpolated_pos.x, camera.interpolated_pos.y, camera.interpolated_pos.z);
-	//Render::SetTransform(model, camera.view, camera.projection);
-	//Render::RawQuads("Sky_Texture", SkyBox);
-	//Matrix::MakeIdentity(model);
-	//Render::SetModelTransform(model);
 	Render::SetTransform(model, camera.view, camera.projection);
 
-	Render::ClearZ();
-	Render::SetZBuffer(true, true);
-
-	Render::SetAlphaBlend(true);
+	// render map
 	world.map_material.SetVideoMaterial();
-
-	//if(!getControls().isKeyPressed(KEY_KEY_K))
+	for(int i = 0; i < chunks_to_render.size(); i++)
 	{
-		for(int i = 0; i < chunks_to_render.size(); i++)
-		{
-			/*Chunk@ chunk = chunks_to_render[i];
-			if(chunk.rebuild)
-			{
-				if(generated < max_generate)
-				{
-					chunk.GenerateMesh();
-					generated++;
-				}
-			}*/
-			chunks_to_render[i].Render();
-		}
-		//Render::RawQuads("SOLID", players_verts);
+		chunks_to_render[i].Render();
 	}
 
+	// render all block diggers
 	Render::SetAlphaBlend(true);
 	Render::RawQuads("Block_Digger", diggers);
 
+	// render your block cursor
 	if(draw_block_mouse)
 	{
 		Matrix::MakeIdentity(model);
 		Matrix::SetTranslation(model, block_mouse_pos.x, block_mouse_pos.y, block_mouse_pos.z);
 		Render::SetModelTransform(model);
 		Render::RawQuads("BLOCK_MOUSE", block_mouse);
-		Matrix::MakeIdentity(model);
-		Render::SetModelTransform(model);
 	}
 
-	//world.map_material.SetVideoMaterial();
-	//Vertex[] players_verts;
+	Render::SetAlphaBlend(false);
+
+	// render yourself only while in thirdperson
 	if(thirdperson)
 	{
 		my_player.RenderUpdate();
-		//my_player.Render(players_verts);
-		//Render::SetModelTransform(billboard_model);
-		my_player.Render();
+		my_player.RenderPlayer();
 	}
+	// render other players
 	for(int i = 0; i < other_players.size(); i++)
 	{
 		other_players[i].RenderUpdate();
-		//other_players[i].Render(players_verts);
-		//Render::SetModelTransform(billboard_model);
-		other_players[i].Render();
+		other_players[i].RenderPlayer();
+		other_players[i].RenderNickname();
 	}
 
-	//Render::RawQuads("SOLID", HitBoxes);
+	Render::SetAlphaBlend(true);
+	Matrix::MakeIdentity(model);
+	Render::SetModelTransform(model);
 	RenderSectors();
+
+	// render frustum shape
 	if(hold_frustum)
 	{
 		Render::SetBackfaceCull(false);
 		Matrix::MakeIdentity(model);
 		Matrix::SetTranslation(model, camera.frustum_pos.x, camera.frustum_pos.y, camera.frustum_pos.z);
 		Render::SetModelTransform(model);
-		Render::RawQuads("SOLID", frustum_shape);
-
-		//Matrix::MakeIdentity(model);
+		Render::RawQuads("SOLID", camera.frustum.frustum_shape);
+		Render::SetBackfaceCull(true);
+		
+		// actual camera model (thanks jenny :3 )
 		Matrix::SetRotationDegrees(model, -camera.frustum_dir_y, camera.frustum_dir_x, 0);
 		Render::SetModelTransform(model);
 		camera.camera_model.RenderMeshWithMaterial();
-
-		Render::SetModelTransform(model);
-		Render::SetBackfaceCull(true);
 	}
-	Render::SetAlphaBlend(false);
 
+	// calculate interpolation multiplier	
 	rules.set_f32("interFrameTime", Maths::Clamp01(rules.get_f32("interFrameTime")+getRenderApproximateCorrectionFactor()));
 	rules.add_f32("interGameTime", getRenderApproximateCorrectionFactor());
 
@@ -375,7 +312,6 @@ void Render(int id)
 	GUI::DrawShadowedText("Pos: "+my_player.pos.IntString(), Vec2f(20,20), color_white);
 	GUI::DrawShadowedText("Vel: "+my_player.vel.FloatString(), Vec2f(20,40), color_white);
 	GUI::DrawShadowedText("Ang: "+my_player.look_dir.FloatString(), Vec2f(20,60), color_white);
-
 	GUI::DrawShadowedText("dir_x: "+my_player.dir_x, Vec2f(20,80), color_white);
 }
 
@@ -423,12 +359,8 @@ void onRender(CRules@ this)
 	}
 }
 
-Vertex[] frustum_shape;
-
-Vertex[] diggers; // ...maybe change the name...
-
 // temp solution probably
-Vertex[] SkyBox = {	Vertex(-1, -1, 1, 0.25f, 0.5f, color_white), // front face
+/*Vertex[] SkyBox = {	Vertex(-1, -1, 1, 0.25f, 0.5f, color_white), // front face
 					Vertex(-1, 1, 1, 0.25f, 0.25f, color_white),
 					Vertex(1, 1, 1, 0.5f, 0.25f, color_white),
 					Vertex(1, -1, 1, 0.5f, 0.5f, color_white),
@@ -457,7 +389,7 @@ Vertex[] SkyBox = {	Vertex(-1, -1, 1, 0.25f, 0.5f, color_white), // front face
 					Vertex(-1, -1, 1, 0.25f, 0.5f, color_white),
 					Vertex(1, -1, 1, 0.5f, 0.5f, color_white),
 					Vertex(1, -1, -1, 0.5f, 0.75f, color_white)
-};
+};*/
 
 Vertex[] Fill = {	Vertex(0, 0, 0, 0, 0, color_white),
 					Vertex(getScreenWidth(), 0, 0, 1, 0, color_white),

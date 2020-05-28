@@ -55,7 +55,6 @@ class Camera
 		camera_model.LoadObjIntoMesh("Models/Camera/Camera.obj");
 		camera_model.GetMaterial().SetFlag(SMaterial::LIGHTING, false);
 		camera_model.GetMaterial().SetFlag(SMaterial::BILINEAR_FILTER, false);
-		//camera_model.BuildMesh();
 	}
 	
 	void move(const Vec3f&in nextpos, bool instantly)

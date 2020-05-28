@@ -49,9 +49,9 @@ class Player
 	float dig_timer;
 	uint8 hand_block = Block::stone;
 
-	NickName nn;
+	SMaterial player_material;
 	
-	SMesh mesh_nn;
+	SMesh mesh_nickname;
 	
 	SMesh mesh_head;
 	SMesh mesh_body;
@@ -72,15 +72,31 @@ class Player
 		@player = @_player;
 	}
 
-	void MakeNickname()
-	{
-		nn = NickName(player.getUsername(), mesh_nn);
-	}
-
 	void MakeModel()
 	{
-		MakeNickname();
+		if(	player.getUsername() == "Turtlecake" ||
+			player.getUsername() == "MintMango" ||
+			player.getUsername() == "Mazey" ||
+			player.getUsername() == "epsilon" ||
+			player.getUsername() == "dragonfriend18" ||
+			player.getUsername() == "GoldenGuy")
+		{
+			player_material.AddTexture("Textures/skin_"+player.getUsername()+".png", 0);
+		}
+		else
+		{
+			player_material.AddTexture("Textures/Default/skin"+XORRandom(8)+".png", 0);
+		}
+		player_material.DisableAllFlags();
+		player_material.SetFlag(SMaterial::COLOR_MASK, true);
+		player_material.SetFlag(SMaterial::ZBUFFER, true);
+		player_material.SetFlag(SMaterial::ZWRITE_ENABLE, true);
+		player_material.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
+	}
 
+	void MakeNickname()
+	{
+		MakeNickName(player.getUsername(), mesh_nickname);
 	}
 
     void Update()
@@ -183,7 +199,7 @@ class Player
 						uint8 block_looking_at = world.getBlock(hit_pos.x, hit_pos.y, hit_pos.z);
 						draw_block_mouse = true;
 						block_mouse_pos = hit_pos;
-						DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
+						//DrawHitbox(int(hit_pos.x), int(hit_pos.y), int(hit_pos.z), 0x88FFC200);
 						// block placing ---
 						if(blob.isKeyJustPressed(key_action2))
 						{
@@ -231,6 +247,14 @@ class Player
 									AddSector(AABB(pos-Vec3f(player_radius,0,player_radius), pos+Vec3f(player_radius,player_height,player_radius)), 0x45FF0000, 20);
 								}
 							}
+						}
+						// ---
+
+						// block picking ---
+						else if(c.isKeyJustPressed(KEY_MBUTTON))
+						{
+							uint8 block_looking_at = world.getBlock(hit_pos.x, hit_pos.y, hit_pos.z);
+							hand_block = block_looking_at;
 						}
 						// ---
 
@@ -485,18 +509,21 @@ class Player
 		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.max.z,	0,	0,	color_white));
 	}*/
 
-	void Render()
+	void RenderPlayer()
+	{
+		
+	}
+
+	void RenderNickname()
 	{
 		float[] billboard_model;
 		Matrix::MakeIdentity(billboard_model);
 		Matrix::SetTranslation(billboard_model, render_pos.x, render_pos.y+player_height+0.2f, render_pos.z);
 		Matrix::SetRotationDegrees(billboard_model, -camera.interpolated_dir_y, camera.interpolated_dir_x, 0);
 		Render::SetModelTransform(billboard_model);
-		//camera.camera_model.RenderMeshWithMaterial();
-		//nn.Mesh.BuildMesh();
-		//nn.Mesh.RenderMesh();
-		//nn.Render();
-		mesh_nn.RenderMeshWithMaterial();
+		Render::SetAlphaBlend(true);
+		mesh_nickname.RenderMeshWithMaterial();
+		Render::SetAlphaBlend(false);
 	}
 
 	void Serialize(CBitStream@ to_send)
@@ -721,7 +748,7 @@ bool isColliding(const Vec3f&in position, const Vec3f&in next_position)
 
 				if (world.isTileSolidOrOOB(x, y, z))
 				{
-					DrawHitbox(x, y, z, 0x8800FF00);
+					//DrawHitbox(x, y, z, 0x8800FF00);
 					return true;
 				}
 			}

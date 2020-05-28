@@ -60,6 +60,7 @@ namespace Loading
 				Texture::createFromFile("BLOCK_MOUSE", "Textures/BlockMouse.png");
 				Texture::createFromFile("DEBUG", "Textures/Debug.png");
 				Texture::createFromFile("SOLID", "Sprites/pixel.png");
+				Texture::createFromFile("NickNamesFont", "NickNamesFont.png");
 
 				InitBlocks();
 
@@ -205,8 +206,8 @@ namespace Loading
 				my_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
 				my_player.SetBlob(getLocalPlayerBlob());
 				my_player.SetPlayer(getLocalPlayer());
-				my_player.GenerateBlockMenu();
 				my_player.MakeModel();
+				my_player.GenerateBlockMenu();
 
 				getControls().setMousePosition(Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f));
 

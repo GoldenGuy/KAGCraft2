@@ -10,6 +10,8 @@ class Frustum
 	Plane plane3;
 	Plane plane4;
 	Plane plane5;
+
+	Vertex[] frustum_shape;
 	
 	Frustum(){}
 	
@@ -108,6 +110,50 @@ class Frustum
 		if (plane5.DistanceToPoint(point) < -radius)
 			return false;
 		return true;
+	}
+
+	void GenerateShape()
+	{
+		Vec3f FLU = camera.frustum.getFarLeftUp();
+		Vec3f FLD = camera.frustum.getFarLeftDown();
+		Vec3f FRU = camera.frustum.getFarRightUp();
+		Vec3f FRD = camera.frustum.getFarRightDown();
+		Vec3f NLU = camera.frustum.getNearLeftUp();
+		Vec3f NLD = camera.frustum.getNearLeftDown();
+		Vec3f NRU = camera.frustum.getNearRightUp();
+		Vec3f NRD = camera.frustum.getNearRightDown();
+
+		camera.frustum.frustum_shape.clear();
+
+		camera.frustum.frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 0, 0, 0x45AA00AA));
+		camera.frustum.frustum_shape.push_back(Vertex(FRU.x, FRU.y, FRU.z, 1, 0, 0x45AA00AA));
+		camera.frustum.frustum_shape.push_back(Vertex(FRD.x, FRD.y, FRD.z,	1, 1, 0x45AA00AA));
+		camera.frustum.frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z, 0, 1, 0x45AA00AA));
+
+		camera.frustum.frustum_shape.push_back(Vertex(NLU.x, NLU.y, NLU.z, 0, 0, 0x45AA00AA));
+		camera.frustum.frustum_shape.push_back(Vertex(NRU.x, NRU.y, NRU.z, 1, 0, 0x45AA00AA));
+		camera.frustum.frustum_shape.push_back(Vertex(NRD.x, NRD.y, NRD.z,	1, 1, 0x45AA00AA));
+		camera.frustum.frustum_shape.push_back(Vertex(NLD.x, NLD.y, NLD.z, 0, 1, 0x45AA00AA));
+
+		camera.frustum.frustum_shape.push_back(Vertex(NLU.x, NLU.y, NLU.z, 0, 0, 0x4500AAAA));
+		camera.frustum.frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 1, 0, 0x4500AAAA));
+		camera.frustum.frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z,	1, 1, 0x4500AAAA));
+		camera.frustum.frustum_shape.push_back(Vertex(NLD.x, NLD.y, NLD.z, 0, 1, 0x4500AAAA));
+
+		camera.frustum.frustum_shape.push_back(Vertex(FRU.x, FRU.y, FRU.z, 0, 0, 0x4500AAAA));
+		camera.frustum.frustum_shape.push_back(Vertex(NRU.x, NRU.y, NRU.z, 1, 0, 0x4500AAAA));
+		camera.frustum.frustum_shape.push_back(Vertex(NRD.x, NRD.y, NRD.z,	1, 1, 0x4500AAAA));
+		camera.frustum.frustum_shape.push_back(Vertex(FRD.x, FRD.y, FRD.z, 0, 1, 0x4500AAAA));
+
+		camera.frustum.frustum_shape.push_back(Vertex(FLD.x, FLD.y, FLD.z, 0, 0, 0x45FF00AA));
+		camera.frustum.frustum_shape.push_back(Vertex(FRD.x, FRD.y, FRD.z, 1, 0, 0x45FF00AA));
+		camera.frustum.frustum_shape.push_back(Vertex(NRD.x, NRD.y, NRD.z,	1, 1, 0x45FF00AA));
+		camera.frustum.frustum_shape.push_back(Vertex(NLD.x, NLD.y, NLD.z, 0, 1, 0x45FF00AA));
+
+		camera.frustum.frustum_shape.push_back(Vertex(NLU.x, NLU.y, NLU.z, 0, 0, 0x45FF00AA));
+		camera.frustum.frustum_shape.push_back(Vertex(NRU.x, NRU.y, NRU.z, 1, 0, 0x45FF00AA));
+		camera.frustum.frustum_shape.push_back(Vertex(FRU.x, FRU.y, FRU.z,	1, 1, 0x45FF00AA));
+		camera.frustum.frustum_shape.push_back(Vertex(FLU.x, FLU.y, FLU.z, 0, 1, 0x45FF00AA));
 	}
 
 	// stolen from irrlicht :)

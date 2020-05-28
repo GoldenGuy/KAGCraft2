@@ -1053,6 +1053,7 @@ void client_SetBlock(CPlayer@ player, uint8 block, const Vec3f&in pos)
     
     if(!isServer())
     {
+        world.setBlock(pos.x, pos.y, pos.z, block);
         CBitStream to_send;
         to_send.write_netid(player.getNetworkID());
         to_send.write_u8(block);
