@@ -1,4 +1,7 @@
 
+#include "PlayerRenderings.as"
+#include "NickNames.as"
+
 const float acceleration = 0.06f;
 const float jump_acceleration = 0.35f;
 const float friction = 0.75f;
@@ -46,6 +49,15 @@ class Player
 	float dig_timer;
 	uint8 hand_block = Block::stone;
 
+	NickName nn;
+	
+	SMesh mesh_head;
+	SMesh mesh_body;
+	SMesh mesh_arm_right;
+	SMesh mesh_arm_left;
+	SMesh mesh_leg_right;
+	SMesh mesh_leg_left;
+
 	Player(){}
 
 	void SetBlob(CBlob@ _blob)
@@ -56,6 +68,17 @@ class Player
 	void SetPlayer(CPlayer@ _player)
 	{
 		@player = @_player;
+	}
+
+	void MakeNickname()
+	{
+		nn = NickName(player.getUsername());
+	}
+
+	void MakeModel()
+	{
+		MakeNickname();
+
 	}
 
     void Update()
@@ -426,7 +449,7 @@ class Player
 		old_pos = old_pos.Lerp(pos, getInterFrameTime());
 	}
 
-	void Render(Vertex[]&inout players_verts)
+	/*void Render(Vertex[]&inout players_verts)
 	{
 		AABB pl_box = AABB(old_pos-Vec3f(player_radius,0,player_radius), old_pos+Vec3f(player_radius,player_height,player_radius));
 		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.min.z,	0,	1,	color_white));
@@ -458,6 +481,18 @@ class Player
 		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.min.z,	1,	1,	color_white));
 		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.min.z,	1,	0,	color_white));
 		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.max.z,	0,	0,	color_white));
+	}*/
+
+	void Render()
+	{
+		float[] billboard_model;
+		Matrix::MakeIdentity(billboard_model);
+		//Matrix::SetTranslation(billboard_model, old_pos.x, old_pos.y, old_pos.z);
+		//Matrix::SetRotationDegrees(billboard_model, -camera.frustum_dir_y, camera.frustum_dir_x-45, 0);
+		Render::SetModelTransform(billboard_model);
+		//camera.camera_model.RenderMeshWithMaterial();
+		//nn.Mesh.BuildMesh();
+		nn.Mesh.RenderMesh();
 	}
 
 	void Serialize(CBitStream@ to_send)
@@ -690,35 +725,3 @@ bool isColliding(const Vec3f&in position, const Vec3f&in next_position)
 	}
 	return false;
 }
-
-Vertex[] block_mouse = {
-		Vertex(-0.02f,	-0.02f,	-0.02f,	0,	1,	color_white),
-		Vertex(-0.02f,	1.02f,	-0.02f,	0,	0,	color_white),
-		Vertex(1.02f,	1.02f,	-0.02f,	1,	0,	color_white),
-		Vertex(1.02f,	-0.02f,	-0.02f,	1,	1,	color_white),
-
-		Vertex(1.02f,	-0.02f,	1.02f,	0,	1,	color_white),
-		Vertex(1.02f,	1.02f,	1.02f,	0,	0,	color_white),
-		Vertex(-0.02f,	1.02f,	1.02f,	1,	0,	color_white),
-		Vertex(-0.02f,	-0.02f,	1.02f,	1,	1,	color_white),
-
-		Vertex(-0.02f,	-0.02f,	1.02f,	0,	1,	color_white),
-		Vertex(-0.02f,	1.02f,	1.02f,	0,	0,	color_white),
-		Vertex(-0.02f,	1.02f,	-0.02f,	1,	0,	color_white),
-		Vertex(-0.02f,	-0.02f,	-0.02f,	1,	1,	color_white),
-
-		Vertex(1.02f,	-0.02f,	-0.02f,	0,	1,	color_white),
-		Vertex(1.02f,	1.02f,	-0.02f,	0,	0,	color_white),
-		Vertex(1.02f,	1.02f,	1.02f,	1,	0,	color_white),
-		Vertex(1.02f,	-0.02f,	1.02f,	1,	1,	color_white),
-
-		Vertex(-0.02f,	1.02f,	-0.02f,	0,	1,	color_white),
-		Vertex(-0.02f,	1.02f,	1.02f,	0,	0,	color_white),
-		Vertex(1.02f,	1.02f,	1.02f,	1,	0,	color_white),
-		Vertex(1.02f,	1.02f,	-0.02f,	1,	1,	color_white),
-
-		Vertex(-0.02f,	-0.02f,	1.02f,	0,	1,	color_white),
-		Vertex(-0.02f,	-0.02f,	-0.02f,	0,	0,	color_white),
-		Vertex(1.02f,	-0.02f,	-0.02f,	1,	0,	color_white),
-		Vertex(1.02f,	-0.02f,	1.02f,	1,	1,	color_white)
-};

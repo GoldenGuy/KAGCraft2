@@ -276,18 +276,6 @@ void Render(int id)
 	rules.set_f32("interFrameTime", Maths::Clamp01(rules.get_f32("interFrameTime")+getRenderApproximateCorrectionFactor()));
 	rules.add_f32("interGameTime", getRenderApproximateCorrectionFactor());
 
-	Vertex[] players_verts;
-	if(thirdperson)
-	{
-		my_player.RenderUpdate();
-		my_player.Render(players_verts);
-	}
-	for(int i = 0; i < other_players.size(); i++)
-	{
-		other_players[i].RenderUpdate();
-		other_players[i].Render(players_verts);
-	}
-
 	Render::SetTransformScreenspace();
 
 	Render::RawQuads("SOLID", Fill);
@@ -298,11 +286,11 @@ void Render(int id)
 	Render::SetAlphaBlend(false);
 	Render::SetBackfaceCull(true);
 	
-	//Matrix::MakeIdentity(model);
+	Matrix::MakeIdentity(model);
 	//Matrix::SetTranslation(model, camera.interpolated_pos.x, camera.interpolated_pos.y, camera.interpolated_pos.z);
 	//Render::SetTransform(model, camera.view, camera.projection);
 	//Render::RawQuads("Sky_Texture", SkyBox);
-	Matrix::MakeIdentity(model);
+	//Matrix::MakeIdentity(model);
 	//Render::SetModelTransform(model);
 	Render::SetTransform(model, camera.view, camera.projection);
 
@@ -325,9 +313,9 @@ void Render(int id)
 					generated++;
 				}
 			}*/
-			chunks_to_render[i].Render();
+			//chunks_to_render[i].Render();
 		}
-		Render::RawQuads("SOLID", players_verts);
+		//Render::RawQuads("SOLID", players_verts);
 	}
 
 	Render::SetAlphaBlend(true);
@@ -341,6 +329,23 @@ void Render(int id)
 		Render::RawQuads("BLOCK_MOUSE", block_mouse);
 		Matrix::MakeIdentity(model);
 		Render::SetModelTransform(model);
+	}
+
+	world.map_material.SetVideoMaterial();
+	//Vertex[] players_verts;
+	//if(thirdperson)
+	{
+		my_player.RenderUpdate();
+		//my_player.Render(players_verts);
+		//Render::SetModelTransform(billboard_model);
+		my_player.Render();
+	}
+	for(int i = 0; i < other_players.size(); i++)
+	{
+		other_players[i].RenderUpdate();
+		//other_players[i].Render(players_verts);
+		//Render::SetModelTransform(billboard_model);
+		other_players[i].Render();
 	}
 
 	//Render::RawQuads("SOLID", HitBoxes);

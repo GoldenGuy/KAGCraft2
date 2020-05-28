@@ -206,6 +206,7 @@ namespace Loading
 				my_player.SetBlob(getLocalPlayerBlob());
 				my_player.SetPlayer(getLocalPlayer());
 				my_player.GenerateBlockMenu();
+				my_player.MakeModel();
 
 				getControls().setMousePosition(Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f));
 
