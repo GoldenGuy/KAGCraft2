@@ -224,6 +224,26 @@ namespace Loading
 
 				Render::addScript(Render::layer_background, "Client.as", "Render", 1);
 
+				for(int i = 0; i < getPlayersCount(); i++)
+				{
+					CPlayer@ pl = getPlayer(i);
+					if(pl !is getLocalPlayer())
+					{
+						Player new_player();
+						new_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
+						new_player.SetPlayer(pl);
+						new_player.MakeNickname();
+						new_player.MakeModel();
+						other_players.push_back(@new_player);
+					}
+				}
+
+				CBitStream to_send;
+				to_send.write_netid(getLocalPlayer().getNetworkID());
+				this.SendCommand(this.getCommandID("C_CreatePlayer"), to_send);
+
+				//getLocalPlayer().client_RequestSpawn();
+
 				loading_string = "Done!";
 				state = done;
 

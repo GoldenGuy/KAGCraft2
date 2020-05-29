@@ -8,6 +8,7 @@ void onInit(CRules@ this)
 	this.addCommandID("S_SendMapPacket");
 	this.addCommandID("C_ChangeBlock");
 	this.addCommandID("S_ChangeBlock");
+	this.addCommandID("C_CreatePlayer");
 	this.addCommandID("C_PlayerUpdate");
 	this.addCommandID("S_PlayerUpdate");
 
