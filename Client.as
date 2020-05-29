@@ -54,6 +54,7 @@ void onTick(CRules@ this)
 		if(!isServer() && getPlayersCount() > 1)
 		{
 			CBitStream to_send;
+			//to_send.write_netid(getLocalPlayer().getNetworkID());
 			my_player.Serialize(@to_send);
 			this.SendCommand(this.getCommandID("C_PlayerUpdate"), to_send, false);
 		}
@@ -136,8 +137,29 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 		map_packet.SetBitIndex(params.getBitIndex());
 		world.map_packets.push_back(@map_packet);
 	}
+	else if(cmd == this.getCommandID("C_CreatePlayer"))
+	{
+		u16 netid = params.read_netid();
+		CPlayer@ _player = getPlayerByNetworkId(netid);
+		if(_player !is null && _player !is getLocalPlayer())
+		{
+			print("created "+_player.getUsername());
+			Player new_player();
+			new_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
+			new_player.SetPlayer(_player);
+			new_player.MakeNickname();
+			new_player.MakeModel();
+			other_players.push_back(@new_player);
+		}
+	}
 	else if(cmd == this.getCommandID("S_PlayerUpdate"))
 	{
+		// ignore while loading
+		if(Loading::isLoading)
+		{
+			return;
+		}
+		
 		u16 size = params.read_u16();
 		for(int i = 0; i < size; i++)
 		{
@@ -145,31 +167,22 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 			CPlayer@ _player = getPlayerByNetworkId(netid);
 			if(_player !is null && _player !is getLocalPlayer())
 			{
-				bool exists = false;
 				for(int i = 0; i < other_players.size(); i++)
 				{
 					Player@ __player = other_players[i];
 					if(__player.player is _player)
 					{
 						__player.UnSerialize(params);
-						exists = true;
 						break;
 					}
-				}
-				// create new player class
-				if(!exists)
-				{
-					Player new_player();
-					new_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
-					new_player.SetPlayer(_player);
-					new_player.MakeNickname();
-					new_player.MakeModel();
-					other_players.push_back(@new_player);
 				}
 			}
 			else
 			{
 				float temp_float = params.read_f32();
+				temp_float = params.read_f32();
+				temp_float = params.read_f32();
+				temp_float = params.read_f32();
 				temp_float = params.read_f32();
 				temp_float = params.read_f32();
 				temp_float = params.read_f32();
@@ -252,21 +265,6 @@ void Render(int id)
 		chunks_to_render[i].Render();
 	}
 
-	// render all block diggers
-	Render::SetAlphaBlend(true);
-	Render::RawQuads("Block_Digger", diggers);
-
-	// render your block cursor
-	if(draw_block_mouse)
-	{
-		Matrix::MakeIdentity(model);
-		Matrix::SetTranslation(model, block_mouse_pos.x, block_mouse_pos.y, block_mouse_pos.z);
-		Render::SetModelTransform(model);
-		Render::RawQuads("BLOCK_MOUSE", block_mouse);
-	}
-
-	Render::SetAlphaBlend(false);
-
 	// render yourself only while in thirdperson
 	if(thirdperson)
 	{
@@ -284,6 +282,19 @@ void Render(int id)
 	Render::SetAlphaBlend(true);
 	Matrix::MakeIdentity(model);
 	Render::SetModelTransform(model);
+
+	// render all block diggers
+	Render::RawQuads("Block_Digger", diggers);
+
+	// render your block cursor
+	if(draw_block_mouse)
+	{
+		Matrix::MakeIdentity(model);
+		Matrix::SetTranslation(model, block_mouse_pos.x, block_mouse_pos.y, block_mouse_pos.z);
+		Render::SetModelTransform(model);
+		Render::RawQuads("BLOCK_MOUSE", block_mouse);
+	}
+
 	RenderSectors();
 
 	// render frustum shape

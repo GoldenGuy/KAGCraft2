@@ -97,7 +97,7 @@ class Player
 		player_material.SetFlag(SMaterial::ZWRITE_ENABLE, true);
 		player_material.SetFlag(SMaterial::BACK_FACE_CULLING, true);
 		player_material.SetFlag(SMaterial::FOG_ENABLE, true);
-		player_material.SetMaterialType(SMaterial::TRANSPARENT_VERTEX_ALPHA);
+		player_material.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
 
 		mesh_head.Clear();
 		mesh_head.SetMaterial(player_material);

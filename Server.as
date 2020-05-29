@@ -39,9 +39,28 @@ void onTick(CRules@ this)
 			to_send.write_u16(size);
 			for(int i = 0; i < size; i++)
 			{
+				//to_send.write_netid(players[i].player.getNetworkID());
 				players[i].Serialize(@to_send);
 			}
 			this.SendCommand(this.getCommandID("S_PlayerUpdate"), to_send, true);
+
+			/*if(size < getPlayersCount())
+			{
+				for(int i = 0; i < getPlayersCount(); i++)
+				{
+					CPlayer@ pl = getPlayer(i);
+					if(pl is null) continue;
+
+					if(getServerPlayer(pl) !is null) continue;
+					else
+					{
+						ServerPlayer new_player();
+						new_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
+						new_player.SetPlayer(pl);
+						players.push_back(@new_player);
+					}
+				}
+			}*/
 		}
 	}
 	if(players_to_send.size() > 0)
@@ -112,13 +131,35 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 			players_to_send.push_back(MapSender(player, 0));
 		}
 	}
+	else if(cmd == this.getCommandID("C_CreatePlayer"))
+	{
+		u16 netid = params.read_netid();
+		if(isClient())
+		{
+			return;
+		}
+		CPlayer@ player = getPlayerByNetworkId(netid);
+		if(player !is null)
+		{
+			print("created "+player.getUsername());
+			ServerPlayer new_player();
+			new_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
+			new_player.SetPlayer(player);
+			players.push_back(@new_player);
+		}
+	}
 	else if(cmd == this.getCommandID("C_PlayerUpdate"))
 	{
 		uint16 netid = params.read_netid();
 		CPlayer@ _player = getPlayerByNetworkId(netid);
 		if(_player !is null)
 		{
-			for(int i = 0; i < players.size(); i++)
+			ServerPlayer@ __player = getServerPlayer(_player);
+			if(__player !is null)
+			{
+				__player.UnSerialize(params);
+			}
+			/*for(int i = 0; i < players.size(); i++)
 			{
 				ServerPlayer@ __player = players[i];
 				if(__player.player is _player)
@@ -126,7 +167,7 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 					__player.UnSerialize(params);
 					break;
 				}
-			}
+			}*/
 		}
 	}
 	else if(cmd == this.getCommandID("C_ChangeBlock"))
@@ -164,7 +205,7 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 	}
 }
 
-void onNewPlayerJoin(CRules@ this, CPlayer@ player)
+/*void onNewPlayerJoin(CRules@ this, CPlayer@ player)
 {
 	getSecurity().sendSeclevs(player);
 	CBlob@ blob = server_CreateBlob("husk");
@@ -186,7 +227,27 @@ void onNewPlayerJoin(CRules@ this, CPlayer@ player)
 	new_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
 	new_player.SetPlayer(player);
 	players.push_back(@new_player);
+}*/
+
+void onNewPlayerJoin(CRules@ this, CPlayer@ player)
+{
+	getSecurity().sendSeclevs(player);
+	CBlob@ blob = server_CreateBlob("husk");
+	if(blob !is null)
+	{
+		blob.server_SetPlayer(player);
+	}
 }
+
+// better than using a command i think
+/*void onPlayerRequestSpawn( CRules@ this, CPlayer@ player )
+{
+	print("added   "+players.size());
+	ServerPlayer new_player();
+	new_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
+	new_player.SetPlayer(player);
+	players.push_back(@new_player);
+}*/
 
 void onPlayerLeave(CRules@ this, CPlayer@ player)
 {
