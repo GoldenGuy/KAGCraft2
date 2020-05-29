@@ -81,19 +81,23 @@ class Player
 			player.getUsername() == "dragonfriend18" ||
 			player.getUsername() == "Vamist" ||
 			player.getUsername() == "guift" ||
+			player.getUsername() == "Netormozi_snekersni" ||
 			player.getUsername() == "GoldenGuy")
 		{
-			player_material.AddTexture("Textures/skin_"+player.getUsername()+".png", 0);
+			player_material.AddTexture("Textures/Skins/skin_"+player.getUsername()+".png", 0);
 		}
 		else
 		{
-			player_material.AddTexture("Textures/Default/skin"+XORRandom(8)+".png", 0);
+			player_material.AddTexture("Textures/Skins/Default/skin"+XORRandom(8)+".png", 0);
 		}
+
 		player_material.DisableAllFlags();
 		player_material.SetFlag(SMaterial::COLOR_MASK, true);
 		player_material.SetFlag(SMaterial::ZBUFFER, true);
 		player_material.SetFlag(SMaterial::ZWRITE_ENABLE, true);
-		player_material.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
+		player_material.SetFlag(SMaterial::BACK_FACE_CULLING, true);
+		player_material.SetFlag(SMaterial::FOG_ENABLE, true);
+		player_material.SetMaterialType(SMaterial::TRANSPARENT_VERTEX_ALPHA);
 
 		mesh_head.Clear();
 		mesh_head.SetMaterial(player_material);
@@ -513,7 +517,6 @@ class Player
 					crouching_pos_min.y -= player_radius-0.01f;
 					crouching_pos_max.x += player_radius-0.01f;
 					crouching_pos_max.y += player_radius-0.01f;
-					pos.Print();
 					pos = Vec3f(Maths::Clamp(pos.x, crouching_pos_min.x, crouching_pos_max.x), pos.y, Maths::Clamp(pos.z, crouching_pos_min.y, crouching_pos_max.y));
 				}
 			}
@@ -575,7 +578,7 @@ class Player
 		Render::SetModelTransform(model_matr);
 		mesh_head.RenderMesh();
 
-		f32 vem_mult = vel.Length()*120.0f;
+		f32 vem_mult = Maths::Min(Maths::Pow(vel.Length()*30.0f, 1.75f), 75);
 		f32 limb_rotation = Maths::Cos(getInterGameTime()/3.5f)*vem_mult;
 
 		Matrix::SetRotationDegrees(model_matr, limb_rotation, dir_x, 0);
@@ -612,6 +615,9 @@ class Player
 		to_send.write_f32(pos.x);
 		to_send.write_f32(pos.y);
 		to_send.write_f32(pos.z);
+		to_send.write_f32(vel.x);
+		to_send.write_f32(vel.y);
+		to_send.write_f32(vel.z);
 		to_send.write_f32(dir_x);
 		to_send.write_f32(dir_y);
 		to_send.write_bool(Crouch);
@@ -631,6 +637,9 @@ class Player
 		pos.x = received.read_f32();
 		pos.y = received.read_f32();
 		pos.z = received.read_f32();
+		vel.x = received.read_f32();
+		vel.y = received.read_f32();
+		vel.z = received.read_f32();
 		dir_x = received.read_f32();
 		dir_y = received.read_f32();
 		Crouch = received.read_bool();
