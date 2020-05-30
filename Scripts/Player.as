@@ -13,6 +13,10 @@ const float player_diameter = player_radius*2;
 const float arm_distance = 5.0f;
 const float max_dig_time = 100;
 const float mouse_sensitivity = 0.16;
+
+bool move_mouse = false;
+
+bool admin = false;
 bool thirdperson = false;
 bool block_menu_open = false;
 bool fly = false;
@@ -165,21 +169,35 @@ class Player
 		CControls@ c = getControls();
 		Driver@ d = getDriver();
 
-		if(blob !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null && !block_menu_open)
+		if(blob !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null && !block_menu_open && !IsChatPromptActive() && !scoreboard_open)
 		{
-			Vec2f ScrMid = d.getScreenCenterPos();
-			Vec2f dir = (c.getMouseScreenPos() - ScrMid);
-			
-			dir_x += dir.x*mouse_sensitivity;
-			if(dir_x < 0) dir_x += 360;
-			dir_x = dir_x % 360;
-			dir_y = Maths::Clamp(dir_y-(dir.y*mouse_sensitivity),-90,90);
-			
-			c.setMousePosition(ScrMid/*-Vec2f(3,26)*/);
+			if(!move_mouse)
+			{
+				Vec2f ScrMid = d.getScreenCenterPos();
+				Vec2f dir = (c.getMouseScreenPos() - ScrMid);
+				
+				dir_x += dir.x*mouse_sensitivity;
+				if(dir_x < 0) dir_x += 360;
+				dir_x = dir_x % 360;
+				dir_y = Maths::Clamp(dir_y-(dir.y*mouse_sensitivity),-90,90);
+				
+				c.setMousePosition(ScrMid/*-Vec2f(3,26)*/);
 
-			look_dir = Vec3f(	Maths::Sin((dir_x)*piboe)*Maths::Cos(dir_y*piboe),
-								Maths::Sin(dir_y*piboe),
-								Maths::Cos((dir_x)*piboe)*Maths::Cos(dir_y*piboe));
+				look_dir = Vec3f(	Maths::Sin((dir_x)*piboe)*Maths::Cos(dir_y*piboe),
+									Maths::Sin(dir_y*piboe),
+									Maths::Cos((dir_x)*piboe)*Maths::Cos(dir_y*piboe));
+			}
+			else
+			{
+				c.setMousePosition(d.getScreenCenterPos()/*-Vec2f(3,26)*/);
+				move_mouse = false;
+			}
+			getHUD().HideCursor();
+		}
+		else
+		{
+			getHUD().ShowCursor();
+			move_mouse = true;
 		}
 
 		Vec3f cam_pos = pos+Vec3f(0,eye_height,0);
@@ -218,6 +236,7 @@ class Player
 						if(block_menu_blocks[i] == hand_block)
 						{
 							picked_block_pos = block_menu_start + Vec2f((i % block_menu_size.x) * block_menu_tile_size.x, int(i / block_menu_size.x) * block_menu_tile_size.y);
+							break;
 						}
 					}
 				}
@@ -241,7 +260,7 @@ class Player
 			// ---
 
 			// player controls ---
-			if(blob !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null && !block_menu_open)
+			if(blob !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null && !block_menu_open && !IsChatPromptActive() && !scoreboard_open)
 			{
 				// block manipulations ---
 				{
@@ -291,7 +310,14 @@ class Player
 									}
 									if(place)
 									{
-										client_SetBlock(player, hand_block, pos_to_place);
+										if(pos_to_place.y >= world.map_height)
+										{
+											AddUText("Cant build higher than map height limit! ("+world.map_height+" blocks)", 0xFFFF0000, 60);
+										}
+										else
+										{
+											client_SetBlock(player, hand_block, pos_to_place);
+										}
 									}
 								}
 								else
@@ -410,9 +436,55 @@ class Player
 
 			// misc
 			{
-				if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
-				if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
+				if(c.isKeyJustPressed(MOUSE_SCROLL_UP) || c.isKeyJustPressed(MOUSE_SCROLL_DOWN))
+				{
+					if(c.isKeyJustPressed(MOUSE_SCROLL_UP))
+					{
+						hand_block = Maths::Max(1, hand_block-1);
+						while(!Block::allowed_to_build[hand_block])
+						{
+							hand_block -= 1;
+						}
+					}
+					else if(c.isKeyJustPressed(MOUSE_SCROLL_DOWN))
+					{
+						hand_block = Maths::Min(Block::blocks_count-2, hand_block+1);
+						while(!Block::allowed_to_build[hand_block])
+						{
+							hand_block += 1;
+						}
+					}
+
+					for(int i = 0; i < block_menu_blocks.size(); i++)
+					{
+						if(block_menu_blocks[i] == hand_block)
+						{
+							picked_block_pos = block_menu_start + Vec2f((i % block_menu_size.x) * block_menu_tile_size.x, int(i / block_menu_size.x) * block_menu_tile_size.y);
+							break;
+						}
+					}
+				}
+
 				if(c.isKeyJustPressed(KEY_F5)) thirdperson = !thirdperson;
+
+				if(scoreboard_open)
+				{
+					if(getRules().get_bool("scoreboard_hover"))
+					{
+						if(blob.isKeyJustPressed(key_action2))
+						{
+							string name = getRules().get_string("scoreboard_clipboard");
+							CopyToClipboard(name);
+							AddUText("Copied \""+name+"\" to clipboard!", 0xFF60FF60, 70);
+						}
+					}
+				}
+				
+				if(admin)
+				{
+					if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
+					if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
+				}
 			}
 			// ---
 		}
@@ -534,40 +606,6 @@ class Player
 	{
 		render_pos = old_pos.Lerp(pos, getInterFrameTime());
 	}
-
-	/*void Render(Vertex[]&inout players_verts)
-	{
-		AABB pl_box = AABB(old_pos-Vec3f(player_radius,0,player_radius), old_pos+Vec3f(player_radius,player_height,player_radius));
-		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.min.z,	0,	1,	color_white));
-		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.max.y,	pl_box.min.z,	1,	1,	color_white));
-		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.max.y,	pl_box.min.z,	1,	0,	color_white));
-		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.min.z,	0,	0,	color_white));
-
-		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.max.z,	0,	1,	color_white));
-		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.max.y,	pl_box.max.z,	1,	1,	color_white));
-		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.max.y,	pl_box.max.z,	1,	0,	color_white));
-		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.max.z,	0,	0,	color_white));
-
-		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.max.z,	0,	1,	color_white));
-		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.max.y,	pl_box.max.z,	1,	1,	color_white));
-		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.max.y,	pl_box.min.z,	1,	0,	color_white));
-		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.min.z,	0,	0,	color_white));
-
-		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.min.z,	0,	1,	color_white));
-		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.max.y,	pl_box.min.z,	1,	1,	color_white));
-		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.max.y,	pl_box.max.z,	1,	0,	color_white));
-		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.max.z,	0,	0,	color_white));
-
-		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.max.y,	pl_box.min.z,	0,	1,	color_white));
-		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.max.y,	pl_box.max.z,	1,	1,	color_white));
-		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.max.y,	pl_box.max.z,	1,	0,	color_white));
-		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.max.y,	pl_box.min.z,	0,	0,	color_white));
-
-		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.max.z,	0,	1,	color_white));
-		players_verts.push_back(Vertex(pl_box.min.x,	pl_box.min.y,	pl_box.min.z,	1,	1,	color_white));
-		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.min.z,	1,	0,	color_white));
-		players_verts.push_back(Vertex(pl_box.max.x,	pl_box.min.y,	pl_box.max.z,	0,	0,	color_white));
-	}*/
 
 	void RenderPlayer()
 	{
@@ -697,6 +735,51 @@ class Player
 		verts.push_back(Vertex(digging_pos.x+1+s,	digging_pos.y-s,	digging_pos.z+1+s,	u_step,	1,	color_white));
 	}
 
+	void RenderHandBlock()
+	{
+		float u1 = Block::u_sides_start[hand_block];
+		float u2 = Block::u_sides_end[hand_block];
+		float v1 = Block::v_sides_start[hand_block];
+		float v2 = Block::v_sides_end[hand_block];
+
+		Vec2f screen_pos = Vec2f(80, getScreenHeight()-80);
+		Vec2f scale = Vec2f(100,100);
+
+		Vertex[] verts;
+
+		if(Block::plant[hand_block])
+		{
+			verts.push_back(Vertex(screen_pos.x-scale.x*0.34f,	screen_pos.y+scale.y*0.34f, 0, u1,	v2,	top_scol));
+			verts.push_back(Vertex(screen_pos.x-scale.x*0.34f,	screen_pos.y-scale.y*0.34f, 0, u1,	v1,	top_scol));
+			verts.push_back(Vertex(screen_pos.x+scale.x*0.34f,	screen_pos.y-scale.y*0.34f, 0, u2,	v1,	top_scol));
+			verts.push_back(Vertex(screen_pos.x+scale.x*0.34f,	screen_pos.y+scale.y*0.34f, 0, u2,	v2,	top_scol));
+		}
+		else
+		{
+			verts.push_back(Vertex(screen_pos.x-scale.x*0.35f,	screen_pos.y+scale.y*0.27f-scale.y*0.05f,	0, u1,	v2,	front_scol));
+			verts.push_back(Vertex(screen_pos.x-scale.x*0.35f,	screen_pos.y-scale.y*0.18f,					0, u1,	v1,	front_scol));
+			verts.push_back(Vertex(screen_pos.x, 				screen_pos.y,								0, u2,	v1,	front_scol));
+			verts.push_back(Vertex(screen_pos.x,				screen_pos.y+scale.y*0.45f-scale.y*0.05f,	0, u2,	v2,	front_scol));
+
+			verts.push_back(Vertex(screen_pos.x,				screen_pos.y+scale.y*0.45f-scale.y*0.05f,	0, u1,	v2,	left_scol));
+			verts.push_back(Vertex(screen_pos.x,				screen_pos.y,								0, u1,	v1,	left_scol));
+			verts.push_back(Vertex(screen_pos.x+scale.x*0.35f, 	screen_pos.y-scale.y*0.18f,					0, u2,	v1,	left_scol));
+			verts.push_back(Vertex(screen_pos.x+scale.x*0.35f,	screen_pos.y+scale.y*0.27f-scale.y*0.05f,	0, u2,	v2,	left_scol));
+
+			u1 = Block::u_top_start[hand_block];
+			u2 = Block::u_top_end[hand_block];
+			v1 = Block::v_top_start[hand_block];
+			v2 = Block::v_top_end[hand_block];
+
+			verts.push_back(Vertex(screen_pos.x-scale.x*0.35f,	screen_pos.y-scale.y*0.18f,	0, u1,	v1,	top_scol));
+			verts.push_back(Vertex(screen_pos.x,				screen_pos.y-scale.y*0.36f,	0, u2,	v1,	top_scol));
+			verts.push_back(Vertex(screen_pos.x+scale.x*0.35f,	screen_pos.y-scale.y*0.18f,	0, u2,	v2,	top_scol));
+			verts.push_back(Vertex(screen_pos.x,				screen_pos.y,				0, u1,	v2,	top_scol));
+		}
+
+		Render::RawQuads("Block_Textures", verts);
+	}
+
 	void GenerateBlockMenu()
 	{
 		block_menu_blocks.clear();
@@ -815,14 +898,7 @@ void CollisionResponse(Vec3f&inout position, Vec3f&inout velocity)
 		}
 		velocity.y = 0;
 	}
-	/*if(world.isTileSolid(position.x, position.y, position.z) && !world.isTileSolid(position.x, position.y+1, position.z))
-	{
-		position.y += 1;
-	}
-	else*/
-	{
-		position.y += velocity.y;
-	}
+	position.y += velocity.y;
 }
 
 bool isColliding(const Vec3f&in position, const Vec3f&in next_position)

@@ -11,7 +11,7 @@
 #include "Camera.as"
 #include "Player.as"
 #include "Scoreboard.as"
-#include "UtilitySectors.as"
+#include "UtilityStuff.as"
 #include "Sound3D.as"
 
 World@ world;
@@ -88,7 +88,9 @@ void onTick(CRules@ this)
 		}
 
 		UpdateSectors();
+		UpdateUTexts();
 	}
+	scoreboard_open = false;
 }
 
 void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
@@ -295,13 +297,15 @@ void Render(int id)
 		Render::RawQuads("BLOCK_MOUSE", block_mouse);
 	}
 
+	Matrix::MakeIdentity(model);
+	Render::SetModelTransform(model);
 	RenderSectors();
 
 	// render frustum shape
 	if(hold_frustum)
 	{
 		Render::SetBackfaceCull(false);
-		Matrix::MakeIdentity(model);
+		//Matrix::MakeIdentity(model);
 		Matrix::SetTranslation(model, camera.frustum_pos.x, camera.frustum_pos.y, camera.frustum_pos.z);
 		Render::SetModelTransform(model);
 		Render::RawQuads("SOLID", camera.frustum.frustum_shape);
@@ -318,12 +322,19 @@ void Render(int id)
 	rules.add_f32("interGameTime", getRenderApproximateCorrectionFactor());
 
 	Render::SetTransformScreenspace();
+	Render::ClearZ();
 	
-	GUI::SetFont("menu");
-	GUI::DrawShadowedText("Pos: "+my_player.pos.IntString(), Vec2f(20,20), color_white);
-	GUI::DrawShadowedText("Vel: "+my_player.vel.FloatString(), Vec2f(20,40), color_white);
-	GUI::DrawShadowedText("Ang: "+my_player.look_dir.FloatString(), Vec2f(20,60), color_white);
-	GUI::DrawShadowedText("dir_x: "+my_player.dir_x, Vec2f(20,80), color_white);
+	//GUI::SetFont("menu");
+	//GUI::DrawShadowedText("Pos: "+my_player.pos.IntString(), Vec2f(20,20), color_white);
+	//GUI::DrawShadowedText("Vel: "+my_player.vel.FloatString(), Vec2f(20,40), color_white);
+	//GUI::DrawShadowedText("Ang: "+my_player.look_dir.FloatString(), Vec2f(20,60), color_white);
+	//GUI::DrawShadowedText("dir_x: "+my_player.dir_x, Vec2f(20,80), color_white);
+
+	if(!g_videorecording)
+	{
+		RenderUTexts();
+		my_player.RenderHandBlock();
+	}
 }
 
 int max_generate = 4;

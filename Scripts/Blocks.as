@@ -193,6 +193,7 @@ void InitBlocks()
 
     Block::allowed_to_build[Block::air] = false;
     Block::allowed_to_build[Block::bedrock] = false;
+    Block::allowed_to_build[Block::tempsolid] = false;
 }
 
 void AddBlock(const string&in name, bool _solid, bool _see_through, int allsides)

@@ -242,8 +242,6 @@ namespace Loading
 				to_send.write_netid(getLocalPlayer().getNetworkID());
 				this.SendCommand(this.getCommandID("C_CreatePlayer"), to_send);
 
-				//getLocalPlayer().client_RequestSpawn();
-
 				loading_string = "Done!";
 				state = done;
 
