@@ -3,7 +3,7 @@ bool onServerProcessChat(CRules@ this, const string& in text_in, string& out tex
 {
 	if (text_in.substr(0, 1) == "/") // command
 	{
-		/*if (getSecurity().getPlayerSeclev(p).getName() = "Admin")
+		if(getSecurity().getPlayerSeclev(player).getName() == "Admin")
 		{
 			string[]@ tokens = text_in.split(" ");
 
@@ -13,14 +13,18 @@ bool onServerProcessChat(CRules@ this, const string& in text_in, string& out tex
 				{
 					if (tokens.length == 4)
 					{
-						SColor@ old;
-						getRules().set("sky_color", @old);
-						old.set(255, int(tokens[1]), int(tokens[2]), int(tokens[3]));
+						CBitStream to_send;
+						u8 r = parseInt(tokens[1]);
+						u8 g = parseInt(tokens[2]);
+						u8 b = parseInt(tokens[3]);
+						to_send.write_u8(r);
+						to_send.write_u8(g);
+						to_send.write_u8(b);
+						this.SendCommand(this.getCommandID("SC_ChangeSky"), to_send, true);
 					}
 				}
 			}
-		}*/
-		return false;
+		}
 	}
 	return true;
 }

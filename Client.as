@@ -258,9 +258,17 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 			Sound3D(sound_name, Vec3f(x,y,z));
 		}
 	}
-	else if(cmd == this.getCommandID("C_RequestMap") || cmd == this.getCommandID("C_ChangeBlock"))
+	else if(cmd == this.getCommandID("SC_ChangeSky"))
 	{
-		return;
+		u8 r = params.read_u8();
+		u8 g = params.read_u8();
+		u8 b = params.read_u8();
+		world.sky_color.setRed(r);
+		world.sky_color.setGreen(g);
+		world.sky_color.setBlue(b);
+
+		Render::SetFog(world.sky_color, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, false);
+		Fill[0].col = Fill[1].col = Fill[2].col = Fill[3].col = world.sky_color;
 	}
 }
 

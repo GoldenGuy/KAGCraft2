@@ -226,6 +226,15 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 			}
 		}
 	}
+	else if(cmd == this.getCommandID("SC_ChangeSky"))
+	{
+		u8 r = params.read_u8();
+		u8 g = params.read_u8();
+		u8 b = params.read_u8();
+		world.sky_color.setRed(r);
+		world.sky_color.setGreen(g);
+		world.sky_color.setBlue(b);
+	}
 }
 
 /*void onNewPlayerJoin(CRules@ this, CPlayer@ player)
