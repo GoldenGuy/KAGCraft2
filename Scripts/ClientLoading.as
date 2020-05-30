@@ -17,6 +17,7 @@ namespace Loading
 		block_faces_gen,
 		chunk_gen,
 		octree_gen,
+		press_enter,
 		set_player,
 		done
 	}
@@ -193,9 +194,19 @@ namespace Loading
 			case octree_gen:
 			{
 				SetUpTree();
-				loading_string = "Setting up player.";
-				state = set_player;
+				loading_string = "Press Spacebar to continue.";
+				state = press_enter;
 
+				return;
+			}
+
+			case press_enter:
+			{
+				if(getControls().isKeyJustPressed(KEY_SPACE))
+				{
+					loading_string = "Setting up player.";
+					state = set_player;
+				}
 				return;
 			}
 

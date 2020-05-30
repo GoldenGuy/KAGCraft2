@@ -13,6 +13,7 @@ void onRenderScoreboard(CRules@ this)
     int y_step = 16;
 
     GUI::DrawRectangle(top_left-Vec2f(10,10), Vec2f(top_right.x, top_right.y + getPlayersCount()*y_step)+Vec2f(10,10), 0xAA404040);
+    GUI::SetFont("menu");
     
     for(int i = 0; i < getPlayersCount(); i++)
     {

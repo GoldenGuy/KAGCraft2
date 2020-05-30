@@ -90,6 +90,8 @@ void onTick(CRules@ this)
 		UpdateSectors();
 		UpdateUTexts();
 
+		if(getControls().isKeyJustPressed(KEY_F1)) show_help = !show_help;
+
 		if(thirdperson || !isWindowActive() || !isWindowFocused() || Menu::getMainMenu() !is null || block_menu_open || IsChatPromptActive() || scoreboard_open)
 		{
 			getDriver().SetShader("mc_cursor", false);
@@ -365,7 +367,7 @@ void Render(int id)
 	Render::SetTransformScreenspace();
 	Render::ClearZ();
 	
-	//GUI::SetFont("menu");
+	GUI::SetFont("menu");
 	//GUI::DrawShadowedText("Pos: "+my_player.pos.IntString(), Vec2f(20,20), color_white);
 	//GUI::DrawShadowedText("Vel: "+my_player.vel.FloatString(), Vec2f(20,40), color_white);
 	//GUI::DrawShadowedText("Ang: "+my_player.look_dir.FloatString(), Vec2f(20,60), color_white);
@@ -407,18 +409,49 @@ void onRender(CRules@ this)
 		else if(Loading::state == Loading::chunk_gen) percent = float(world.current_chunks_packet)/float(world.chunks_packets_amount);
 		else percent = 1;
 
-		GUI::DrawProgressBar(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-16), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+16), percent);
+		if(Loading::state == Loading::press_enter)
+		{
+			GUI::DrawPane(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-16), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+16), 0xFF30BB30);
+		}
+		else
+		{
+			GUI::DrawProgressBar(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-16), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+16), percent);
+		}
 		GUI::SetFont("menu");
 		GUI::DrawTextCentered(Loading::loading_string, Vec2f(getScreenWidth()/2, getScreenHeight()/2), color_white);
+
+		Vec2f help_dim;
+		GUI::GetTextDimensions(help_text, help_dim);
+		Vec2f help_start = getDriver().getScreenCenterPos()-Vec2f(help_dim.x/2, help_dim.y+40);
+		help_start.y += 40;
+		Vec2f help_end = help_start+help_dim;
+		help_end.y -= 40;
+		GUI::DrawWindow(help_start-Vec2f(6,6), help_end+Vec2f(6,6));
+		GUI::DrawText(help_text, help_start, color_black);
 	}
-	else if(block_menu_open)
+	else
 	{
-		Render::SetTransformScreenspace();
-		Render::SetBackfaceCull(false);
-		GUI::DrawRectangle(block_menu_start, block_menu_end, 0xAA404040);
-		GUI::DrawPane(block_menu_mouse, block_menu_mouse+block_menu_tile_size);
-		GUI::DrawPane(picked_block_pos, picked_block_pos+block_menu_tile_size, 0xFF30AA30);
-		Render::RawQuads("Block_Textures", block_menu_verts);
+		if(block_menu_open)
+		{
+			Render::SetTransformScreenspace();
+			Render::SetBackfaceCull(false);
+			GUI::DrawRectangle(block_menu_start, block_menu_end, 0xAA404040);
+			GUI::DrawPane(block_menu_mouse, block_menu_mouse+block_menu_tile_size);
+			GUI::DrawPane(picked_block_pos, picked_block_pos+block_menu_tile_size, 0xFF30AA30);
+			Render::RawQuads("Block_Textures", block_menu_verts);
+		}
+
+		if(show_help)
+		{
+			GUI::SetFont("menu");
+			Vec2f help_dim;
+			GUI::GetTextDimensions(help_text, help_dim);
+			Vec2f help_start = Vec2f(20, 20);
+			Vec2f help_end = help_start+help_dim;
+			help_end.y -= 60;
+			GUI::DrawRectangle(help_start-Vec2f(6,6), help_end+Vec2f(6,6), 0xAA404040);
+			GUI::DrawText(help_text, help_start, color_white);
+		}
 	}
 }
 
@@ -459,3 +492,18 @@ Vertex[] Fill = {	Vertex(0, 0, 0, 0, 0, color_white),
 					Vertex(getScreenWidth(), getScreenHeight(), 0, 1, 1, color_white),
 					Vertex(0, getScreenHeight(), 0, 0, 1, color_white)
 };
+
+bool show_help = false;
+string help_text =  "Welcome to KagCraft2!"+"\n\n"+
+					"Rules: Dont grief, dont build forbidden structures (dicks, swastikas, etc.)."+"\n\n"+
+					"Controls:"+"\n"+
+					"Left click - dig block,"+"\n"+
+					"Right click - place block,"+"\n"+
+					"Middle click - copy block you looking at,"+"\n"+
+					"Mouse wheel up/down - change block,"+"\n"+
+					"E - block menu,"+"\n"+
+					"Shift - crouch,"+"\n"+
+					"Ctrl - sprint,"+"\n"+
+					"Tab - scoreboard,"+"\n"+
+					"F1 - show this text in game."+"\n\n"+
+					"Type /commands in chat to see available commands.";
