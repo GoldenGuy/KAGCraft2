@@ -52,6 +52,8 @@ namespace Block
         sand,
         water,
         watersecond,
+
+        tempsolid,
         
         blocks_count
     }
@@ -177,6 +179,8 @@ void InitBlocks()
     AddBlock("Sand", true, false, 15);
     AddBlock("Water", true, false, 17);
     AddBlock("Deep water", true, false, 18);
+
+    AddBlock("Temp solid", true, true, 0);
 
     Block::dig_speed[Block::bedrock] = 0;
     Block::dig_speed[Block::fence] = 2.2;

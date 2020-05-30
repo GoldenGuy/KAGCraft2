@@ -481,15 +481,22 @@ class Player
 				{
 					if(Jump)
 					{
-						vel.y += jump_acceleration;
-						onGround = false;
+						if(!world.isTileSolid(pos.x, pos.y, pos.z))
+						{
+							vel.y += jump_acceleration;
+							onGround = false;
+						}
+						else
+						{
+							pos.y = int(pos.y+1);
+						}
 						Jump = false;
 					}
-					else if(Crouch)
+					if(Crouch)
 					{
 						temp_acceleration *= 0.5f;
 					}
-					if(!Crouch && Run)
+					else if(Run)
 					{
 						temp_acceleration *= 1.8f;
 					}
@@ -808,7 +815,14 @@ void CollisionResponse(Vec3f&inout position, Vec3f&inout velocity)
 		}
 		velocity.y = 0;
 	}
-	position.y += velocity.y;
+	/*if(world.isTileSolid(position.x, position.y, position.z) && !world.isTileSolid(position.x, position.y+1, position.z))
+	{
+		position.y += 1;
+	}
+	else*/
+	{
+		position.y += velocity.y;
+	}
 }
 
 bool isColliding(const Vec3f&in position, const Vec3f&in next_position)
@@ -831,7 +845,7 @@ bool isColliding(const Vec3f&in position, const Vec3f&in next_position)
 					y >= Maths::Floor(position.y) && y < Maths::Ceil(position.y + player_height) &&
 					z >= Maths::Floor(position.z - player_diameter / 2.0f) && z < Maths::Ceil(position.z + player_diameter / 2.0f))
 				{
-					// dont actually ignore, try pushing away (meh, later)
+					// dont actually ignore, try pushing away (meh, later) maybe not here then
 					continue;
 				}
 
