@@ -544,11 +544,50 @@ class Player
 				}
 			}
 		}
-		
-		if(admin)
+		else if(admin)
 		{
 			if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
-			if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
+			else if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
+			else if(c.isKeyJustPressed(KEY_F3) || c.isKeyJustPressed(KEY_F2))
+			{
+				bool freeze = c.isKeyJustPressed(KEY_F3);
+				float[] distances;
+				for(int i = 0; i < other_players.size(); i++)
+				{
+					Player@ pl_to_test = other_players[i];
+					if(pl_to_test.player is null) continue;
+					AABB box(pl_to_test.pos-Vec3f(player_radius, 0, player_radius), pl_to_test.pos+Vec3f(player_radius, player_height, player_radius));
+					if(box.intersectsWithLine(camera.pos, look_dir, 50000))
+					{
+						distances.push_back((pl_to_test.pos - pos).Length());
+					}
+					else
+					{
+						distances.push_back(9999999);
+					}
+				}
+
+				int min_value = 9999999;
+				int min_id = 999;
+				for(int i = 0; i < distances.size(); i++)
+				{
+					if(distances[i] < min_value)
+					{
+						min_value = distances[i];
+						min_id = i;
+					}
+				}
+
+				if(min_id != 999)
+				{
+					Player@ pl_to_test = other_players[min_id];
+					CBitStream to_send;
+					to_send.write_netid(pl_to_test.player.getNetworkID());
+					to_send.write_bool(freeze);
+					getRules().SendCommand(getRules().getCommandID("C_FreezePlayer"), to_send, false);
+					AddUText((freeze ? "F" : "Unf")+"rozen "+pl_to_test.player.getUsername()+"!", 0xFF2050FF, 80);
+				}
+			}
 		}
 		// ---
 	}
