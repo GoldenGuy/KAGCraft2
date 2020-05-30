@@ -170,6 +170,29 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 			}*/
 		}
 	}
+	else if(cmd == this.getCommandID("C_FreezePlayer"))
+	{
+		uint16 netid = params.read_netid();
+		CPlayer@ _player = getPlayerByNetworkId(netid);
+		if(_player !is null)
+		{
+			string seclev = getSecurity().getPlayerSeclev(_player).getName();
+			if(seclev != "Admin")
+			{
+				ServerPlayer@ __player = getServerPlayer(_player);
+				if(__player !is null)
+				{
+					bool freeze = params.read_bool();
+					__player.Frozen = freeze;
+					error("Player "+_player.getCharacterName()+" ("+_player.getUsername()+") is "+(freeze ? "" : "un")+"frozen!");
+					CBitStream to_send;
+					to_send.write_netid(netid);
+					to_send.write_bool(freeze);
+					getRules().SendCommand(getRules().getCommandID("S_FreezePlayer"), to_send, true);
+				}
+			}
+		}
+	}
 	else if(cmd == this.getCommandID("C_ChangeBlock"))
 	{
 		uint16 netid = params.read_netid();

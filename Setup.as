@@ -11,6 +11,8 @@ void onInit(CRules@ this)
 	this.addCommandID("C_CreatePlayer");
 	this.addCommandID("C_PlayerUpdate");
 	this.addCommandID("S_PlayerUpdate");
+	this.addCommandID("C_FreezePlayer");
+	this.addCommandID("S_FreezePlayer");
 
 	this.addCommandID("C_PlaySound3D");
 

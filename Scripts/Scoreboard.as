@@ -4,6 +4,7 @@ bool scoreboard_open;
 void onRenderScoreboard(CRules@ this)
 {
 	scoreboard_open = true;
+    this.set_bool("scoreboard_hover", false);
     Render::SetTransformWorldspace();
     Vec2f top_right = Vec2f(getScreenWidth()-30, 30);
     Vec2f top_left = Vec2f(top_right.x - 20 - 240 - 30 - 180 - 30 - 48 - 20, top_right.y);
@@ -24,10 +25,10 @@ void onRenderScoreboard(CRules@ this)
 
         // mouse interactions
         {
-            Vec2f start = top_left;
+            Vec2f start = top_left+Vec2f(0,y);
             Vec2f end;
             GUI::GetTextDimensions(c_name, end);
-            end += start+Vec2f(4,3);
+            end += start+Vec2f(4,0);
 
             // check character name
             if( getControls().getMouseScreenPos().x >= start.x && getControls().getMouseScreenPos().x <= end.x && 
@@ -41,9 +42,9 @@ void onRenderScoreboard(CRules@ this)
             }
             else // check user name then
             {
-                start = top_left+Vec2f(240+45, 0);
+                start = top_left+Vec2f(240+45, y);
                 GUI::GetTextDimensions(u_name, end);
-                end += start+Vec2f(4,3);
+                end += start+Vec2f(4,0);
 
                 if( getControls().getMouseScreenPos().x >= start.x && getControls().getMouseScreenPos().x <= end.x && 
                     getControls().getMouseScreenPos().y >= start.y && getControls().getMouseScreenPos().y <= end.y)
@@ -53,10 +54,6 @@ void onRenderScoreboard(CRules@ this)
                     this.set_bool("scoreboard_hover", true);
                     this.set("scoreboard_player", @player);
                     this.set_string("scoreboard_clipboard", u_name);
-                }
-                else
-                {
-                    this.set_bool("scoreboard_hover", false);
                 }
             }
         }
@@ -92,7 +89,7 @@ SColor getNameColour(CPlayer@ p)
 	{
         c = SColor(0xff5FCC5F);
     }
-	else if (getSecurity().getPlayerSeclev(p).getName() == "Admin")	//cool
+	else if (seclev == "Admin")	//cool
 	{
         c = SColor(0xffF08020);
 	}

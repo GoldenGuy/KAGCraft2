@@ -201,6 +201,30 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 			}
 		}
 	}
+	else if(cmd == this.getCommandID("S_FreezePlayer"))
+	{
+		u16 netid = params.read_netid();
+		CPlayer@ _player = getPlayerByNetworkId(netid);
+		if(_player !is null)
+		{
+			bool freeze = params.read_bool();
+			if(_player is getLocalPlayer())
+			{
+				my_player.Frozen = freeze;
+			}
+			else
+			{
+				for(int i = 0; i < other_players.size(); i++)
+				{
+					Player@ __player = other_players[i];
+					if(__player.player is _player)
+					{
+						__player.Frozen = freeze;
+					}
+				}
+			}
+		}
+	}
 	else if(cmd == this.getCommandID("S_ChangeBlock"))
 	{
 		uint8 block = params.read_u8();

@@ -54,6 +54,7 @@ class Player
 	uint8 hand_block = Block::stone;
 
 	SMaterial player_material;
+	SMaterial player_frozen_material;
 	
 	SMesh mesh_nickname;
 	
@@ -89,10 +90,12 @@ class Player
 			player.getUsername() == "GoldenGuy")
 		{
 			player_material.AddTexture("Textures/Skins/skin_"+player.getUsername()+".png", 0);
+			player_frozen_material.AddTexture("Textures/Skins/skin_"+player.getUsername()+".png", 0);
 		}
 		else
 		{
 			player_material.AddTexture("Textures/Skins/Default/skin"+XORRandom(8)+".png", 0);
+			player_frozen_material.AddTexture("Textures/Skins/Default/skin"+XORRandom(8)+".png", 0);
 		}
 
 		player_material.DisableAllFlags();
@@ -102,6 +105,16 @@ class Player
 		player_material.SetFlag(SMaterial::BACK_FACE_CULLING, true);
 		player_material.SetFlag(SMaterial::FOG_ENABLE, true);
 		player_material.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
+
+		player_frozen_material.DisableAllFlags();
+		player_frozen_material.SetFlag(SMaterial::COLOR_MASK, true);
+		player_frozen_material.SetFlag(SMaterial::ZBUFFER, true);
+		player_frozen_material.SetFlag(SMaterial::ZWRITE_ENABLE, true);
+		player_frozen_material.SetFlag(SMaterial::BACK_FACE_CULLING, true);
+		player_frozen_material.SetFlag(SMaterial::FOG_ENABLE, true);
+		player_frozen_material.SetMaterialType(SMaterial::TRANSPARENT_ALPHA_CHANNEL_REF);
+		player_frozen_material.SetFlag(SMaterial::LIGHTING, true);
+		player_frozen_material.SetEmissiveColor(0xFFFF6060);
 
 		mesh_head.Clear();
 		mesh_head.SetMaterial(player_material);
@@ -169,7 +182,7 @@ class Player
 		CControls@ c = getControls();
 		Driver@ d = getDriver();
 
-		if(blob !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null && !block_menu_open && !IsChatPromptActive() && !scoreboard_open)
+		if(blob !is null && isWindowActive() && isWindowFocused() && Menu::getMainMenu() is null && !block_menu_open && !IsChatPromptActive() && !scoreboard_open && !Frozen)
 		{
 			if(!move_mouse)
 			{
@@ -464,34 +477,80 @@ class Player
 						}
 					}
 				}
-
-				if(c.isKeyJustPressed(KEY_F5)) thirdperson = !thirdperson;
-
-				if(scoreboard_open)
-				{
-					if(getRules().get_bool("scoreboard_hover"))
-					{
-						if(blob.isKeyJustPressed(key_action2))
-						{
-							string name = getRules().get_string("scoreboard_clipboard");
-							CopyToClipboard(name);
-							AddUText("Copied \""+name+"\" to clipboard!", 0xFF60FF60, 70);
-						}
-					}
-				}
-				
-				if(admin)
-				{
-					if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
-					if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
-				}
 			}
 			// ---
 		}
-		else
+
+		// misc stuff that is also allowed when frozen
+		if(c.isKeyJustPressed(KEY_F5)) thirdperson = !thirdperson;
+
+		if(scoreboard_open)
 		{
-			digging = false;
+			if(getRules().get_bool("scoreboard_hover"))
+			{
+				if(blob.isKeyJustPressed(key_action2))
+				{
+					string name = getRules().get_string("scoreboard_clipboard");
+					CopyToClipboard(name);
+					AddUText("Copied \""+name+"\" to clipboard!", 0xFF60FF60, 70);
+				}
+				else if(admin)
+				{
+					if(blob.isKeyJustPressed(key_action1))
+					{
+						CPlayer@ pl_hovering;
+						getRules().get("scoreboard_player", @pl_hovering);
+						if(pl_hovering !is null)
+						{
+							if(c.isKeyPressed(KEY_LSHIFT))
+							{
+								if(pl_hovering is getLocalPlayer())
+								{
+									AddUText("Cant teleport to yourself!", 0xFFFF0000, 50);
+								}
+								else
+								{
+									for(int i = 0; i < other_players.size(); i++)
+									{
+										Player@ _player = other_players[i];
+										if(_player.player is pl_hovering)
+										{
+											pos = _player.pos + Vec3f(0,0.5,0);
+											string name = pl_hovering.getUsername();
+											AddUText("Teleporting to "+name+"!", 0xFF40FF90, 70);
+											break;
+										}
+									}
+								}
+							}
+							else if(c.isKeyPressed(KEY_F3))
+							{
+								CBitStream to_send;
+								to_send.write_netid(pl_hovering.getNetworkID());
+								to_send.write_bool(true);
+								getRules().SendCommand(getRules().getCommandID("C_FreezePlayer"), to_send, false);
+								AddUText("Frozen "+pl_hovering.getUsername()+"!", 0xFF2050FF, 80);
+							}
+							else if(c.isKeyPressed(KEY_F2))
+							{
+								CBitStream to_send;
+								to_send.write_netid(pl_hovering.getNetworkID());
+								to_send.write_bool(false);
+								getRules().SendCommand(getRules().getCommandID("C_FreezePlayer"), to_send, false);
+								AddUText("Unfrozen "+pl_hovering.getUsername()+"!", 0xFF2050FF, 80);
+							}
+						}
+					}
+				}
+			}
 		}
+		
+		if(admin)
+		{
+			if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
+			if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
+		}
+		// ---
 	}
 
 	void UpdatePhysics()
@@ -609,7 +668,14 @@ class Player
 
 	void RenderPlayer()
 	{
-		player_material.SetVideoMaterial();
+		if(Frozen)
+		{
+			player_frozen_material.SetVideoMaterial();
+		}
+		else
+		{
+			player_material.SetVideoMaterial();
+		}
 		
 		float[] model_matr;
 		Matrix::MakeIdentity(model_matr);
