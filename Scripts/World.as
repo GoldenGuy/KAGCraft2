@@ -603,7 +603,17 @@ class World
 
         if(z > 0 && Block::see_through[map[y][z-1][x]]) faces += 1;
         if(z < map_depth-1 && Block::see_through[map[y][z+1][x]]) faces += 2;
-        if(y < map_height-1 && Block::see_through[map[y+1][z][x]]) faces += 4;
+        if(y < map_height-1)
+        {
+            if(Block::see_through[map[y+1][z][x]])
+            {
+                faces += 4;
+            }
+        }
+        else if(y == map_height-1)
+        {
+            faces += 4;
+        }
         if(y > 0 && Block::see_through[map[y-1][z][x]]) faces += 8;
         if(x < map_width-1 && Block::see_through[map[y][z][x+1]]) faces += 16;
         if(x > 0 && Block::see_through[map[y][z][x-1]]) faces += 32;
@@ -712,6 +722,12 @@ class World
         if(x<0 || y<0 || z<0 || x>=map_width || y>=map_height || z>=map_depth) return false;
         return true;
     }
+
+    bool inWorldBoundsIgnoreHeight(int x, int y, int z)
+    {
+        if(x<0 || y<0 || z<0 || x>=map_width || z>=map_depth) return false;
+        return true;
+    }
     
     bool inChunkBounds(int x, int y, int z)
     {
@@ -729,6 +745,15 @@ class World
     {
         if(!inWorldBounds(x, y, z)) return true;
         return Block::solid[map[y][z][x]];
+    }
+
+    bool isTileSolidOrOOBIgnoreHeight(int x, int y, int z)
+    {
+        if(inWorldBounds(x, y, z))
+        {
+            return Block::solid[map[y][z][x]];
+        }
+        return !inWorldBoundsIgnoreHeight(x, y, z);
     }
 
     void UpdateBlocksAndChunks(int x, int y, int z)

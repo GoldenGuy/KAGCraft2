@@ -16,7 +16,9 @@ namespace Raycast
 	
 uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_dist, Vec3f&out hit_pos, bool ignore_nonsolid)
 {
-	if(!world.inWorldBounds(ray_pos.x, ray_pos.y, ray_pos.z)) return Raycast::S_OUTSIDE;
+	bool escaped_above = false;
+	if(!world.inWorldBoundsIgnoreHeight(ray_pos.x, ray_pos.y, ray_pos.z)) return Raycast::S_OUTSIDE;
+	if(ray_pos.y >= world.map_height) escaped_above = true;
 	
 	Vec3f ray_world_pos(int(ray_pos.x), int(ray_pos.y), int(ray_pos.z));
 	Vec3f delta_dist(
@@ -90,10 +92,18 @@ uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_d
 			{
 				side_dist.y += delta_dist.y;
 				ray_world_pos.y += step.y;
-				if(ray_world_pos.y >= world.map_height || ray_world_pos.y < 0)
+				if(ray_world_pos.y < 0)
 				{
 					hit_pos = ray_pos + ray_dir * (side_dist.y-delta_dist.y);
 					return Raycast::S_OOB_Y;
+				}
+				else if(ray_world_pos.y >= world.map_height)
+				{
+					escaped_above = true;
+				}
+				else
+				{
+					escaped_above = false;
 				}
 				side = 1;
 			}
@@ -108,6 +118,10 @@ uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_d
 				}
 				side = 2;
 			}
+		}
+		if(escaped_above)
+		{
+			continue;
 		}
 		uint8 check = world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
 		if((ignore_nonsolid && Block::solid[check]) || (!ignore_nonsolid && check != Block::air))
@@ -133,7 +147,9 @@ uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_d
 
 uint8 RaycastWorld_Previous(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_dist, Vec3f&out hit_pos)
 {
-	if(!world.inWorldBounds(ray_pos.x, ray_pos.y, ray_pos.z)) return Raycast::S_OUTSIDE;
+	bool escaped_above = false;
+	if(!world.inWorldBoundsIgnoreHeight(ray_pos.x, ray_pos.y, ray_pos.z)) return Raycast::S_OUTSIDE;
+	if(ray_pos.y >= world.map_height) escaped_above = true;
 	
 	Vec3f ray_world_pos(int(ray_pos.x), int(ray_pos.y), int(ray_pos.z));
 	Vec3f delta_dist(
@@ -203,9 +219,17 @@ uint8 RaycastWorld_Previous(const Vec3f&in ray_pos, const Vec3f&in ray_dir, floa
 			{
 				side_dist.y += delta_dist.y;
 				ray_world_pos.y += step.y;
-				if(ray_world_pos.y >= world.map_height || ray_world_pos.y < 0)
+				if(ray_world_pos.y < 0)
 				{
 					return Raycast::S_OOB_Y;
+				}
+				else if(ray_world_pos.y >= world.map_height)
+				{
+					escaped_above = true;
+				}
+				else
+				{
+					escaped_above = false;
 				}
 			}
 			else
@@ -218,6 +242,10 @@ uint8 RaycastWorld_Previous(const Vec3f&in ray_pos, const Vec3f&in ray_dir, floa
 				}
 			}
 		}
+		if(escaped_above)
+		{
+			continue;
+		}
 		uint8 check = world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
 		if(check != Block::air)
 		{
@@ -229,7 +257,9 @@ uint8 RaycastWorld_Previous(const Vec3f&in ray_pos, const Vec3f&in ray_dir, floa
 
 uint8 RaycastWorld(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_dist, Vec3f&out hit_pos)
 {
-	if(!world.inWorldBounds(ray_pos.x, ray_pos.y, ray_pos.z)) return Raycast::S_OUTSIDE;
+	bool escaped_above = false;
+	if(!world.inWorldBoundsIgnoreHeight(ray_pos.x, ray_pos.y, ray_pos.z)) return Raycast::S_OUTSIDE;
+	if(ray_pos.y >= world.map_height) escaped_above = true;
 
 	Vec3f ray_world_pos(int(ray_pos.x), int(ray_pos.y), int(ray_pos.z));
 	Vec3f delta_dist(
@@ -298,9 +328,17 @@ uint8 RaycastWorld(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_dis
 			{
 				side_dist.y += delta_dist.y;
 				ray_world_pos.y += step.y;
-				if(ray_world_pos.y >= world.map_height || ray_world_pos.y < 0)
+				if(ray_world_pos.y < 0)
 				{
 					return Raycast::S_OOB_Y;
+				}
+				else if(ray_world_pos.y >= world.map_height)
+				{
+					escaped_above = true;
+				}
+				else
+				{
+					escaped_above = false;
 				}
 			}
 			else
@@ -312,6 +350,10 @@ uint8 RaycastWorld(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_dis
 					return Raycast::S_OOB_Z;
 				}
 			}
+		}
+		if(escaped_above)
+		{
+			continue;
 		}
 		uint8 check = world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
 		if(check != Block::air)

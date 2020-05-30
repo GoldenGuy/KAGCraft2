@@ -189,7 +189,7 @@ class Player
 			uint8 check = RaycastPrecise(pos+Vec3f(0,eye_height,0), look_dir*(-1), 7.5, hit_pos, true);
 			if(check != 0)
 			{
-				cam_pos = hit_pos+look_dir*0.5;
+				cam_pos = hit_pos+look_dir*0.35;
 			}
 		}
 		camera.move(cam_pos, false);
@@ -835,7 +835,7 @@ bool isColliding(const Vec3f&in position, const Vec3f&in next_position)
 					continue;
 				}
 
-				if (world.isTileSolidOrOOB(x, y, z))
+				if (world.isTileSolidOrOOBIgnoreHeight(x, y, z))
 				{
 					//DrawHitbox(x, y, z, 0x8800FF00);
 					return true;
