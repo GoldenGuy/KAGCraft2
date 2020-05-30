@@ -89,6 +89,15 @@ void onTick(CRules@ this)
 
 		UpdateSectors();
 		UpdateUTexts();
+
+		if(thirdperson || !isWindowActive() || !isWindowFocused() || Menu::getMainMenu() !is null || block_menu_open || IsChatPromptActive() || scoreboard_open)
+		{
+			getDriver().SetShader("mc_cursor", false);
+		}
+		else
+		{
+			getDriver().SetShader("mc_cursor", true);
+		}
 	}
 	scoreboard_open = false;
 }

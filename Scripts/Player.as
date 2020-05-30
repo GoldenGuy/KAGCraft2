@@ -482,7 +482,18 @@ class Player
 		}
 
 		// misc stuff that is also allowed when frozen
-		if(c.isKeyJustPressed(KEY_F5)) thirdperson = !thirdperson;
+		if(c.isKeyJustPressed(KEY_F5))
+		{
+			thirdperson = !thirdperson;
+			/*if(thirdperson)
+			{
+				getDriver().SetShader("mc_cursor", false);
+			}
+			else
+			{
+				getDriver().SetShader("mc_cursor", true);
+			}*/
+		}
 
 		if(scoreboard_open)
 		{

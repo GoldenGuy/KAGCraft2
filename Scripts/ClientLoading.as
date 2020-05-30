@@ -248,6 +248,12 @@ namespace Loading
 				to_send.write_netid(getLocalPlayer().getNetworkID());
 				this.SendCommand(this.getCommandID("C_CreatePlayer"), to_send);
 
+				getDriver().ForceStartShaders();
+				getDriver().AddShader("mc_cursor");
+				getDriver().SetShaderInt("mc_cursor", "screenWidth", getScreenWidth());
+				getDriver().SetShaderInt("mc_cursor", "screenHeight", getScreenHeight());
+				getDriver().SetShader("mc_cursor", true);
+
 				loading_string = "Done!";
 				state = done;
 
