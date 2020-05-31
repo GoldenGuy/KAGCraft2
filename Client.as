@@ -54,7 +54,6 @@ void onTick(CRules@ this)
 		if(!isServer() && getPlayersCount() > 1)
 		{
 			CBitStream to_send;
-			//to_send.write_netid(getLocalPlayer().getNetworkID());
 			my_player.Serialize(@to_send);
 			this.SendCommand(this.getCommandID("C_PlayerUpdate"), to_send, false);
 		}
@@ -423,7 +422,7 @@ void onRender(CRules@ this)
 
 		if(Loading::state == Loading::press_enter)
 		{
-			GUI::DrawPane(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-16), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+16), 0xFF30BB30);
+			GUI::DrawPane(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-16), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+16), 0xFF30EE30);
 		}
 		else
 		{

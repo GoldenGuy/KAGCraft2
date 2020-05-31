@@ -1,11 +1,14 @@
 
-
 namespace Loading
 {
 	bool isLoading = false;
 	bool mapParamsReady = false;
 	int state = 0;
 	string loading_string = "Init.";
+
+	SMesh into_model_head;
+	SMesh into_model_body;
+	int intro_timer = 0;
 
 	enum val
 	{
@@ -104,9 +107,26 @@ namespace Loading
 				to_send.write_netid(getLocalPlayer().getNetworkID());
 				this.SendCommand(this.getCommandID("C_RequestMapParams"), to_send, false);
 
-				state = waiting_for_map_params;
+				intro_timer = 0;
+				into_model_head.LoadObjIntoMesh("Models/Misc/Intro/intro_head.obj");
+				into_model_head.GetMaterial().SetFlag(SMaterial::LIGHTING, false);
+				into_model_head.GetMaterial().SetFlag(SMaterial::BILINEAR_FILTER, false);
+				into_model_body.LoadObjIntoMesh("Models/Misc/Intro/intro_body.obj");
+				into_model_body.GetMaterial().SetFlag(SMaterial::LIGHTING, false);
+				into_model_body.GetMaterial().SetFlag(SMaterial::BILINEAR_FILTER, false);
+				
+				state = intro;
 				loading_string = "Waiting for map parameters.";
 				return;
+			}
+
+			case intro:
+			{
+				if(intro_timer == 0)
+				{
+
+				}
+				intro_timer++;
 			}
 
 			case waiting_for_map_params:
