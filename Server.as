@@ -21,7 +21,14 @@ void onInit(CRules@ this)
 	@world = @World();
 
 	world.LoadMapParams();
-	world.GenerateMap();
+	if(world.new)
+	{
+		world.GenerateMap();
+	}
+	else
+	{
+		world.LoadMap();
+	}
 
 	if(isClient()) this.set("world", @world);
 	
@@ -84,6 +91,20 @@ void onTick(CRules@ this)
 			players_to_send.removeAt(0);
 		}
 	}
+
+	if(getGameTime() % world.map_save_time == world.map_save_time-10)
+	{
+		world.SaveMap();
+
+		CBitStream to_send;
+		to_send.write_string("Map has been saved successfully!");
+		to_send.write_u8(255);
+		to_send.write_u8(22);
+		to_send.write_u8(119);
+		to_send.write_u16(160);
+		this.SendCommand(this.getCommandID("S_UText"), to_send, true);
+	}
+
 	/*if(getGameTime() == 100)
 	{
 		StartSaving();
@@ -213,6 +234,7 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 					{
 						uint8 old_block = world.getBlock(x, y, z);
 						world.setBlock(x, y, z, block);
+						world.saveBlock(x, y, z, block);
 						world.BlockUpdate(x, y, z, block, old_block);
 
 						CBitStream to_send;

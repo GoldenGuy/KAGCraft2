@@ -281,6 +281,18 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 		Render::SetFog(world.sky_color, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, false);
 		Fill[0].col = Fill[1].col = Fill[2].col = Fill[3].col = world.sky_color;
 	}
+	else if(cmd == this.getCommandID("S_UText"))
+	{
+		string text = params.read_string();
+		u8 r = params.read_u8();
+		u8 g = params.read_u8();
+		u8 b = params.read_u8();
+		u16 timer = params.read_u16();
+
+		SColor col(255,r,g,b);
+
+		AddUText(text, col.color, timer);
+	}
 }
 
 float[] model;

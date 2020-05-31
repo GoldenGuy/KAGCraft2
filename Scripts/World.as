@@ -17,6 +17,11 @@ class MapSender
 
 class World
 {
+    string map_name = "";
+    bool new = true;
+
+    uint32 map_save_time = 10;
+    
     uint32 chunk_width = 14;
     uint32 chunk_depth = 14;
     uint32 chunk_height = 14;
@@ -38,6 +43,8 @@ class World
 
     // map gen
 
+    CFileImage@ save_image;
+    
     float initial_plane = 0.0017;
     float initial_plane_max_height = 0.35f;
     float initial_plane_add_max = 0.16f;
@@ -91,6 +98,67 @@ class World
         else
         {
             print("Loading map parameters.");
+
+            map_save_time = cfg.read_u32("map_save_time");
+            map_save_time = map_save_time*60*getTicksASecond();
+
+            map_name = cfg.read_string("map_name");
+            if(map_name == "")
+            {
+                map_name = Time_Month()+"_"+Time_Local();
+                new = true;
+            }
+            else
+            {
+                ConfigFile map_cfg;
+                if(map_cfg.loadFile("../Cache/KagCraft2/map_info_"+map_name+".cfg"))
+                {
+                    print("Map \""+map_name+"\" exists, preparing to load it.");
+                    //ConfigFile map_cfg = ConfigFile(CFileMatcher("../Cache/KagCraft2/"+map_name+"/map_info.cfg").getFirst());
+                    //print(CFileMatcher("../Cache/KagCraft2/"+map_name+"/map_info.cfg").getFirst());
+
+                    chunk_width = map_cfg.read_u32("c_w");
+                    chunk_depth = map_cfg.read_u32("c_d");
+                    chunk_height = map_cfg.read_u32("c_h");
+                    chunk_size = chunk_width*chunk_depth*chunk_height;
+
+                    world_width = map_cfg.read_u32("w_w");
+                    world_depth = map_cfg.read_u32("w_d");
+                    world_height = map_cfg.read_u32("w_h");
+                    world_width_depth = world_width * world_depth;
+                    world_size = world_width_depth * world_height;
+
+                    map_width = world_width * chunk_width;
+                    map_depth = world_depth * chunk_depth;
+                    map_height = world_height * chunk_height;
+                    map_width_depth = map_width * map_depth;
+                    map_size = map_width_depth * map_height;
+
+                    map_packet_size = chunk_width*chunk_depth*chunk_height*8;
+                    map_packets_amount = map_size / map_packet_size;
+                    block_faces_packets_amount = map_packets_amount;
+                    block_faces_packet_size = map_size / block_faces_packets_amount;
+                    chunks_packets_amount = world_depth*world_height;
+                    chunks_packet_size = world_size / chunks_packets_amount;
+
+                    uint32 sky_color_R = map_cfg.read_u32("s_r");
+                    uint32 sky_color_G = map_cfg.read_u32("s_g");
+                    uint32 sky_color_B = map_cfg.read_u32("s_b");
+                    sky_color = SColor(255, sky_color_R, sky_color_G, sky_color_B);
+
+                    @save_image = CFileImage("Maps/KagCraft2/map_data_"+map_name+".png");
+
+                    new = false;
+                    return;
+                }
+                else
+                {
+                    new = true;
+                }
+            }
+
+            print("Creating new map with name \""+map_name+"\".");
+
             chunk_width = cfg.read_u32("chunk_width");
             chunk_depth = cfg.read_u32("chunk_depth");
             chunk_height = cfg.read_u32("chunk_height");
@@ -152,6 +220,13 @@ class World
 
         print("Map size: "+(map_height*map_depth*map_width));
 
+        int temp = int(Maths::Sqrt(float(map_height*map_depth*map_width)/4.0f))+2;
+
+        @save_image = CFileImage(temp, temp, true);
+        save_image.setFilename("KagCraft2/map_data_"+map_name+".png", ImageFileBase::IMAGE_FILENAME_BASE_MAPS);
+        //int map_index = 0; 
+        //u8 rgba = 0; // 0 - red, 1 - green, 2 - blue, 3 - alpha
+
         for(float z = 0.0f; z < map_depth; z += 1.0f)
         {
             for(float x = 0.0f; x < map_width; x += 1.0f)
@@ -173,6 +248,7 @@ class World
                         if(y < stone)
                         {
                             setBlock(x, y, z, Block::stone);
+                            setSaveSubPixel(x, y, z, Block::stone);
                             continue;
                         }
                         else 
@@ -193,6 +269,7 @@ class World
                                     {
                                         trees.push_back(Vec3f(x,y+1,z));
                                         setBlock(x, y, z, Block::dirt);
+                                        setSaveSubPixel(x, y, z, Block::dirt);
                                         continue;
                                     }
                                     else if(make_grass)
@@ -202,24 +279,29 @@ class World
                                             if(flower_type)
                                             {
                                                 setBlock(x, y+1, z, Block::tulip);
+                                                setSaveSubPixel(x, y+1, z, Block::tulip);
                                             }
                                             else
                                             {
                                                 setBlock(x, y+1, z, Block::edelweiss);
+                                                setSaveSubPixel(x, y+1, z, Block::edelweiss);
                                             }
                                         }
                                         else
                                         {
                                             setBlock(x, y+1, z, Block::grass);
+                                            setSaveSubPixel(x, y+1, z, Block::grass);
                                         }
                                     }
                                     setBlock(x, y, z, Block::grass_dirt);
+                                    setSaveSubPixel(x, y, z, Block::grass_dirt);
                                 }
                                 continue;
                             }
                             else
                             {
                                 setBlock(x, y, z, Block::dirt);
+                                setSaveSubPixel(x, y, z, Block::dirt);
                                 continue;
                             }
                         }
@@ -234,6 +316,7 @@ class World
             MakeTree(trees[i]);
         }
         print("Map generated.");
+        SaveMap();
     }
 
     void MakeTree(Vec3f pos)
@@ -244,39 +327,53 @@ class World
 		if(inWorldBounds(pos.x, pos.y, pos.z))
 		{
 			setBlockSafe(pos.x, pos.y, pos.z, tree_type);
+            setSaveSubPixel(pos.x, pos.y, pos.z, tree_type);
 			pos.y += 1;
 			if(inWorldBounds(pos.x, pos.y, pos.z))
 			{
 				setBlockSafe(pos.x, pos.y, pos.z, tree_type);
+                setSaveSubPixel(pos.x, pos.y, pos.z, tree_type);
 				pos.y += 1;
 				if(inWorldBounds(pos.x, pos.y, pos.z))
 				{
 					setBlockSafe(pos.x, pos.y, pos.z, tree_type);
+                    setSaveSubPixel(pos.x, pos.y, pos.z, tree_type);
 					
 					for(int _z = -2; _z <= 2; _z++)
 						for(int _x = -2; _x <= 2; _x++)
 							if(!(_x == 0 && _z == 0))
+                            {
 								setBlockSafe(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
+                                setSaveSubPixel(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
+                            }
 					
 					pos.y += 1;
 					if(inWorldBounds(pos.x, pos.y, pos.z))
 					{
 						setBlockSafe(pos.x, pos.y, pos.z, tree_type);
+                        setSaveSubPixel(pos.x, pos.y, pos.z, tree_type);
 						
 						for(int _z = -2; _z <= 2; _z++)
 							for(int _x = -2; _x <= 2; _x++)
 								if(!(_x == 0 && _z == 0))
+                                {
 									setBlockSafe(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
+                                    setSaveSubPixel(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
+                                }
 						
 						pos.y += 1;
 						if(inWorldBounds(pos.x, pos.y, pos.z))
 						{
 							setBlockSafe(pos.x, pos.y, pos.z, tree_type);
+                            setSaveSubPixel(pos.x, pos.y, pos.z, tree_type);
 							
 							for(int _z = -1; _z <= 1; _z++)
 								for(int _x = -1; _x <= 1; _x++)
 									if(!(_x == 0 && _z == 0))
+                                    {
 										setBlockSafe(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
+                                        setSaveSubPixel(pos.x+_x, pos.y, pos.z+_z, Block::leaves);
+                                    }
 							
 							pos.y += 1;
 							if(inWorldBounds(pos.x, pos.y, pos.z))
@@ -286,6 +383,12 @@ class World
 								setBlockSafe(pos.x, pos.y, pos.z, Block::leaves);
 								setBlockSafe(pos.x, pos.y, pos.z+1, Block::leaves);
 								setBlockSafe(pos.x, pos.y, pos.z-1, Block::leaves);
+
+                                setSaveSubPixel(pos.x+1, pos.y, pos.z, Block::leaves);
+								setSaveSubPixel(pos.x-1, pos.y, pos.z, Block::leaves);
+								setSaveSubPixel(pos.x, pos.y, pos.z, Block::leaves);
+								setSaveSubPixel(pos.x, pos.y, pos.z+1, Block::leaves);
+								setSaveSubPixel(pos.x, pos.y, pos.z-1, Block::leaves);
 								getNet().server_KeepConnectionsAlive();
 							}
 						}
@@ -296,6 +399,132 @@ class World
 		}
 		getNet().server_KeepConnectionsAlive();
 	}
+
+    void LoadMap()
+    {
+        print("Loading existing map.");
+
+        uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
+        map = _map;
+
+        bool done = false;
+        if (save_image.isLoaded())
+		{
+			while(save_image.nextPixel() && !done)
+			{
+                int index = save_image.getPixelOffset()*4;
+                if(index >= map_size)
+                {
+                    done = true;
+                    break;
+                }
+                u8 a;
+                u8 r;
+                u8 g;
+                u8 b;
+                save_image.readPixel(a, r, g, b);
+
+                Vec3f pos = getPosFromWorldIndex(index);
+                setBlock(pos.x, pos.y, pos.z, a);
+
+                if(index+1 >= map_size)
+                {
+                    done = true;
+                    break;
+                }
+                else
+                {
+                    pos = getPosFromWorldIndex(index+1);
+                    setBlock(pos.x, pos.y, pos.z, r);
+                }
+                if(index+2 >= map_size)
+                {
+                    done = true;
+                    break;
+                }
+                else
+                {
+                    pos = getPosFromWorldIndex(index+2);
+                    setBlock(pos.x, pos.y, pos.z, g);
+                }
+                if(index+3 >= map_size)
+                {
+                    done = true;
+                    break;
+                }
+                else
+                {
+                    pos = getPosFromWorldIndex(index+3);
+                    setBlock(pos.x, pos.y, pos.z, b);
+                }
+            }
+            print("Done!");
+        }
+        else
+        {
+            error("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+        }
+    }
+
+    void SaveMap()
+    {
+        world.save_image.Save();
+
+        ConfigFile cfg;
+
+        cfg.add_u32("c_w", chunk_width);
+        cfg.add_u32("c_d", chunk_depth);
+        cfg.add_u32("c_h", chunk_height);
+        cfg.add_u32("w_w", world_width);
+        cfg.add_u32("w_d", world_depth);
+        cfg.add_u32("w_h", world_height);
+
+        u32 R = sky_color.getRed();
+        u32 G = sky_color.getGreen();
+        u32 B = sky_color.getBlue();
+
+        cfg.add_u32("s_r", R);
+        cfg.add_u32("s_g", G);
+        cfg.add_u32("s_b", B);
+
+        cfg.saveFile("KagCraft2/map_info_"+map_name+".cfg");
+        print("Map saved!");
+    }
+
+    void setSaveSubPixel(int x, int y, int z, uint8 block)
+    {
+        if(!inWorldBounds(x, y, z)) return;
+
+        uint map_index = getIndex(x, y, z);
+        uint image_index = map_index / 4;
+        u8 sub_pixel = map_index % 4;
+        save_image.setPixelOffset(image_index);
+        SColor new_col = save_image.readPixel();
+        switch(sub_pixel)
+        {
+            case 0:
+                new_col.setAlpha(block);
+                break;
+            case 1:
+                new_col.setRed(block);
+                break;
+            case 2:
+                new_col.setGreen(block);
+                break;
+            case 3:
+                new_col.setBlue(block);
+                break;
+        }
+        save_image.setPixel(new_col.getAlpha(), new_col.getRed(), new_col.getGreen(), new_col.getBlue());
+    }
+
+    void saveBlock(int x, int y, int z, uint8 block)
+    {
+        //if(!inWorldBounds(x, y, z)) return;
+        //CFileImage image("../Cache/KagCraft2/"+map_name+"/data.png");
+        setSaveSubPixel(x, y, z, block);
+        //save_image.Save();
+    }
 
     void BlockUpdate(int x, int y, int z, uint8 new_block, uint8 old_block)
     {
@@ -471,6 +700,7 @@ class World
                     if(block_below == Block::grass_dirt)
                     {
                         server_SetBlock(Block::dirt, x, y-1, z);
+                        saveBlock(x, y-1, z, Block::dirt);
                     }
                 }
             }
@@ -482,6 +712,7 @@ class World
                     if(Block::plant[block_above])
                     {
                         server_SetBlock(Block::air, x, y+1, z);
+                        saveBlock(x, y+1, z, Block::air);
                     }
                 }
             }
@@ -493,6 +724,7 @@ class World
                     if(block_below == Block::dirt)
                     {
                         server_SetBlock(Block::grass_dirt, x, y-1, z);
+                        saveBlock(x, y-1, z, Block::grass_dirt);
                     }
                 }
             }

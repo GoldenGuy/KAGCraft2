@@ -16,6 +16,7 @@ void onInit(CRules@ this)
 
 	this.addCommandID("C_PlaySound3D");
 	this.addCommandID("SC_ChangeSky");
+	this.addCommandID("S_UText");
 
 	CMap@ map = getMap();
 	map.topBorder = map.bottomBorder = map.leftBorder = map.rightBorder = map.legacyTileVariations = map.legacyTileEffects = map.legacyTileDestroy = map.legacyTileMinimap = false;
