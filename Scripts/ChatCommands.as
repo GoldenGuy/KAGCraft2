@@ -5,6 +5,27 @@ bool onServerProcessChat(CRules@ this, const string& in text_in, string& out tex
 	{
 		if(getSecurity().getPlayerSeclev(player).getName() == "Admin")
 		{
+			if(text_in == "/savemap")
+			{
+				/*World@ world;
+				if(this.exists("world"))
+				{
+					this.get("world", @world);
+				
+					world.SaveMap();
+
+					CBitStream to_send;
+					to_send.write_string("Map has been manually saved successfully!");
+					to_send.write_u8(255);
+					to_send.write_u8(22);
+					to_send.write_u8(119);
+					to_send.write_u16(160);
+					this.SendCommand(this.getCommandID("S_UText"), to_send, true);
+				}*/
+				CBitStream to_send;
+				this.SendCommand(this.getCommandID("CC_savemap"), to_send, false);
+			}
+			
 			string[]@ tokens = text_in.split(" ");
 
 			if (tokens.length > 1)

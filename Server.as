@@ -46,28 +46,9 @@ void onTick(CRules@ this)
 			to_send.write_u16(size);
 			for(int i = 0; i < size; i++)
 			{
-				//to_send.write_netid(players[i].player.getNetworkID());
 				players[i].Serialize(@to_send);
 			}
 			this.SendCommand(this.getCommandID("S_PlayerUpdate"), to_send, true);
-
-			/*if(size < getPlayersCount())
-			{
-				for(int i = 0; i < getPlayersCount(); i++)
-				{
-					CPlayer@ pl = getPlayer(i);
-					if(pl is null) continue;
-
-					if(getServerPlayer(pl) !is null) continue;
-					else
-					{
-						ServerPlayer new_player();
-						new_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
-						new_player.SetPlayer(pl);
-						players.push_back(@new_player);
-					}
-				}
-			}*/
 		}
 	}
 	if(players_to_send.size() > 0)
@@ -92,28 +73,18 @@ void onTick(CRules@ this)
 		}
 	}
 
-	if(getGameTime() % world.map_save_time == world.map_save_time-10)
+	if(world.map_save_time != -1 && getGameTime() % world.map_save_time == world.map_save_time-10)
 	{
 		world.SaveMap();
 
 		CBitStream to_send;
-		to_send.write_string("Map has been saved successfully!");
+		to_send.write_string("Map has been auto-saved successfully!");
 		to_send.write_u8(255);
 		to_send.write_u8(22);
 		to_send.write_u8(119);
 		to_send.write_u16(160);
 		this.SendCommand(this.getCommandID("S_UText"), to_send, true);
 	}
-
-	/*if(getGameTime() == 100)
-	{
-		StartSaving();
-		return;
-	}
-	if(map_saving || map_loading)
-	{
-		UpdateSL();
-	}*/
 }
 
 void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
@@ -180,15 +151,6 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 			{
 				__player.UnSerialize(params);
 			}
-			/*for(int i = 0; i < players.size(); i++)
-			{
-				ServerPlayer@ __player = players[i];
-				if(__player.player is _player)
-				{
-					__player.UnSerialize(params);
-					break;
-				}
-			}*/
 		}
 	}
 	else if(cmd == this.getCommandID("C_FreezePlayer"))
@@ -257,31 +219,19 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 		world.sky_color.setGreen(g);
 		world.sky_color.setBlue(b);
 	}
+	else if(cmd == this.getCommandID("CC_savemap"))
+	{
+		world.SaveMap();
+
+		CBitStream to_send;
+		to_send.write_string("Map has been manually saved successfully!");
+		to_send.write_u8(255);
+		to_send.write_u8(22);
+		to_send.write_u8(119);
+		to_send.write_u16(160);
+		this.SendCommand(this.getCommandID("S_UText"), to_send, true);
+	}
 }
-
-/*void onNewPlayerJoin(CRules@ this, CPlayer@ player)
-{
-	getSecurity().sendSeclevs(player);
-	CBlob@ blob = server_CreateBlob("husk");
-	if(blob !is null)
-	{
-		blob.server_SetPlayer(player);
-	}
-
-	for(int i = 0; i < players.size(); i++)
-	{
-		ServerPlayer@ _player = players[i];
-		if(_player.player is player)
-		{
-			return;
-		}
-	}
-
-	ServerPlayer new_player();
-	new_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
-	new_player.SetPlayer(player);
-	players.push_back(@new_player);
-}*/
 
 void onNewPlayerJoin(CRules@ this, CPlayer@ player)
 {
@@ -292,16 +242,6 @@ void onNewPlayerJoin(CRules@ this, CPlayer@ player)
 		blob.server_SetPlayer(player);
 	}
 }
-
-// better than using a command i think
-/*void onPlayerRequestSpawn( CRules@ this, CPlayer@ player )
-{
-	print("added   "+players.size());
-	ServerPlayer new_player();
-	new_player.pos = Vec3f(world.map_width/2, world.map_height-4, world.map_depth/2);
-	new_player.SetPlayer(player);
-	players.push_back(@new_player);
-}*/
 
 void onPlayerLeave(CRules@ this, CPlayer@ player)
 {

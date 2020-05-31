@@ -18,6 +18,8 @@ void onInit(CRules@ this)
 	this.addCommandID("SC_ChangeSky");
 	this.addCommandID("S_UText");
 
+	this.addCommandID("CC_savemap");
+
 	CMap@ map = getMap();
 	map.topBorder = map.bottomBorder = map.leftBorder = map.rightBorder = map.legacyTileVariations = map.legacyTileEffects = map.legacyTileDestroy = map.legacyTileMinimap = false;
 	SColor col = 0x00000000;

@@ -99,8 +99,8 @@ class World
         {
             print("Loading map parameters.");
 
-            map_save_time = cfg.read_u32("map_save_time");
-            map_save_time = map_save_time*60*getTicksASecond();
+            map_save_time = cfg.read_s32("map_save_time");
+            if(map_save_time != -1) map_save_time = map_save_time*60*getTicksASecond();
 
             map_name = cfg.read_string("map_name");
             if(map_name == "")
