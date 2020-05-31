@@ -7,21 +7,6 @@ bool onServerProcessChat(CRules@ this, const string& in text_in, string& out tex
 		{
 			if(text_in == "/savemap")
 			{
-				/*World@ world;
-				if(this.exists("world"))
-				{
-					this.get("world", @world);
-				
-					world.SaveMap();
-
-					CBitStream to_send;
-					to_send.write_string("Map has been manually saved successfully!");
-					to_send.write_u8(255);
-					to_send.write_u8(22);
-					to_send.write_u8(119);
-					to_send.write_u16(160);
-					this.SendCommand(this.getCommandID("S_UText"), to_send, true);
-				}*/
 				CBitStream to_send;
 				this.SendCommand(this.getCommandID("CC_savemap"), to_send, false);
 			}
@@ -87,7 +72,9 @@ bool onClientProcessChat(CRules@ this, const string&in text_in, string&out text_
 			client_AddToChat("/commands - show this text. :)", chat_colors::color_blue);
 			client_AddToChat("/blocks - show available block texture names.", chat_colors::color_blue);
 			client_AddToChat("/blocks texture_name - change current block textures.", chat_colors::color_blue);
-			client_AddToChat("...and more comming soon!", chat_colors::color_blue);
+			client_AddToChat("Admin only commands:", chat_colors::color_green);
+			client_AddToChat("/sky R G B - change sky color.", chat_colors::color_blue);
+			client_AddToChat("/savemap - save game map.", chat_colors::color_blue);
 		}
 		else if(text_in == "/blocks")
 		{
@@ -98,13 +85,20 @@ bool onClientProcessChat(CRules@ this, const string&in text_in, string&out text_
 			client_AddToChat("\"PublicEnemy\"", chat_colors::color_blue);
 			client_AddToChat("\"3x3\"", chat_colors::color_blue);
 		}
+		else if(text_in == "/savemap")
+		{
+			if(getSecurity().getPlayerSeclev(player).getName() != "Admin")
+			{
+				client_AddToChat("You dont have enough strength to do that.", chat_colors::color_red);
+			}
+		}
 		else // check commands with multiple arguments
 		{
 			string[]@ tokens = text_in.split(" ");
 
-			if (tokens.length == 2)
+			if (tokens[0] == "/blocks")
 			{
-				if (tokens[0] == "/blocks")
+				if (tokens.length == 2)
 				{
 					string name = tokens[1];
 					if(name == "Classic" || name == "Jenny" || name == "Minecraft" || name == "PublicEnemy" || name == "3x3")
@@ -123,10 +117,17 @@ bool onClientProcessChat(CRules@ this, const string&in text_in, string&out text_
 						client_AddToChat("Incorrect name, use /blocks commant to see all available textures.", chat_colors::color_red);
 					}
 				}
+				else
+				{
+					client_AddToChat("Not enough, or too many arguments.", chat_colors::color_red);
+				}
 			}
-			else if(tokens.length == 1)
+			if (tokens[0] == "/sky")
 			{
-				client_AddToChat("Invalid command, use /commands to see all available commands.", chat_colors::color_red);
+				if(getSecurity().getPlayerSeclev(player).getName() != "Admin")
+				{
+					client_AddToChat("You dont have enough strength to do that.", chat_colors::color_red);
+				}
 			}
 		}
 		return false;
