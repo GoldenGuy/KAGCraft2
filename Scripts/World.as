@@ -404,6 +404,11 @@ class World
     {
         print("Loading existing map.");
 
+        uint32 seed = (114748346*Time_Local()+Time_Local()) % 500000;
+
+        @noise = @Noise(seed);
+        @rand = @Random(seed);
+
         uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
         map = _map;
 
@@ -805,7 +810,12 @@ class World
         for(uint32 i = start; i < end; i++)
         {
             pos = getPosFromWorldIndex(i);
-            SetBlockFaces(getBlock(pos.x, pos.y, pos.z), pos.x, pos.y, pos.z);
+            uint8 block = getBlock(pos.x, pos.y, pos.z);
+            SetBlockFaces(block, pos.x, pos.y, pos.z);
+            if(pos.y == map_height-1 && !Block::see_through[block])
+            {
+                faces_bits[pos.y][pos.z][pos.x] += 4;
+            }
             getNet().server_KeepConnectionsAlive();
         }
     }
@@ -927,6 +937,10 @@ class World
                 pos = getPosFromWorldIndex(start+index);
                 map[pos.y][pos.z][pos.x] = block_id;
                 SetBlockFaces(block_id, pos.x, pos.y, pos.z);
+                if(pos.y == map_height-1 && !Block::see_through[block_id])
+                {
+                    faces_bits[pos.y][pos.z][pos.x] += 4;
+                }
                 index++;
             }
         }
