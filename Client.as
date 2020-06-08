@@ -299,6 +299,97 @@ float[] model;
 void Render(int id)
 {
 	CRules@ rules = getRules();
+
+	if(getLocalPlayer() is null) return;
+	if(Loading::isLoading)
+	{
+		if(Loading::state == Loading::intro && Loading::intro_timer > 0)
+		{
+			camera.render_update();
+			Render::SetTransformScreenspace();
+			Render::RawQuads("SOLID", Fill);
+			if(Loading::intro_timer < 420)
+			{
+				Render::SetTransformWorldspace();
+				Matrix::MakeIdentity(model);
+				Render::SetTransform(model, camera.view, camera.projection);
+				
+				Loading::into_model_body.RenderMeshWithMaterial();
+
+				float look_at_me = 0;
+				if(Loading::intro_timer >= 100 && Loading::intro_timer <= 250)
+				{
+					look_at_me = float(Loading::intro_timer-100)*(-0.3);
+				}
+				else if(Loading::intro_timer > 250 && Loading::intro_timer <= 310)
+				{
+					look_at_me = -45;
+				}
+				else if(Loading::intro_timer > 310 && Loading::intro_timer <= 340)
+				{
+					look_at_me = XORRandom(50)*(-1);
+				}
+				Matrix::SetRotationDegrees(model, 18, 0, 0);
+				float[] temp_mat;
+				Matrix::MakeIdentity(temp_mat);
+				Matrix::SetRotationDegrees(temp_mat, 0, -look_at_me, 0);
+				model = Matrix_Multiply(model, temp_mat);
+				Render::SetModelTransform(model);
+				Loading::into_model_head.RenderMeshWithMaterial();
+				Matrix::MakeIdentity(model);
+				Render::SetModelTransform(model);
+
+				Render::SetTransformScreenspace();
+				GUI::SetFont("menu");
+				GUI::DrawText("Press spacebar to skip.", Vec2f(5, getScreenHeight()-28), 0xFF505050);
+			}
+			else
+			{
+				Render::ClearZ();
+				SColor logo_color = SColor(0xFFFFFFFF);
+				Render::SetAlphaBlend(true);
+				if(Loading::intro_timer < 548) logo_color.setAlpha(Maths::Min((Loading::intro_timer-420)*2, 255));
+				if(Loading::intro_timer > 670) logo_color.setAlpha(Maths::Max(255-(Loading::intro_timer-670)*3, 0));
+				Vec2f center = getDriver().getScreenCenterPos();
+				Vertex[] Logo = {	Vertex(center.x-76, center.y+20, 0, 0, 1, logo_color),
+									Vertex(center.x-76, center.y-20, 0, 0, 0, logo_color),
+									Vertex(center.x+76, center.y-20, 0, 1, 0, logo_color),
+									Vertex(center.x+76, center.y+20, 0, 1, 1, logo_color)
+				};
+				Render::RawQuads("LOGO", Logo);
+			}
+		}
+		else
+		{
+			float percent;
+			if(Loading::state == Loading::map_unserialization) percent = float(world.current_map_packet)/float(world.map_packets_amount);
+			else if(Loading::state == Loading::block_faces_gen) percent = float(world.current_block_faces_packet)/float(world.block_faces_packets_amount);
+			else if(Loading::state == Loading::chunk_gen) percent = float(world.current_chunks_packet)/float(world.chunks_packets_amount);
+			else percent = 1;
+
+			if(Loading::state == Loading::press_enter)
+			{
+				GUI::DrawPane(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-16), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+16), 0xFF30EE30);
+			}
+			else
+			{
+				GUI::DrawProgressBar(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-16), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+16), percent);
+			}
+			GUI::SetFont("menu");
+			GUI::DrawTextCentered(Loading::loading_string, Vec2f(getScreenWidth()/2, getScreenHeight()/2), color_white);
+
+			Vec2f help_dim;
+			GUI::GetTextDimensions(help_text, help_dim);
+			Vec2f help_start = getDriver().getScreenCenterPos()-Vec2f(help_dim.x/2, help_dim.y+40);
+			help_start.y += 40;
+			Vec2f help_end = help_start+help_dim;
+			help_end.y -= 40;
+			GUI::DrawWindow(help_start-Vec2f(6,6), help_end+Vec2f(6,6));
+			GUI::DrawText(help_text, help_start, color_black);
+		}
+		return;
+	}
+
 	camera.render_update();
 
 	Render::SetTransformScreenspace();
@@ -379,10 +470,27 @@ void Render(int id)
 	Render::ClearZ();
 	
 	GUI::SetFont("menu");
-	//GUI::DrawShadowedText("Pos: "+my_player.pos.IntString(), Vec2f(20,20), color_white);
-	//GUI::DrawShadowedText("Vel: "+my_player.vel.FloatString(), Vec2f(20,40), color_white);
-	//GUI::DrawShadowedText("Ang: "+my_player.look_dir.FloatString(), Vec2f(20,60), color_white);
-	//GUI::DrawShadowedText("dir_x: "+my_player.dir_x, Vec2f(20,80), color_white);
+
+	if(block_menu_open)
+	{
+		Render::SetTransformScreenspace();
+		Render::SetBackfaceCull(false);
+		GUI::DrawRectangle(block_menu_start, block_menu_end, 0xAA404040);
+		GUI::DrawPane(block_menu_mouse, block_menu_mouse+block_menu_tile_size);
+		GUI::DrawPane(picked_block_pos, picked_block_pos+block_menu_tile_size, 0xFF30AA30);
+		Render::RawQuads("Block_Textures", block_menu_verts);
+	}
+
+	if(show_help)
+	{
+		Vec2f help_dim;
+		GUI::GetTextDimensions(help_text, help_dim);
+		Vec2f help_start = Vec2f(20, 20);
+		Vec2f help_end = help_start+help_dim;
+		help_end.y -= 60;
+		GUI::DrawRectangle(help_start-Vec2f(6,6), help_end+Vec2f(6,6), 0xAA404040);
+		GUI::DrawText(help_text, help_start, color_white);
+	}
 
 	if(!g_videorecording)
 	{
@@ -405,63 +513,6 @@ void onPlayerLeave(CRules@ this, CPlayer@ player)
 		{
 			other_players.removeAt(i);
 			return;
-		}
-	}
-}
-
-void onRender(CRules@ this)
-{
-	if(getLocalPlayer() is null) return;
-	if(Loading::isLoading)
-	{
-		float percent;
-		if(Loading::state == Loading::map_unserialization) percent = float(world.current_map_packet)/float(world.map_packets_amount);
-		else if(Loading::state == Loading::block_faces_gen) percent = float(world.current_block_faces_packet)/float(world.block_faces_packets_amount);
-		else if(Loading::state == Loading::chunk_gen) percent = float(world.current_chunks_packet)/float(world.chunks_packets_amount);
-		else percent = 1;
-
-		if(Loading::state == Loading::press_enter)
-		{
-			GUI::DrawPane(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-16), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+16), 0xFF30EE30);
-		}
-		else
-		{
-			GUI::DrawProgressBar(Vec2f(getScreenWidth()/2-200, getScreenHeight()/2-16), Vec2f(getScreenWidth()/2+200, getScreenHeight()/2+16), percent);
-		}
-		GUI::SetFont("menu");
-		GUI::DrawTextCentered(Loading::loading_string, Vec2f(getScreenWidth()/2, getScreenHeight()/2), color_white);
-
-		Vec2f help_dim;
-		GUI::GetTextDimensions(help_text, help_dim);
-		Vec2f help_start = getDriver().getScreenCenterPos()-Vec2f(help_dim.x/2, help_dim.y+40);
-		help_start.y += 40;
-		Vec2f help_end = help_start+help_dim;
-		help_end.y -= 40;
-		GUI::DrawWindow(help_start-Vec2f(6,6), help_end+Vec2f(6,6));
-		GUI::DrawText(help_text, help_start, color_black);
-	}
-	else
-	{
-		if(block_menu_open)
-		{
-			Render::SetTransformScreenspace();
-			Render::SetBackfaceCull(false);
-			GUI::DrawRectangle(block_menu_start, block_menu_end, 0xAA404040);
-			GUI::DrawPane(block_menu_mouse, block_menu_mouse+block_menu_tile_size);
-			GUI::DrawPane(picked_block_pos, picked_block_pos+block_menu_tile_size, 0xFF30AA30);
-			Render::RawQuads("Block_Textures", block_menu_verts);
-		}
-
-		if(show_help)
-		{
-			GUI::SetFont("menu");
-			Vec2f help_dim;
-			GUI::GetTextDimensions(help_text, help_dim);
-			Vec2f help_start = Vec2f(20, 20);
-			Vec2f help_end = help_start+help_dim;
-			help_end.y -= 60;
-			GUI::DrawRectangle(help_start-Vec2f(6,6), help_end+Vec2f(6,6), 0xAA404040);
-			GUI::DrawText(help_text, help_start, color_white);
 		}
 	}
 }

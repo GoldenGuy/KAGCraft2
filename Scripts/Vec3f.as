@@ -65,6 +65,13 @@ class Vec3f
 	{
 		return Vec3f((((1 - t) * this.x) + (t * desired.x)), (((1 - t) * this.y) + (t * desired.y)), (((1 - t) * this.z) + (t * desired.z)));
 	}
+
+	void Clamp(const Vec3f&in min, const Vec3f&in max)
+	{
+		x = Maths::Clamp(x, min.x, max.x);
+		y = Maths::Clamp(y, min.y, max.y);
+		z = Maths::Clamp(z, min.z, max.z);
+	}
 	
 	void Print()
 	{

@@ -1337,6 +1337,7 @@ void client_SetBlock(CPlayer@ player, uint8 block, const Vec3f&in pos)
     {
         uint8 old_block = world.getBlock(pos.x, pos.y, pos.z);
         world.setBlock(pos.x, pos.y, pos.z, block);
+        world.saveBlock(pos.x, pos.y, pos.z, block);
         world.UpdateBlocksAndChunks(pos.x, pos.y, pos.z);
         world.BlockUpdate(pos.x, pos.y, pos.z, block, old_block);
     }

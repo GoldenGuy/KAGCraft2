@@ -14,6 +14,7 @@ namespace Loading
 	{
 		init,
 		intro,
+		request_map_params,
 		waiting_for_map_params,
 		ask_for_map,
 		map_unserialization,
@@ -65,6 +66,7 @@ namespace Loading
 				Texture::createFromFile("DEBUG", "Textures/Debug.png");
 				Texture::createFromFile("SOLID", "Sprites/pixel.png");
 				Texture::createFromFile("NickNamesFont", "NickNamesFont.png");
+				Texture::createFromFile("LOGO", "Textures/Logo.png");
 
 				InitBlocks();
 
@@ -74,49 +76,39 @@ namespace Loading
 				if(this.exists("world"))
 				{
 					this.get("world", @world);
-
-					//world.LoadMapParams();
-
-					world.map_packets.clear();
-					world.current_map_packet = 0;
-					world.current_block_faces_packet = 0;
-					world.current_chunks_packet = 0;
-					Fill[0].col = Fill[1].col = Fill[2].col = Fill[3].col = world.sky_color;
-
 					world.FacesSetUp();
 					world.SetUpMaterial();
-
-					state = block_faces_gen;
-					return;
 				}
 				else
 				{
 					@world = @World();
-
-					world.map_packets.clear();
-					world.current_map_packet = 0;
-					world.current_block_faces_packet = 0;
-					world.current_chunks_packet = 0;
-					Fill[0].col = Fill[1].col = Fill[2].col = Fill[3].col = world.sky_color;
-					//getRules().set("sky_color", @world.sky_color);
-
 					world.SetUpMaterial();
 				}
 
-				CBitStream to_send;
-				to_send.write_netid(getLocalPlayer().getNetworkID());
-				this.SendCommand(this.getCommandID("C_RequestMapParams"), to_send, false);
+				world.map_packets.clear();
+				world.current_map_packet = 0;
+				world.current_block_faces_packet = 0;
+				world.current_chunks_packet = 0;
+				Fill[0].col = Fill[1].col = Fill[2].col = Fill[3].col = color_black;
 
 				intro_timer = 0;
 				into_model_head.LoadObjIntoMesh("Models/Misc/Intro/intro_head.obj");
 				into_model_head.GetMaterial().SetFlag(SMaterial::LIGHTING, false);
+				into_model_head.GetMaterial().SetFlag(SMaterial::BACK_FACE_CULLING, false);
 				into_model_head.GetMaterial().SetFlag(SMaterial::BILINEAR_FILTER, false);
+				into_model_head.GetMaterial().SetFlag(SMaterial::BLEND_OPERATION, true);
+				into_model_head.GetMaterial().SetFlag(SMaterial::FOG_ENABLE, true);
 				into_model_body.LoadObjIntoMesh("Models/Misc/Intro/intro_body.obj");
 				into_model_body.GetMaterial().SetFlag(SMaterial::LIGHTING, false);
+				into_model_body.GetMaterial().SetFlag(SMaterial::BACK_FACE_CULLING, false);
 				into_model_body.GetMaterial().SetFlag(SMaterial::BILINEAR_FILTER, false);
+				into_model_body.GetMaterial().SetFlag(SMaterial::BLEND_OPERATION, true);
+				into_model_body.GetMaterial().SetFlag(SMaterial::FOG_ENABLE, true);
+
+				Render::addScript(Render::layer_background, "Client.as", "Render", 1);
 				
 				state = intro;
-				loading_string = "Waiting for map parameters.";
+				loading_string = "Intro.";
 				return;
 			}
 
@@ -124,9 +116,47 @@ namespace Loading
 			{
 				if(intro_timer == 0)
 				{
+					CMixer@ mixer = getMixer();
+					mixer.ResetMixer();
+					mixer.AddTrack("Sounds/intro_music.ogg", 1);
+					mixer.PlayRandom(1);
 
+					camera.move(Vec3f(-3,2,-6), true);
+					camera.turn(30,-20,0, true);
+				}
+				camera.tick_update();
+				if(intro_timer < 420)
+				{
+					float fog_modif = 7.5f;
+					if(intro_timer > 360)
+					{
+						fog_modif = Maths::Max(0, 7.5f-7.5f*((intro_timer-360)/120.0f));
+					}
+					if(intro_timer % 2 == 0) Render::SetFog(0x0000000, SMesh::LINEAR, fog_modif*(0.20f+float(XORRandom(20))/100.0f), fog_modif, 0, true, false);
+				}
+				else if(intro_timer >= 420)
+				{
+					Render::SetFog(0xFFFFFFFF, SMesh::LINEAR, 0, 8000, 0, false, false);
 				}
 				intro_timer++;
+				if(getControls().isKeyJustPressed(KEY_SPACE) || intro_timer == 790)
+				{
+					intro_timer = 0;
+					getMixer().FadeOut(1, 2);
+					loading_string = "Requesting map parameters.";
+					state = isServer() ? block_faces_gen : request_map_params;
+				}
+				return;
+			}
+
+			case request_map_params:
+			{
+				CBitStream to_send;
+				to_send.write_netid(getLocalPlayer().getNetworkID());
+				this.SendCommand(this.getCommandID("C_RequestMapParams"), to_send, false);
+				state = waiting_for_map_params;
+				loading_string = "Waiting for map parameters.";
+				return;
 			}
 
 			case waiting_for_map_params:
@@ -243,6 +273,7 @@ namespace Loading
 				getControls().setMousePosition(Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f));
 
 				Render::SetFog(world.sky_color, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, false);
+				Fill[0].col = Fill[1].col = Fill[2].col = Fill[3].col = world.sky_color;
 
 				for(int i = 0; i < block_queue.size(); i++)
 				{
@@ -252,8 +283,6 @@ namespace Loading
 					world.UpdateBlocksAndChunks(pos.x, pos.y, pos.z);
 				}
 				block_queue.clear();
-
-				Render::addScript(Render::layer_background, "Client.as", "Render", 1);
 
 				for(int i = 0; i < getPlayersCount(); i++)
 				{
