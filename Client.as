@@ -2,7 +2,7 @@
 #define CLIENT_ONLY
 
 #include "Debug.as"
-#include "Vec3f.as"
+#include "Maths.as"
 #include "World.as"
 #include "Tree.as"
 #include "ClientLoading.as"
@@ -101,23 +101,6 @@ void onTick(CRules@ this)
 		}
 	}
 	scoreboard_open = false;
-}
-
-Vec2f Project(Vec3f&in p)
-{
-	p = MultiplyVec3fMatrix(camera.view, p);
-	p = MultiplyVec3fMatrix(camera.projection, p);
-	Vec2f output = Vec2f(int(((p.x/p.z + 1.0)/2.0) * getScreenWidth() + 0.5f), int(((1.0 - p.y/p.z)/2.0) * getScreenHeight() + 0.5f));
-	return output;
-}
-
-Vec3f MultiplyVec3fMatrix(const float[]&in M, Vec3f&in point)
-{
-	Vec3f output;
-	output.x = point.x*M[0] + point.y*M[4] + point.z*M[8] + M[12];
-	output.y = point.x*M[1] + point.y*M[5] + point.z*M[9] + M[13];
-	output.z = point.x*M[2] + point.y*M[6] + point.z*M[10] + M[14];
-	return output;
 }
 
 void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
@@ -432,10 +415,10 @@ void Render(int id)
 	// render yourself only while in thirdperson
 	if(thirdperson)
 	{
-		Vec3f temp_1 = my_player.render_pos;
-		temp_1.y += player_height+0.5f;
-		Vec2f nnpos = Project(temp_1);
-		GUI::DrawTextCentered("GoldenGuy", nnpos, color_white);
+		//Vec3f temp_1 = my_player.render_pos;
+		//temp_1.y += player_height+0.5f;
+		//Vec2f nnpos = Project(temp_1, model, camera.view, camera.projection);
+		//GUI::DrawTextCentered("GoldenGuy", nnpos, color_white);
 		my_player.RenderUpdate();
 		my_player.RenderPlayer();
 	}

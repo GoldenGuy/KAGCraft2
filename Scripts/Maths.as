@@ -134,3 +134,21 @@ float[] Matrix_Multiply(const float[]&in first, const float[]&in second) // inbu
 				new[i+j*4] += first[i+k*4] * second[j+k*4];
 	return new;
 }
+
+Vec2f Project(Vec3f&in p, const float[]&in model, const float[]&in view, const float[]&in projection)
+{
+	//p = MultiplyVec3fMatrix(model, p); // eh
+	p = MultiplyVec3fMatrix(view, p);
+	p = MultiplyVec3fMatrix(projection, p);
+	Vec2f output = Vec2f(int(((p.x/p.z + 1.0)/2.0) * getScreenWidth() + 0.5f), int(((1.0 - p.y/p.z)/2.0) * getScreenHeight() + 0.5f));
+	return output;
+}
+
+Vec3f MultiplyVec3fMatrix(const float[]&in M, const Vec3f&in point)
+{
+	Vec3f output;
+	output.x = point.x*M[0] + point.y*M[4] + point.z*M[8] + M[12];
+	output.y = point.x*M[1] + point.y*M[5] + point.z*M[9] + M[13];
+	output.z = point.x*M[2] + point.y*M[6] + point.z*M[10] + M[14];
+	return output;
+}
