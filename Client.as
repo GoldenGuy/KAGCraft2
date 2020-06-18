@@ -91,6 +91,8 @@ void onTick(CRules@ this)
 
 		if(getControls().isKeyJustPressed(KEY_F1)) show_help = !show_help;
 
+		//if(getControls().isKeyJustPressed(KEY_F7)) GenerateModelPLY();
+
 		if(thirdperson || !isWindowActive() || !isWindowFocused() || Menu::getMainMenu() !is null || block_menu_open || IsChatPromptActive() || scoreboard_open)
 		{
 			getDriver().SetShader("mc_cursor", false);
@@ -573,3 +575,92 @@ string help_text =  "Welcome to KagCraft2!"+"\n\n"+
 					"Tab - scoreboard,"+"\n"+
 					"F1 - show this text in game."+"\n\n"+
 					"Type /commands in chat to see available commands.";
+
+void GenerateModelPLY()
+{
+	string everything;
+	string misc = "ply\nformat ascii 1.0\n";
+	string vert_count = "element vertex ";
+	string props = "\nproperty float x\nproperty float y\nproperty float z\nproperty float s\nproperty float t\n";
+	string face_count = "element face ";
+	string end_header = "\nproperty list uchar uint vertex_indices\nend_header";
+
+	string verts;
+	string faces;
+
+	int add_faces = 0;
+	//int faces;
+
+	int total_verts = 0;
+	int total_faces = 0;
+
+	for(int i = 0; i < world.chunks.size(); i++)
+	{
+		Chunk@ chunk = world.chunks[i];
+		if(chunk.empty) continue;
+
+		// verts
+		for(int j = 0; j < chunk.verts.size(); j++)
+		{
+			Vertex vert = chunk.verts[j];
+			string _x = formatFloat(vert.x, "", 0, 6);
+			string _y = formatFloat(vert.y, "", 0, 6);
+			string _z = formatFloat(vert.z, "", 0, 6);
+			string _u = formatFloat(vert.u, "", 0, 6);
+			string _v = formatFloat(vert.v, "", 0, 6);
+			//verts += "\n"+_x+" "+_y+" "+_z+" "+_u+" "+_v;
+			print(""+_x+" "+_y+" "+_z+" "+_u+" "+_v);
+			total_verts++;
+		}
+
+		//print("chunk good");
+
+		/*for(int j = 0; j < chunk.verts.size(); j++)
+		{
+			Vertex vert = chunk.verts[j];
+			string _x = formatFloat(vert.x, "", 0, 6);
+			string _y = formatFloat(vert.y, "", 0, 6);
+			string _z = formatFloat(vert.z, "", 0, 6);
+			string _u = formatFloat(vert.u, "", 0, 6);
+			string _v = formatFloat(vert.v, "", 0, 6);
+			verts += "\n"+_x+" "+_y+" "+_z+" "+_u+" "+_v;
+			print(""+_x+" "+_y+" "+_z+" "+_u+" "+_v);
+			total_verts++;
+		}
+		for(int j = 0; j < chunk.indices.size(); j += 6)
+		{
+			faces += "\n3 "+(chunk.indices[j]+add_faces)+" "+(chunk.indices[j+1]+add_faces)+" "+(chunk.indices[j+2]+add_faces)+"\n3 "+(chunk.indices[j+3]+add_faces)+" "+(chunk.indices[j+4]+add_faces)+" "+(chunk.indices[j+5]+add_faces);
+			//print("3 "+(chunk.indices[j]+add_faces)+" "+(chunk.indices[j+1]+add_faces)+" "+(chunk.indices[j+2]+add_faces));
+			//print("3 "+(chunk.indices[j+3]+add_faces)+" "+(chunk.indices[j+4]+add_faces)+" "+(chunk.indices[j+5]+add_faces));
+			total_faces += 2;
+		}
+		add_faces += chunk.indices.size();*/
+	}
+	print("verts: "+total_verts);
+
+	for(int i = 0; i < world.chunks.size(); i++)
+	{
+		Chunk@ chunk = world.chunks[i];
+		if(chunk.empty) continue;
+
+		// ind
+		int soize = chunk.verts.size()/4;
+		for(int j = 0; j < soize; j++)
+		{
+			print("3 "+(add_faces)+" "+(add_faces+1)+" "+(add_faces+2));
+			print("3 "+(add_faces)+" "+(add_faces+2)+" "+(add_faces+3));
+			add_faces += 4;
+			total_faces += 2;
+		}
+	}
+
+	print("faces: "+total_faces);
+	//print(faces);
+
+	//vert_count += ""+total_verts;
+	//face_count += ""+total_faces;
+
+	//everything = misc+vert_count+props+face_count+end_header+verts+faces;
+	print("done");
+	//print(everything);
+}
