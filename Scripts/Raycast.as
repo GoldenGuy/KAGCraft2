@@ -1,4 +1,3 @@
-//Raycast.as
 
 namespace Raycast
 {
@@ -123,7 +122,7 @@ uint8 RaycastPrecise(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_d
 		{
 			continue;
 		}
-		uint8 check = world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
+		uint8 check = world.getBlock(ray_world_pos.x, ray_world_pos.y, ray_world_pos.z);//world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
 		if((ignore_nonsolid && Block::solid[check]) || (!ignore_nonsolid && check != Block::air))
 		{
 			if(side == 0)
@@ -246,7 +245,7 @@ uint8 RaycastWorld_Previous(const Vec3f&in ray_pos, const Vec3f&in ray_dir, floa
 		{
 			continue;
 		}
-		uint8 check = world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
+		uint8 check = world.getBlock(ray_world_pos.x, ray_world_pos.y, ray_world_pos.z);//world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
 		if(check != Block::air)
 		{
 			return Raycast::S_HIT;
@@ -355,7 +354,7 @@ uint8 RaycastWorld(const Vec3f&in ray_pos, const Vec3f&in ray_dir, float max_dis
 		{
 			continue;
 		}
-		uint8 check = world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
+		uint8 check = world.getBlock(ray_world_pos.x, ray_world_pos.y, ray_world_pos.z);//world.map[ray_world_pos.y][ray_world_pos.z][ray_world_pos.x];
 		if(check != Block::air)
 		{
 			hit_pos = ray_world_pos;

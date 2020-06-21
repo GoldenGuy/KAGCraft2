@@ -78,7 +78,14 @@ void onTick(CRules@ this)
 		world.SaveMap();
 
 		CBitStream to_send;
-		to_send.write_string("Map has been auto-saved successfully!");
+		if(world.save_map)
+		{
+			to_send.write_string("Map has been auto-saved successfully!");
+		}
+		else
+		{
+			to_send.write_string("Will not save map :P");
+		}
 		to_send.write_u8(255);
 		to_send.write_u8(22);
 		to_send.write_u8(119);
@@ -224,7 +231,14 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 		world.SaveMap();
 
 		CBitStream to_send;
-		to_send.write_string("Map has been manually saved successfully!");
+		if(world.save_map)
+		{
+			to_send.write_string("Map has been manually saved successfully!");
+		}
+		else
+		{
+			to_send.write_string("Will not save map :P");
+		}
 		to_send.write_u8(255);
 		to_send.write_u8(22);
 		to_send.write_u8(119);

@@ -17,6 +17,7 @@ class MapSender
 
 class World
 {
+    bool save_map;
     string map_name = "";
     bool new = true;
 
@@ -72,8 +73,10 @@ class World
     uint32 current_chunks_packet;
     
     // y z x
-    uint8[][][] map;
-    uint8[][][] faces_bits;
+    //uint8[][][] map;
+    uint8[] map;
+    //uint8[][][] faces_bits;
+    uint8[] faces_bits;
     Chunk@[] chunks;
     SMaterial map_material;
 
@@ -99,6 +102,8 @@ class World
         {
             print("Loading map parameters.");
 
+            save_map = cfg.read_bool("save_map");
+            
             map_save_time = cfg.read_s32("map_save_time");
             if(map_save_time != -1) map_save_time = map_save_time*60*getTicksASecond();
 
@@ -215,8 +220,9 @@ class World
         Vec3f[] trees;
         trees.clear();
         
-        uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
-        map = _map;
+        //uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
+        //map = _map;
+        map.resize(map_size);
 
         print("Map size: "+(map_height*map_depth*map_width));
 
@@ -409,8 +415,10 @@ class World
         @noise = @Noise(seed);
         @rand = @Random(seed);
 
-        uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
-        map = _map;
+        //uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
+        //map = _map;
+        //map_1d.resize(map_size);
+        map.resize(map_size);
 
         bool done = false;
         if (save_image.isLoaded())
@@ -431,6 +439,7 @@ class World
 
                 Vec3f pos = getPosFromWorldIndex(index);
                 setBlock(pos.x, pos.y, pos.z, a);
+                //map_1d[pos.x+pos.z*map_width+pos.y*map_width_depth] = a;
 
                 if(index+1 >= map_size)
                 {
@@ -441,6 +450,7 @@ class World
                 {
                     pos = getPosFromWorldIndex(index+1);
                     setBlock(pos.x, pos.y, pos.z, r);
+                    //map_1d[pos.x+pos.z*map_width+pos.y*map_width_depth] = r;
                 }
                 if(index+2 >= map_size)
                 {
@@ -451,6 +461,7 @@ class World
                 {
                     pos = getPosFromWorldIndex(index+2);
                     setBlock(pos.x, pos.y, pos.z, g);
+                    //map_1d[pos.x+pos.z*map_width+pos.y*map_width_depth] = g;
                 }
                 if(index+3 >= map_size)
                 {
@@ -461,6 +472,7 @@ class World
                 {
                     pos = getPosFromWorldIndex(index+3);
                     setBlock(pos.x, pos.y, pos.z, b);
+                    //map_1d[pos.x+pos.z*map_width+pos.y*map_width_depth] = b;
                 }
             }
             print("Done!");
@@ -473,6 +485,8 @@ class World
 
     void SaveMap()
     {
+        if(!save_map) {print("lol, no, not gonna save the map :P"); return;}
+
         world.save_image.Save();
 
         ConfigFile cfg;
@@ -500,7 +514,7 @@ class World
     {
         if(!inWorldBounds(x, y, z)) return;
 
-        uint map_index = getIndex(x, y, z);
+        uint map_index = toIndex(x, y, z);
         uint image_index = map_index / 4;
         u8 sub_pixel = map_index % 4;
         save_image.setPixelOffset(image_index);
@@ -738,8 +752,9 @@ class World
 
     void ClientMapSetUp()
     {
-        uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
-        map = _map;
+        //uint8[][][] _map(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
+        //map = _map;
+        map.resize(map_size);
 
         @noise = @Noise(XORRandom(10000000));
 
@@ -748,8 +763,9 @@ class World
 
     void FacesSetUp()
     {
-        uint8[][][] _faces_bits(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
-        faces_bits = _faces_bits;
+        //uint8[][][] _faces_bits(map_height, uint8[][](map_depth, uint8[](map_width, 0)));
+        //faces_bits = _faces_bits;
+        faces_bits.resize(map_size);
     }
 
     void SetUpMaterial()
@@ -768,23 +784,46 @@ class World
 
     void setBlockSafe(int x, int y, int z, uint8 block_id)
     {
-        if(inWorldBounds(x, y, z)) map[y][z][x] = block_id;
+        if(inWorldBounds(x, y, z)) setBlock(x, y, z, block_id);
     }
 
-    void setBlock(int x, int y, int z, uint8 block_id)
+    void setBlockSafe(uint32 index, uint8 block_id)
     {
-        map[y][z][x] = block_id;
+        if(index < 0 || index >= map_size) setBlock(index, block_id);
     }
 
-    uint8 getBlock(int x, int y, int z)
+    void setBlock(uint32 x, uint32 y, uint32 z, uint8 block_id)
     {
-        return map[y][z][x];
+        //map[y][z][x] = block_id;
+        map[x+z*map_width+y*map_width_depth] = block_id;
+    }
+
+    void setBlock(uint32 index, uint8 block_id)
+    {
+        map[index] = block_id;
     }
 
     uint8 getBlockSafe(int x, int y, int z)
     {
-        if(inWorldBounds(x, y, z)) return map[y][z][x];
+        if(inWorldBounds(x, y, z)) return getBlock(x, y, z);
         return 255;
+    }
+
+    uint8 getBlockSafe(uint32 index)
+    {
+        if(index < 0 || index >= map_size) return getBlock(index);
+        return 255;
+    }
+
+    uint8 getBlock(int x, int y, int z)
+    {
+        //return map[y][z][x];
+        return map[x+z*map_width+y*map_width_depth];
+    }
+
+    uint8 getBlock(uint32 index)
+    {
+        return map[index];
     }
 
     void SetUpChunks(uint32 chunk_packet)
@@ -810,11 +849,11 @@ class World
         for(uint32 i = start; i < end; i++)
         {
             pos = getPosFromWorldIndex(i);
-            uint8 block = getBlock(pos.x, pos.y, pos.z);
+            uint8 block = getBlock(i);//pos.x, pos.y, pos.z);
             SetBlockFaces(block, pos.x, pos.y, pos.z);
-            if(pos.y == map_height-1 && !Block::see_through[block])
+            if(pos.y == map_height-1)// && !Block::see_through[block])
             {
-                faces_bits[pos.y][pos.z][pos.x] += 4;
+                faces_bits[i] += 4;
             }
             getNet().server_KeepConnectionsAlive();
         }
@@ -824,30 +863,30 @@ class World
     {
         if(Block::see_through[block])
         {
-            if(z < map_depth-1) faces_bits[y][z+1][x] += 1;
-            if(z > 0) faces_bits[y][z-1][x] += 2;
-            if(y > 0) faces_bits[y-1][z][x] += 4;
-            if(y < map_height-1) faces_bits[y+1][z][x] += 8;
-            if(x > 0) faces_bits[y][z][x-1] += 16;
-            if(x < map_width-1) faces_bits[y][z][x+1] += 32;
+            if(z < map_depth-1) faces_bits[toIndex(x, y, z+1)] += 1;
+            if(z > 0) faces_bits[toIndex(x, y, z-1)] += 2;
+            if(y > 0) faces_bits[toIndex(x, y-1, z)] += 4;
+            if(y < map_height-1) faces_bits[toIndex(x, y+1, z)] += 8;
+            if(x > 0) faces_bits[toIndex(x-1, y, z)] += 16;
+            if(x < map_width-1) faces_bits[toIndex(x+1, y, z)] += 32;
         }
     }
 
     void UpdateBlockFaces(int x, int y, int z)
     {
-        if(map[y][z][x] == Block::air)
+        if(getBlock(x, y, z) == Block::air)
         {
-            faces_bits[y][z][x] = 0;
+            faces_bits[toIndex(x, y, z)] = 0;
             return;
         }
         
         uint8 faces = 0;
 
-        if(z > 0 && Block::see_through[map[y][z-1][x]]) faces += 1;
-        if(z < map_depth-1 && Block::see_through[map[y][z+1][x]]) faces += 2;
+        if(z > 0 && Block::see_through[getBlock(x, y, z-1)]) faces += 1;
+        if(z < map_depth-1 && Block::see_through[getBlock(x, y, z+1)]) faces += 2;
         if(y < map_height-1)
         {
-            if(Block::see_through[map[y+1][z][x]])
+            if(Block::see_through[getBlock(x, y+1, z)])
             {
                 faces += 4;
             }
@@ -856,14 +895,14 @@ class World
         {
             faces += 4;
         }
-        if(y > 0 && Block::see_through[map[y-1][z][x]]) faces += 8;
-        if(x < map_width-1 && Block::see_through[map[y][z][x+1]]) faces += 16;
-        if(x > 0 && Block::see_through[map[y][z][x-1]]) faces += 32;
+        if(y > 0 && Block::see_through[getBlock(x, y-1, z)]) faces += 8;
+        if(x < map_width-1 && Block::see_through[getBlock(x+1, y, z)]) faces += 16;
+        if(x > 0 && Block::see_through[getBlock(x-1, y, z)]) faces += 32;
 
-        faces_bits[y][z][x] = faces;
+        faces_bits[toIndex(x, y, z)] = faces;
     }
 
-    int getIndex(int x, int y, int z)
+    int32 toIndex(int x, int y, int z)
     {
         int index = y*map_width_depth + z*map_width + x;
         return index;
@@ -887,7 +926,7 @@ class World
         for(uint32 i = start; i < end; i++)
         {
             pos = getPosFromWorldIndex(i);
-            block_id = map[pos.y][pos.z][pos.x];
+            block_id = getBlock(pos.x, pos.y, pos.z);
             if(i == start)
             {
                 similar_block_id = block_id;
@@ -934,12 +973,14 @@ class World
                 {
                     return;
                 }
+                uint32 map_index = start+index;
                 pos = getPosFromWorldIndex(start+index);
-                map[pos.y][pos.z][pos.x] = block_id;
+                //map[pos.y][pos.z][pos.x] = block_id;
+                setBlock(map_index, block_id);
                 SetBlockFaces(block_id, pos.x, pos.y, pos.z);
-                if(pos.y == map_height-1 && !Block::see_through[block_id])
+                if(pos.y == map_height-1)// && !Block::see_through[block_id])
                 {
-                    faces_bits[pos.y][pos.z][pos.x] += 4;
+                    faces_bits[map_index] += 4;
                 }
                 index++;
             }
@@ -984,20 +1025,20 @@ class World
     bool isTileSolid(int x, int y, int z)
     {
         if(!inWorldBounds(x, y, z)) return false;
-        return Block::solid[map[y][z][x]];
+        return Block::solid[getBlock(x, y, z)];
     }
 
     bool isTileSolidOrOOB(int x, int y, int z)
     {
         if(!inWorldBounds(x, y, z)) return true;
-        return Block::solid[map[y][z][x]];
+        return Block::solid[getBlock(x, y, z)];
     }
 
     bool isTileSolidOrOOBIgnoreHeight(int x, int y, int z)
     {
         if(inWorldBounds(x, y, z))
         {
-            return Block::solid[map[y][z][x]];
+            return Block::solid[getBlock(x, y, z)];
         }
         return !inWorldBoundsIgnoreHeight(x, y, z);
     }
@@ -1064,21 +1105,21 @@ class Chunk
 			{
 				for (int _x = world_x; _x < world_x_bounds; _x++)
 				{
-                    int faces = _world.faces_bits[_y][_z][_x];
+                    int faces = _world.faces_bits[_world.toIndex(_x, _y, _z)];
 
                     if(faces == 0) continue;
 
-                    uint8 block = _world.map[_y][_z][_x];
+                    uint8 block = _world.getBlock(_x, _y, _z);
 
                     if(block == Block::air) continue;
 
                     if(Block::plant[block])
                     {
-                        addPlantFaces(block, Vec3f(_x,_y,_z));
+                        addPlantFaces(block, _x, _y, _z);
                     }
                     else
                     {
-                        addFaces(block, faces, Vec3f(_x,_y,_z));
+                        addFaces(block, faces, _x, _y, _z);
                     }
                 }
             }
@@ -1097,192 +1138,192 @@ class Chunk
         }
     }
 
-    void addFaces(uint8 block, uint8 face_info, const Vec3f&in pos)
+    void addFaces(uint8 block, uint8 face_info, uint32 x, uint32 y, uint32 z)
 	{
 		switch(face_info)
 		{
 			case 0:{ break;}
-			case 1:{ addFrontFace(block, pos); break;}
-			case 2:{ addBackFace(block, pos); break;}
-			case 3:{ addFrontFace(block, pos); addBackFace(block, pos); break;}
-			case 4:{ addUpFace(block, pos); break;}
-			case 5:{ addFrontFace(block, pos); addUpFace(block, pos); break;}
-			case 6:{ addBackFace(block, pos); addUpFace(block, pos); break;}
-			case 7:{ addFrontFace(block, pos); addBackFace(block, pos); addUpFace(block, pos); break;}
-			case 8:{ addDownFace(block, pos); break;}
-			case 9:{ addFrontFace(block, pos); addDownFace(block, pos); break;}
-			case 10:{ addBackFace(block, pos); addDownFace(block, pos); break;}
-			case 11:{ addFrontFace(block, pos); addBackFace(block, pos); addDownFace(block, pos); break;}
-			case 12:{ addUpFace(block, pos); addDownFace(block, pos); break;}
-			case 13:{ addFrontFace(block, pos); addUpFace(block, pos); addDownFace(block, pos); break;}
-			case 14:{ addBackFace(block, pos); addUpFace(block, pos); addDownFace(block, pos); break;}
-			case 15:{ addFrontFace(block, pos); addBackFace(block, pos); addUpFace(block, pos); addDownFace(block, pos); break;}
-			case 16:{ addRightFace(block, pos); break;}
-			case 17:{ addFrontFace(block, pos); addRightFace(block, pos); break;}
-			case 18:{ addBackFace(block, pos); addRightFace(block, pos); break;}
-			case 19:{ addFrontFace(block, pos); addBackFace(block, pos); addRightFace(block, pos); break;}
-			case 20:{ addUpFace(block, pos); addRightFace(block, pos); break;}
-			case 21:{ addFrontFace(block, pos); addUpFace(block, pos); addRightFace(block, pos); break;}
-			case 22:{ addBackFace(block, pos); addUpFace(block, pos); addRightFace(block, pos); break;}
-			case 23:{ addFrontFace(block, pos); addBackFace(block, pos); addUpFace(block, pos); addRightFace(block, pos); break;}
-			case 24:{ addDownFace(block, pos); addRightFace(block, pos); break;}
-			case 25:{ addFrontFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); break;}
-			case 26:{ addBackFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); break;}
-			case 27:{ addFrontFace(block, pos); addBackFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); break;}
-			case 28:{ addUpFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); break;}
-			case 29:{ addFrontFace(block, pos); addUpFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); break;}
-			case 30:{ addBackFace(block, pos); addUpFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); break;}
-			case 31:{ addFrontFace(block, pos); addBackFace(block, pos); addUpFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); break;}
-			case 32:{ addLeftFace(block, pos); break;}
-			case 33:{ addFrontFace(block, pos); addLeftFace(block, pos); break;}
-			case 34:{ addBackFace(block, pos); addLeftFace(block, pos); break;}
-			case 35:{ addFrontFace(block, pos); addBackFace(block, pos); addLeftFace(block, pos); break;}
-			case 36:{ addUpFace(block, pos); addLeftFace(block, pos); break;}
-			case 37:{ addFrontFace(block, pos); addUpFace(block, pos); addLeftFace(block, pos); break;}
-			case 38:{ addBackFace(block, pos); addUpFace(block, pos); addLeftFace(block, pos); break;}
-			case 39:{ addFrontFace(block, pos); addBackFace(block, pos); addUpFace(block, pos); addLeftFace(block, pos); break;}
-			case 40:{ addDownFace(block, pos); addLeftFace(block, pos); break;}
-			case 41:{ addFrontFace(block, pos); addDownFace(block, pos); addLeftFace(block, pos); break;}
-			case 42:{ addBackFace(block, pos); addDownFace(block, pos); addLeftFace(block, pos); break;}
-			case 43:{ addFrontFace(block, pos); addBackFace(block, pos); addDownFace(block, pos); addLeftFace(block, pos); break;}
-			case 44:{ addUpFace(block, pos); addDownFace(block, pos); addLeftFace(block, pos); break;}
-			case 45:{ addFrontFace(block, pos); addUpFace(block, pos); addDownFace(block, pos); addLeftFace(block, pos); break;}
-			case 46:{ addBackFace(block, pos); addUpFace(block, pos); addDownFace(block, pos); addLeftFace(block, pos); break;}
-			case 47:{ addFrontFace(block, pos); addBackFace(block, pos); addUpFace(block, pos); addDownFace(block, pos); addLeftFace(block, pos); break;}
-			case 48:{ addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 49:{ addFrontFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 50:{ addBackFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 51:{ addFrontFace(block, pos); addBackFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 52:{ addUpFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 53:{ addFrontFace(block, pos); addUpFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 54:{ addBackFace(block, pos); addUpFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 55:{ addFrontFace(block, pos); addBackFace(block, pos); addUpFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 56:{ addDownFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 57:{ addFrontFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 58:{ addBackFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 59:{ addFrontFace(block, pos); addBackFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 60:{ addUpFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 61:{ addFrontFace(block, pos); addUpFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 62:{ addBackFace(block, pos); addUpFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
-			case 63:{ addFrontFace(block, pos); addBackFace(block, pos); addUpFace(block, pos); addDownFace(block, pos); addRightFace(block, pos); addLeftFace(block, pos); break;}
+			case 1:{ addFrontFace(block, x, y, z); break;}
+			case 2:{ addBackFace(block, x, y, z); break;}
+			case 3:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); break;}
+			case 4:{ addUpFace(block, x, y, z); break;}
+			case 5:{ addFrontFace(block, x, y, z); addUpFace(block, x, y, z); break;}
+			case 6:{ addBackFace(block, x, y, z); addUpFace(block, x, y, z); break;}
+			case 7:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addUpFace(block, x, y, z); break;}
+			case 8:{ addDownFace(block, x, y, z); break;}
+			case 9:{ addFrontFace(block, x, y, z); addDownFace(block, x, y, z); break;}
+			case 10:{ addBackFace(block, x, y, z); addDownFace(block, x, y, z); break;}
+			case 11:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addDownFace(block, x, y, z); break;}
+			case 12:{ addUpFace(block, x, y, z); addDownFace(block, x, y, z); break;}
+			case 13:{ addFrontFace(block, x, y, z); addUpFace(block, x, y, z); addDownFace(block, x, y, z); break;}
+			case 14:{ addBackFace(block, x, y, z); addUpFace(block, x, y, z); addDownFace(block, x, y, z); break;}
+			case 15:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addUpFace(block, x, y, z); addDownFace(block, x, y, z); break;}
+			case 16:{ addRightFace(block, x, y, z); break;}
+			case 17:{ addFrontFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 18:{ addBackFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 19:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 20:{ addUpFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 21:{ addFrontFace(block, x, y, z); addUpFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 22:{ addBackFace(block, x, y, z); addUpFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 23:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addUpFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 24:{ addDownFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 25:{ addFrontFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 26:{ addBackFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 27:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 28:{ addUpFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 29:{ addFrontFace(block, x, y, z); addUpFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 30:{ addBackFace(block, x, y, z); addUpFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 31:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addUpFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); break;}
+			case 32:{ addLeftFace(block, x, y, z); break;}
+			case 33:{ addFrontFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 34:{ addBackFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 35:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 36:{ addUpFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 37:{ addFrontFace(block, x, y, z); addUpFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 38:{ addBackFace(block, x, y, z); addUpFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 39:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addUpFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 40:{ addDownFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 41:{ addFrontFace(block, x, y, z); addDownFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 42:{ addBackFace(block, x, y, z); addDownFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 43:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addDownFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 44:{ addUpFace(block, x, y, z); addDownFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 45:{ addFrontFace(block, x, y, z); addUpFace(block, x, y, z); addDownFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 46:{ addBackFace(block, x, y, z); addUpFace(block, x, y, z); addDownFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 47:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addUpFace(block, x, y, z); addDownFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 48:{ addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 49:{ addFrontFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 50:{ addBackFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 51:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 52:{ addUpFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 53:{ addFrontFace(block, x, y, z); addUpFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 54:{ addBackFace(block, x, y, z); addUpFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 55:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addUpFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 56:{ addDownFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 57:{ addFrontFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 58:{ addBackFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 59:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 60:{ addUpFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 61:{ addFrontFace(block, x, y, z); addUpFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 62:{ addBackFace(block, x, y, z); addUpFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
+			case 63:{ addFrontFace(block, x, y, z); addBackFace(block, x, y, z); addUpFace(block, x, y, z); addDownFace(block, x, y, z); addRightFace(block, x, y, z); addLeftFace(block, x, y, z); break;}
 		}
 	}
 	
-	void addFrontFace(uint8 block, const Vec3f&in pos)
+	void addFrontFace(uint8 block, uint32 x, uint32 y, uint32 z)
 	{
 		float u1 = Block::u_sides_start[block];
         float u2 = Block::u_sides_end[block];
         float v1 = Block::v_sides_start[block];
         float v2 = Block::v_sides_end[block];
         
-        verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z,	u1,	v1,	front_scol));
-		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,	u2,	v1,	front_scol));
-		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z,	u2,	v2, front_scol));
-		verts.push_back(Vertex(pos.x,	pos.y,		pos.z,	u1,	v2, front_scol));
+        verts.push_back(Vertex(x,	y+1,	z,	u1,	v1,	front_scol));
+		verts.push_back(Vertex(x+1,	y+1,	z,	u2,	v1,	front_scol));
+		verts.push_back(Vertex(x+1,	y,		z,	u2,	v2, front_scol));
+		verts.push_back(Vertex(x,	y,		z,	u1,	v2, front_scol));
         addIndices();
 	}
 	
-	void addBackFace(uint8 block, const Vec3f&in pos)
+	void addBackFace(uint8 block, uint32 x, uint32 y, uint32 z)
 	{
 		float u1 = Block::u_sides_start[block];
         float u2 = Block::u_sides_end[block];
         float v1 = Block::v_sides_start[block];
         float v2 = Block::v_sides_end[block];
 
-        verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,    u1,	v1,	back_scol));
-		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	u2,	v1,	back_scol));
-		verts.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	u2,	v2,	back_scol));
-		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	u1,	v2,	back_scol));
+        verts.push_back(Vertex(x+1,	y+1,	z+1,    u1,	v1,	back_scol));
+		verts.push_back(Vertex(x,	y+1,	z+1,	u2,	v1,	back_scol));
+		verts.push_back(Vertex(x,	y,		z+1,	u2,	v2,	back_scol));
+		verts.push_back(Vertex(x+1,	y,		z+1,	u1,	v2,	back_scol));
         addIndices();
 	}
 	
-	void addUpFace(uint8 block, const Vec3f&in pos)
+	void addUpFace(uint8 block, uint32 x, uint32 y, uint32 z)
 	{
 		float u1 = Block::u_top_start[block];
         float u2 = Block::u_top_end[block];
         float v1 = Block::v_top_start[block];
         float v2 = Block::v_top_end[block];
         
-        verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	u1,	v1,	top_scol));
-		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	u2,	v1,	top_scol));
-		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		u2,	v2,  top_scol));
-		verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		u1,	v2,  top_scol));
+        verts.push_back(Vertex(x,	y+1,	z+1,	u1,	v1,	top_scol));
+		verts.push_back(Vertex(x+1,	y+1,	z+1,	u2,	v1,	top_scol));
+		verts.push_back(Vertex(x+1,	y+1,	z,		u2,	v2,  top_scol));
+		verts.push_back(Vertex(x,	y+1,	z,		u1,	v2,  top_scol));
         addIndices();
 	}
 	
-	void addDownFace(uint8 block, const Vec3f&in pos)
+	void addDownFace(uint8 block, uint32 x, uint32 y, uint32 z)
 	{
 		float u1 = Block::u_bottom_start[block];
         float u2 = Block::u_bottom_end[block];
         float v1 = Block::v_bottom_start[block];
         float v2 = Block::v_bottom_end[block];
         
-        verts.push_back(Vertex(pos.x,	pos.y,		pos.z,		u1,	v1, bottom_scol));
-		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		u2,	v1, bottom_scol));
-		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	u2,	v2, bottom_scol));
-		verts.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	u1,	v2, bottom_scol));
+        verts.push_back(Vertex(x,	y,		z,		u1,	v1, bottom_scol));
+		verts.push_back(Vertex(x+1,	y,		z,		u2,	v1, bottom_scol));
+		verts.push_back(Vertex(x+1,	y,		z+1,	u2,	v2, bottom_scol));
+		verts.push_back(Vertex(x,	y,		z+1,	u1,	v2, bottom_scol));
         addIndices();
 	}
 	
-	void addRightFace(uint8 block, const Vec3f&in pos)
+	void addRightFace(uint8 block, uint32 x, uint32 y, uint32 z)
 	{
 		float u1 = Block::u_sides_start[block];
         float u2 = Block::u_sides_end[block];
         float v1 = Block::v_sides_start[block];
         float v2 = Block::v_sides_end[block];
         
-        verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z,		u1,	v1,	right_scol));
-		verts.push_back(Vertex(pos.x+1,	pos.y+1,	pos.z+1,	u2,	v1,	right_scol));
-		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z+1,	u2,	v2,	right_scol));
-		verts.push_back(Vertex(pos.x+1,	pos.y,		pos.z,		u1,	v2,	right_scol));
+        verts.push_back(Vertex(x+1,	y+1,	z,		u1,	v1,	right_scol));
+		verts.push_back(Vertex(x+1,	y+1,	z+1,	u2,	v1,	right_scol));
+		verts.push_back(Vertex(x+1,	y,		z+1,	u2,	v2,	right_scol));
+		verts.push_back(Vertex(x+1,	y,		z,		u1,	v2,	right_scol));
         addIndices();
 	}
 	
-	void addLeftFace(uint8 block, const Vec3f&in pos)
+	void addLeftFace(uint8 block, uint32 x, uint32 y, uint32 z)
 	{
 		float u1 = Block::u_sides_start[block];
         float u2 = Block::u_sides_end[block];
         float v1 = Block::v_sides_start[block];
         float v2 = Block::v_sides_end[block];
         
-        verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z+1,	u1,	v1,	left_scol));
-        verts.push_back(Vertex(pos.x,	pos.y+1,	pos.z,		u2,	v1,	left_scol));
-        verts.push_back(Vertex(pos.x,	pos.y,		pos.z,		u2,	v2,	left_scol));
-        verts.push_back(Vertex(pos.x,	pos.y,		pos.z+1,	u1,	v2,	left_scol));
+        verts.push_back(Vertex(x,	y+1,	z+1,	u1,	v1,	left_scol));
+        verts.push_back(Vertex(x,	y+1,	z,		u2,	v1,	left_scol));
+        verts.push_back(Vertex(x,	y,		z,		u2,	v2,	left_scol));
+        verts.push_back(Vertex(x,	y,		z+1,	u1,	v2,	left_scol));
         addIndices();
 	}
 
-    void addPlantFaces(uint8 block, const Vec3f&in pos)
+    void addPlantFaces(uint8 block, uint32 x, uint32 y, uint32 z)
 	{
-		Vec2f rand_offset = Vec2f(_world.noise.Sample(pos.x*60, (pos.z-pos.y)*60)/2.0f-0.25f, _world.noise.Sample(pos.z*60, (pos.y-pos.x)*60)/2.0f-0.25f);
+		Vec2f rand_offset = Vec2f(_world.noise.Sample(x*60, (z-y)*60)/2.0f-0.25f, _world.noise.Sample(z*60, (y-x)*60)/2.0f-0.25f);
 
         float u1 = Block::u_sides_start[block];
         float u2 = Block::u_sides_end[block];
         float v1 = Block::v_sides_start[block];
         float v2 = Block::v_sides_end[block];
         
-        verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y+1,	pos.z+0.84f+rand_offset.y,	u1,	v1,	top_scol));
-		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y+1,	pos.z+0.16f+rand_offset.y,	u2,	v1,	top_scol));
-		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y,		pos.z+0.16f+rand_offset.y,	u2,	v2,	top_scol));
-		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y,		pos.z+0.84f+rand_offset.y,	u1,	v2,	top_scol));
+        verts.push_back(Vertex(x+0.84f+rand_offset.x,	y+1,	z+0.84f+rand_offset.y,	u1,	v1,	top_scol));
+		verts.push_back(Vertex(x+0.16f+rand_offset.x,	y+1,	z+0.16f+rand_offset.y,	u2,	v1,	top_scol));
+		verts.push_back(Vertex(x+0.16f+rand_offset.x,	y,		z+0.16f+rand_offset.y,	u2,	v2,	top_scol));
+		verts.push_back(Vertex(x+0.84f+rand_offset.x,	y,		z+0.84f+rand_offset.y,	u1,	v2,	top_scol));
         addIndices();
 
-		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y+1,	pos.z+0.16f+rand_offset.y,	u1,	v1,	top_scol));
-		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y+1,	pos.z+0.84f+rand_offset.y,	u2,	v1,	top_scol));
-		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y,		pos.z+0.84f+rand_offset.y,	u2,	v2,	top_scol));
-		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y,		pos.z+0.16f+rand_offset.y,	u1,	v2,	top_scol));
+		verts.push_back(Vertex(x+0.84f+rand_offset.x,	y+1,	z+0.16f+rand_offset.y,	u1,	v1,	top_scol));
+		verts.push_back(Vertex(x+0.16f+rand_offset.x,	y+1,	z+0.84f+rand_offset.y,	u2,	v1,	top_scol));
+		verts.push_back(Vertex(x+0.16f+rand_offset.x,	y,		z+0.84f+rand_offset.y,	u2,	v2,	top_scol));
+		verts.push_back(Vertex(x+0.84f+rand_offset.x,	y,		z+0.16f+rand_offset.y,	u1,	v2,	top_scol));
         addIndices();
 
-		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y+1,	pos.z+0.16f+rand_offset.y,	u1,	v1,	top_scol));
-		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y+1,	pos.z+0.84f+rand_offset.y,	u2,	v1,	top_scol));
-		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y,		pos.z+0.84f+rand_offset.y,	u2,	v2,	top_scol));
-		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y,		pos.z+0.16f+rand_offset.y,	u1,	v2,	top_scol));
+		verts.push_back(Vertex(x+0.16f+rand_offset.x,	y+1,	z+0.16f+rand_offset.y,	u1,	v1,	top_scol));
+		verts.push_back(Vertex(x+0.84f+rand_offset.x,	y+1,	z+0.84f+rand_offset.y,	u2,	v1,	top_scol));
+		verts.push_back(Vertex(x+0.84f+rand_offset.x,	y,		z+0.84f+rand_offset.y,	u2,	v2,	top_scol));
+		verts.push_back(Vertex(x+0.16f+rand_offset.x,	y,		z+0.16f+rand_offset.y,	u1,	v2,	top_scol));
         addIndices();
 
-		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y+1,	pos.z+0.84f+rand_offset.y,	u1,	v1, top_scol));
-		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y+1,	pos.z+0.16f+rand_offset.y,	u2,	v1,	top_scol));
-		verts.push_back(Vertex(pos.x+0.84f+rand_offset.x,	pos.y,		pos.z+0.16f+rand_offset.y,	u2,	v2,	top_scol));
-		verts.push_back(Vertex(pos.x+0.16f+rand_offset.x,	pos.y,		pos.z+0.84f+rand_offset.y,	u1,	v2,	top_scol));
+		verts.push_back(Vertex(x+0.16f+rand_offset.x,	y+1,	z+0.84f+rand_offset.y,	u1,	v1, top_scol));
+		verts.push_back(Vertex(x+0.84f+rand_offset.x,	y+1,	z+0.16f+rand_offset.y,	u2,	v1,	top_scol));
+		verts.push_back(Vertex(x+0.84f+rand_offset.x,	y,		z+0.16f+rand_offset.y,	u2,	v2,	top_scol));
+		verts.push_back(Vertex(x+0.16f+rand_offset.x,	y,		z+0.84f+rand_offset.y,	u1,	v2,	top_scol));
         addIndices();
 	}
 

@@ -132,11 +132,11 @@ namespace Loading
 					{
 						fog_modif = Maths::Max(0, 7.5f-7.5f*((intro_timer-360)/120.0f));
 					}
-					if(intro_timer % 2 == 0) Render::SetFog(0x0000000, SMesh::LINEAR, fog_modif*(0.20f+float(XORRandom(20))/100.0f), fog_modif, 0, true, false);
+					if(intro_timer % 2 == 0) Render::SetFog(0x0000000, SMesh::LINEAR, fog_modif*(0.20f+float(XORRandom(20))/100.0f), fog_modif, 0, true, true);
 				}
 				else if(intro_timer >= 420)
 				{
-					Render::SetFog(0xFFFFFFFF, SMesh::LINEAR, 0, 8000, 0, false, false);
+					Render::SetFog(0xFFFFFFFF, SMesh::LINEAR, 0, 8000, 0, false, true);
 				}
 				intro_timer++;
 				if(getControls().isKeyJustPressed(KEY_SPACE) || intro_timer == 790)
@@ -272,7 +272,7 @@ namespace Loading
 
 				getControls().setMousePosition(Vec2f(float(getScreenWidth()) / 2.0f, float(getScreenHeight()) / 2.0f));
 
-				Render::SetFog(world.sky_color, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, false);
+				Render::SetFog(world.sky_color, SMesh::LINEAR, camera.z_far*0.76f, camera.z_far, 0, false, true);
 				Fill[0].col = Fill[1].col = Fill[2].col = Fill[3].col = world.sky_color;
 
 				for(int i = 0; i < block_queue.size(); i++)
