@@ -1,6 +1,5 @@
 
 #include "Blocks.as"
-//#include "Particles3D.as"
 
 MapSender[] players_to_send;
 class MapSender
@@ -554,6 +553,7 @@ class World
                 if(Block::plant[old_block])
                 {
                     PlaySound3D("cut_grass2.ogg", x, y, z);
+                    CreateBlockParticles(old_block, Vec3f(x+0.5,y+0.5,z+0.5));
                 }
                 else if(Block::solid[old_block])
                 {
@@ -1360,7 +1360,7 @@ const SColor right_scol = SColor(debug_alpha, right_col, right_col, right_col);
 const SColor front_scol = SColor(debug_alpha, front_col, front_col, front_col);
 const SColor back_scol = SColor(debug_alpha, back_col, back_col, back_col);
 
-void client_SetBlock(CPlayer@ player, uint8 block, const Vec3f&in pos)
+void client_SetBlock(CPlayer@ player, uint8 block, const Vec3f&in pos) // called from client to server
 {
     if(!world.inWorldBounds(pos.x, pos.y, pos.z)) return;
     
@@ -1385,7 +1385,7 @@ void client_SetBlock(CPlayer@ player, uint8 block, const Vec3f&in pos)
     }
 }
 
-void server_SetBlock(uint8 block, int x, int y, int z)
+void server_SetBlock(uint8 block, int x, int y, int z) // called from server to clients
 {
     if(!world.inWorldBounds(x, y, z)) return;
 

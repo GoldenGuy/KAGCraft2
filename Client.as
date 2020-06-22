@@ -105,7 +105,7 @@ void onTick(CRules@ this)
 		UpdateSectors();
 		UpdateUTexts();
 
-		if(getControls().isKeyJustPressed(KEY_F1)) show_help = !show_help;
+		if(getControls().isKeyJustPressed(KEY_F3)) show_debug = !show_debug;
 
 		//if(getControls().isKeyJustPressed(KEY_F7)) GenerateModelPLY();
 
@@ -509,19 +509,31 @@ void Render(int id)
 		Render::RawQuads("Block_Textures", block_menu_verts);
 	}
 
-	if(show_help)
+	if(u_showtutorial)
 	{
 		Vec2f help_dim;
 		GUI::GetTextDimensions(help_text, help_dim);
-		Vec2f help_start = Vec2f(20, 20);
+		//Vec2f help_start = Vec2f(20, 20);
+		//Vec2f help_end = help_start+help_dim;
+		Vec2f help_start = Vec2f(20, getScreenHeight()-20-help_dim.y);
 		Vec2f help_end = help_start+help_dim;
 		help_end.y -= 60;
 		GUI::DrawRectangle(help_start-Vec2f(6,6), help_end+Vec2f(6,6), 0xAA404040);
 		GUI::DrawText(help_text, help_start, color_white);
+		//setHelpText(help_text);
+	}
+
+	if(show_debug)
+	{
+		GUI::DrawRectangle(Vec2f(20,20), Vec2f(350,70), 0xAA404040);
+		GUI::DrawText("position: "+formatFloat(my_player.pos.x, "", 0, 6)+", "+formatFloat(my_player.pos.y, "", 0, 6)+", "+formatFloat(my_player.pos.z, "", 0, 6), Vec2f(20,20), color_white);
+		GUI::DrawText("chunks rendered: "+chunks_to_render.size(), Vec2f(20,35), color_white);
+		GUI::DrawText("particles: "+ps.particles.size(), Vec2f(20,50), color_white);
 	}
 
 	if(!g_videorecording)
 	{
+		GUI::SetFont("menu");
 		RenderUTexts();
 		my_player.RenderHandBlock();
 	}
@@ -583,7 +595,6 @@ Vertex[] Fill = {	Vertex(0, 0, 0, 0, 0, color_white),
 					Vertex(0, getScreenHeight(), 0, 0, 1, color_white)
 };
 
-bool show_help = false;
 string help_text =  "Welcome to KagCraft2!"+"\n\n"+
 					"Rules: Dont grief, dont build forbidden structures (dicks, swastikas, etc.)."+"\n\n"+
 					"Controls:"+"\n"+
@@ -597,6 +608,8 @@ string help_text =  "Welcome to KagCraft2!"+"\n\n"+
 					"Tab - scoreboard,"+"\n"+
 					"F1 - show this text in game."+"\n\n"+
 					"Type /commands in chat to see available commands.";
+
+bool show_debug = false;
 
 void GenerateModelPLY()
 {
@@ -694,7 +707,8 @@ void PlaySound3D(string name, int x, int y, int z)
 
 void CreateBlockParticles(uint8 block_id, Vec3f pos)
 {
-	//print("adding particle");
+	if((pos-my_player.pos).Length() > 30) return;
+
 	for(int i = 0; i < 32; i++)
 	{
 		Vec3f rand(float(XORRandom(20)-10)/20.0f, float(XORRandom(20)-10)/20.0f, float(XORRandom(20)-10)/20.0f);
