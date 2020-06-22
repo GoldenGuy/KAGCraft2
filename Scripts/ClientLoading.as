@@ -56,6 +56,8 @@ namespace Loading
 				mapParamsReady = false;
 				
 				@camera = @Camera();
+
+				@ps = @ParticleSystem();
 				
 				block_queue.clear();
 
@@ -72,12 +74,23 @@ namespace Loading
 
 				Sound::SetListenerPosition(Vec2f_zero);
 				Sound::SetCutOff(220);
-
-				if(this.exists("world"))
+				
+				if(isServer())
 				{
-					this.get("world", @world);
+					@world = @World();
+					world.LoadMapParams();
+					if(world.new)
+					{
+						world.GenerateMap();
+					}
+					else
+					{
+						world.LoadMap();
+					}
 					world.FacesSetUp();
 					world.SetUpMaterial();
+					this.set("world", @world);
+					this.set_bool("world_ready", true);
 				}
 				else
 				{

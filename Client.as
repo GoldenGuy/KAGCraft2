@@ -3,6 +3,8 @@
 
 #include "Debug.as"
 #include "Maths.as"
+#include "Sound3D.as"
+#include "ParticleSystem.as"
 #include "World.as"
 #include "Tree.as"
 #include "ClientLoading.as"
@@ -12,9 +14,10 @@
 #include "Player.as"
 #include "Scoreboard.as"
 #include "UtilityStuff.as"
-#include "Sound3D.as"
 
 World@ world;
+
+ParticleSystem@ ps;
 
 Camera@ camera;
 
@@ -49,6 +52,19 @@ void onTick(CRules@ this)
 		
 		camera.tick_update();
 		my_player.Update();
+		ps.Update();
+
+		/*this.set_f32("sound_listener_pos_x", camera.pos.x);
+		this.set_f32("sound_listener_pos_y", camera.pos.y);
+		this.set_f32("sound_listener_pos_z", camera.pos.z);
+		this.set_f32("sound_listener_dir_x", camera.dir_x);
+		if(isServer())
+		{
+			this.Sync("sound_listener_dir_x", false);
+			this.Sync("sound_listener_pos_y", false);
+			this.Sync("sound_listener_pos_z", false);
+			this.Sync("sound_listener_dir_x", false);
+		}*/
 
 		// sync your player
 		if(!isServer() && getPlayersCount() > 1)
@@ -256,8 +272,9 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 			world.BlockUpdate(x, y, z, block, old_block);
 		}
 	}
-	else if(cmd == this.getCommandID("C_PlaySound3D"))
+	/*else if(cmd == this.getCommandID("C_PlaySound3D"))
 	{
+		print("SOUNDO");
 		u16 netid = params.read_netid();
 		CPlayer@ _player = getPlayerByNetworkId(netid);
 		if(_player !is null && _player is getLocalPlayer())
@@ -269,7 +286,7 @@ void onCommand(CRules@ this, uint8 cmd, CBitStream@ params)
 
 			Sound3D(sound_name, Vec3f(x,y,z));
 		}
-	}
+	}*/
 	else if(cmd == this.getCommandID("SC_ChangeSky"))
 	{
 		u8 r = params.read_u8();
@@ -413,6 +430,11 @@ void Render(int id)
 	{
 		chunks_to_render[i].Render();
 	}
+	Render::SetBackfaceCull(false);
+	Vec3f look(1,1,0);
+	look.RotateXZ(-camera.interpolated_dir_x);
+	ps.Render(look);
+	Render::SetBackfaceCull(true);
 
 	// render yourself only while in thirdperson
 	if(thirdperson)
@@ -663,4 +685,19 @@ void GenerateModelPLY()
 	//everything = misc+vert_count+props+face_count+end_header+verts+faces;
 	print("done");
 	//print(everything);
+}
+
+void PlaySound3D(string name, int x, int y, int z)
+{
+    Sound3D(name, Vec3f(x,y,z));
+}
+
+void CreateBlockParticles(uint8 block_id, Vec3f pos)
+{
+	//print("adding particle");
+	for(int i = 0; i < 32; i++)
+	{
+		Vec3f rand(float(XORRandom(20)-10)/20.0f, float(XORRandom(20)-10)/20.0f, float(XORRandom(20)-10)/20.0f);
+		ps.AddParticle(block_id, pos+rand, rand/7.0f);
+	}
 }

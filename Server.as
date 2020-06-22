@@ -10,6 +10,8 @@
 
 World@ world;
 
+bool localhost = false;
+
 ServerPlayer@[] players;
 
 void onInit(CRules@ this)
@@ -17,6 +19,12 @@ void onInit(CRules@ this)
 	players_to_send.clear();
 
 	InitBlocks();
+
+	if(isClient())
+	{
+		localhost = true;
+		return;
+	}
 
 	@world = @World();
 
@@ -30,13 +38,22 @@ void onInit(CRules@ this)
 		world.LoadMap();
 	}
 
-	if(isClient()) this.set("world", @world);
+	//if(isClient()) this.set("world", @world);
 	
 	print("Server started.");
 }
 
 void onTick(CRules@ this)
 {
+	if(localhost)
+	{
+		if(this.get_bool("world_ready"))
+		{
+			this.get("world", @world);
+			localhost = false;
+		}
+		return;
+	}
 	if(!isClient())
 	{
 		uint16 size = players.size();
@@ -274,4 +291,14 @@ void onPlayerLeave(CRules@ this, CPlayer@ player)
 			return;
 		}
 	}
+}
+
+void PlaySound3D(string name, int x, int y, int z)
+{
+    // nothing
+}
+
+void CreateBlockParticles(uint8 block_id, Vec3f pos)
+{
+	// nothing
 }

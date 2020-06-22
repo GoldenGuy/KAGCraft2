@@ -630,6 +630,7 @@ class World
                             break;
                         }
                     }
+                    CreateBlockParticles(old_block, Vec3f(x+0.5,y+0.5,z+0.5));
                 }
             }
             else
@@ -1404,19 +1405,5 @@ void server_SetBlock(uint8 block, int x, int y, int z)
     else
     {
         world.UpdateBlocksAndChunks(x, y, z);
-    }
-}
-
-void PlaySound3D(string name, int x, int y, int z)
-{
-    if(getLocalPlayer() !is null)
-    {
-        CBitStream to_send;
-        to_send.write_netid(getLocalPlayer().getNetworkID());
-        to_send.write_string(name);
-        to_send.write_f32(x);
-        to_send.write_f32(y);
-        to_send.write_f32(z);
-        getRules().SendCommand(getRules().getCommandID("C_PlaySound3D"), to_send, false);
     }
 }
