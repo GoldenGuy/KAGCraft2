@@ -311,11 +311,11 @@ namespace Loading
 					}
 				}
 
-				string seclev = getSecurity().getPlayerSeclev(getLocalPlayer()).getName();
+				/*string seclev = getSecurity().getPlayerSeclev(getLocalPlayer()).getName();
 				if (seclev == "Admin")
 				{
 					admin = true;
-				}
+				}*/
 
 				CBitStream to_send;
 				to_send.write_netid(getLocalPlayer().getNetworkID());

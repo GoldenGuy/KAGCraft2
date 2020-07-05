@@ -183,13 +183,13 @@ void InitBlocks()
     AddBlock("Temp solid", true, true, 0);
 
     Block::dig_speed[Block::bedrock] = 0;
-    Block::dig_speed[Block::fence] = 2.2;
-    Block::dig_speed[Block::leaves] = 13;
-    Block::dig_speed[Block::stone] = 3;
-    Block::dig_speed[Block::hard_stone] = 3;
+    Block::dig_speed[Block::fence] = 3.2;
+    Block::dig_speed[Block::leaves] = 15;
+    Block::dig_speed[Block::stone] = 6;
+    Block::dig_speed[Block::hard_stone] = 6;
     Block::dig_speed[Block::water] = 15;
     Block::dig_speed[Block::watersecond] = 15;
-    Block::dig_speed[Block::glass] = 20;
+    Block::dig_speed[Block::glass] = 24;
 
     Block::allowed_to_build[Block::air] = false;
     Block::allowed_to_build[Block::bedrock] = false;
@@ -202,7 +202,7 @@ void AddBlock(const string&in name, bool _solid, bool _see_through, int allsides
     Block::solid.push_back(_solid);
     Block::see_through.push_back(_see_through);
     Block::plant.push_back(false);
-    Block::dig_speed.push_back(6);
+    Block::dig_speed.push_back(9);
     Block::allowed_to_build.push_back(true);
 
     Block::MakeUVs(allsides, allsides, allsides);
@@ -214,7 +214,7 @@ void AddBlock(const string&in name, bool _solid, bool _see_through, int sides, i
     Block::solid.push_back(_solid);
     Block::see_through.push_back(_see_through);
     Block::plant.push_back(false);
-    Block::dig_speed.push_back(6);
+    Block::dig_speed.push_back(9);
     Block::allowed_to_build.push_back(true);
 
     Block::MakeUVs(sides, top_and_bottom, top_and_bottom);
@@ -226,7 +226,7 @@ void AddBlock(const string&in name, bool _solid, bool _see_through, int sides, i
     Block::solid.push_back(_solid);
     Block::see_through.push_back(_see_through);
     Block::plant.push_back(false);
-    Block::dig_speed.push_back(6);
+    Block::dig_speed.push_back(9);
     Block::allowed_to_build.push_back(true);
 
     Block::MakeUVs(sides, top, bottom);

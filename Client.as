@@ -105,7 +105,7 @@ void onTick(CRules@ this)
 		UpdateSectors();
 		UpdateUTexts();
 
-		if(getControls().isKeyJustPressed(KEY_F3)) show_debug = !show_debug;
+		if(getControls().isKeyJustPressed(KEY_F7)) show_debug = !show_debug;
 
 		//if(getControls().isKeyJustPressed(KEY_F7)) GenerateModelPLY();
 
@@ -593,7 +593,7 @@ Vertex[] Fill = {	Vertex(0, 0, 0, 0, 0, color_white),
 };
 
 string help_text =  "Welcome to KagCraft2!"+"\n\n"+
-					"Rules: Dont grief, dont build forbidden structures (dicks, swastikas, etc.)."+"\n\n"+
+					"Rules: Dont grief, dont build forbidden structures (dicks, swastikas, etc.)."+"\n"+"Punishment: Permaban, i dont have time for you."+"\n\n"+
 					"Controls:"+"\n"+
 					"Left click - dig block,"+"\n"+
 					"Right click - place block,"+"\n"+
@@ -709,6 +709,8 @@ void CreateBlockParticles(uint8 block_id, Vec3f pos)
 	if((pos-my_player.pos).Length() > 24) return;
 
 	if(ps.particles.size() >= particle_cap) return;
+
+	if(!camera.frustum.ContainsSphere(pos-camera.frustum_pos, 2)) return;
 
 	int amount = 30*(1.0f-float(ps.particles.size()/particle_cap));
 

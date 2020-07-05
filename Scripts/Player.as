@@ -16,7 +16,6 @@ const float mouse_sensitivity = 0.16;
 
 bool move_mouse = false;
 
-bool admin = false;
 bool thirdperson = false;
 bool block_menu_open = false;
 bool fly = false;
@@ -40,6 +39,7 @@ class Player
     Vec3f pos, vel, old_pos, render_pos, moving_vec;
 	CBlob@ blob;
 	CPlayer@ player;
+	bool admin = false;
     bool onGround = false;
 	bool Jump = false;
 	bool Crouch = false;
@@ -75,6 +75,11 @@ class Player
 	void SetPlayer(CPlayer@ _player)
 	{
 		@player = @_player;
+		string seclev = getSecurity().getPlayerSeclev(_player).getName();
+		if(seclev == "Admin")
+		{
+			admin = true;
+		}
 	}
 
 	void MakeModel()
@@ -262,9 +267,11 @@ class Player
 				if(blob !is null && blob.isKeyJustPressed(key_action1))
 				{
 					int index = block_menu_mouse.x + block_menu_mouse.y*block_menu_size.x;
-					hand_block = block_menu_blocks[index];
-
-					picked_block_pos = block_menu_start + Vec2f((index % block_menu_size.x) * block_menu_tile_size.x, int(index / block_menu_size.x) * block_menu_tile_size.y);
+					if(index < block_menu_blocks.size())
+					{
+						hand_block = block_menu_blocks[index];
+						picked_block_pos = block_menu_start + Vec2f((index % block_menu_size.x) * block_menu_tile_size.x, int(index / block_menu_size.x) * block_menu_tile_size.y);
+					}
 				}
 				block_menu_mouse.x *= block_menu_tile_size.x;
 				block_menu_mouse.y *= block_menu_tile_size.y;
@@ -572,7 +579,16 @@ class Player
 		else if(admin)
 		{
 			if(c.isKeyJustPressed(KEY_XBUTTON2)) fly = !fly;
-			else if(c.isKeyJustPressed(KEY_XBUTTON1)) hold_frustum = !hold_frustum;
+			else if(c.isKeyJustPressed(KEY_XBUTTON1))
+			{
+				Vec3f hit_pos;
+				uint8 check = RaycastWorld(pos+Vec3f(0,eye_height,0), look_dir, 999, hit_pos);
+				if(check == Raycast::S_HIT)
+				{
+					client_SetBlock(player, Block::air, hit_pos);
+				}
+			}
+			else if(c.isKeyJustPressed(KEY_F8)) hold_frustum = !hold_frustum;
 			else if(c.isKeyJustPressed(KEY_F3) || c.isKeyJustPressed(KEY_F2))
 			{
 				bool freeze = c.isKeyJustPressed(KEY_F3);
@@ -926,7 +942,7 @@ class Player
 			{
 				return;
 			}
-			if(!Block::allowed_to_build[i])
+			if((!Block::allowed_to_build[i] && !admin) || i == 0)
 			{
 				continue;
 			}
