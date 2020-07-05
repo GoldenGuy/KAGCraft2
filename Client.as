@@ -82,9 +82,17 @@ void onTick(CRules@ this)
 		}
 		for(int i = 0; i < other_players.size(); i++)
 		{
-			if(other_players[i].digging)
+			if(camera.frustum.ContainsSphere(other_players[i].pos-camera.frustum_pos, 2.5))
 			{
-				other_players[i].RenderDiggingBlock(diggers);
+				other_players[i].render = true;
+				if(other_players[i].digging)
+				{
+					other_players[i].RenderDiggingBlock(diggers);
+				}
+			}
+			else
+			{
+				other_players[i].render = false;
 			}
 		}
 
@@ -449,6 +457,7 @@ void Render(int id)
 	// render other players
 	for(int i = 0; i < other_players.size(); i++)
 	{
+		if(!other_players[i].render) continue;
 		other_players[i].RenderUpdate();
 		other_players[i].RenderPlayer();
 		other_players[i].RenderNickname();

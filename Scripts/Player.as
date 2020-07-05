@@ -40,6 +40,7 @@ class Player
 	CBlob@ blob;
 	CPlayer@ player;
 	bool admin = false;
+	bool render = false;
     bool onGround = false;
 	bool Jump = false;
 	bool Crouch = false;
