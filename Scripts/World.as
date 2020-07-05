@@ -1069,8 +1069,8 @@ class World
 class Chunk
 {
     World@ _world;
-    int x, y, z, world_x, world_y, world_z, world_x_bounds, world_y_bounds, world_z_bounds;
-    int index, world_index;
+    uint32 x, y, z, world_x, world_y, world_z, world_x_bounds, world_y_bounds, world_z_bounds;
+    uint32 index, world_index;
     bool rebuild, empty;
     SMesh mesh;
     Vertex[] verts;
@@ -1079,7 +1079,7 @@ class Chunk
 
     Chunk(){}
 
-    Chunk(World@ reference, int _index)
+    Chunk(World@ reference, uint32 _index)
     {
         @_world = @reference;
         mesh.Clear();
@@ -1385,7 +1385,7 @@ void client_SetBlock(CPlayer@ player, uint8 block, const Vec3f&in pos) // called
     }
 }
 
-void server_SetBlock(uint8 block, int x, int y, int z) // called from server to clients
+void server_SetBlock(uint8 block, uint32 x, uint32 y, uint32 z) // called from server to clients
 {
     if(!world.inWorldBounds(x, y, z)) return;
 
