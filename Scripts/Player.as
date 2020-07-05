@@ -872,7 +872,7 @@ class Player
 		float v1 = Block::v_sides_start[hand_block];
 		float v2 = Block::v_sides_end[hand_block];
 
-		Vec2f screen_pos = Vec2f(getScreenWidth()-100, getScreenHeight()-100);
+		Vec2f screen_pos = Vec2f(80, 140);
 		Vec2f scale = Vec2f(150,150);
 
 		Vertex[] verts;

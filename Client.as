@@ -704,6 +704,8 @@ void PlaySound3D(string name, int x, int y, int z)
 
 void CreateBlockParticles(uint8 block_id, Vec3f pos)
 {
+	if(v_fastrender) return;
+
 	if((pos-my_player.pos).Length() > 24) return;
 
 	if(ps.particles.size() >= particle_cap) return;
