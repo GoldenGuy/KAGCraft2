@@ -389,6 +389,20 @@ class Player
 						digging = false;
 						dig_timer = 0;
 					}
+
+					/*if(c.isKeyPressed(KEY_KEY_N))
+					{
+						Vec3f _hit_pos;
+						uint8 _check = RaycastWorld(pos+Vec3f(0,eye_height,0), look_dir, 999, _hit_pos);
+						if(_check == Raycast::S_HIT)
+						{
+							//client_SetBlock(player, Block::air, hit_pos);
+							for(int _x = -1; _x < 2; _x++)
+								for(int _y = -1; _y < 2; _y++)
+									for(int _z = -1; _z < 2; _z++)
+										client_SetBlock(player, Block::air, _hit_pos+Vec3f(_x,_y,_z));
+						}
+					}*/
 				}
 				// ---
 
