@@ -513,14 +513,11 @@ void Render(int id)
 	{
 		Vec2f help_dim;
 		GUI::GetTextDimensions(help_text, help_dim);
-		//Vec2f help_start = Vec2f(20, 20);
-		//Vec2f help_end = help_start+help_dim;
 		Vec2f help_start = Vec2f(20, getScreenHeight()-20-help_dim.y);
 		Vec2f help_end = help_start+help_dim;
 		help_end.y -= 60;
 		GUI::DrawRectangle(help_start-Vec2f(6,6), help_end+Vec2f(6,6), 0xAA404040);
 		GUI::DrawText(help_text, help_start, color_white);
-		//setHelpText(help_text);
 	}
 
 	if(show_debug)
@@ -707,9 +704,13 @@ void PlaySound3D(string name, int x, int y, int z)
 
 void CreateBlockParticles(uint8 block_id, Vec3f pos)
 {
-	if((pos-my_player.pos).Length() > 30) return;
+	if((pos-my_player.pos).Length() > 24) return;
 
-	for(int i = 0; i < 32; i++)
+	if(ps.particles.size() >= particle_cap) return;
+
+	int amount = 30*(1.0f-float(ps.particles.size()/particle_cap));
+
+	for(int i = 0; i < amount; i++)
 	{
 		Vec3f rand(float(XORRandom(20)-10)/20.0f, float(XORRandom(20)-10)/20.0f, float(XORRandom(20)-10)/20.0f);
 		ps.AddParticle(block_id, pos+rand, rand/7.0f);

@@ -1,4 +1,6 @@
 
+int particle_cap = 250;
+
 class ParticleSystem
 {
     Particle[] particles;
