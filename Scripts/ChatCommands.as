@@ -29,6 +29,7 @@ bool onServerProcessChat(CRules@ this, const string& in text_in, string& out tex
 						this.SendCommand(this.getCommandID("SC_ChangeSky"), to_send, true);
 					}
 				}
+				//else if (tokens[0] == "/msg")
 			}
 		}
 	}
