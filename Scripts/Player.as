@@ -355,7 +355,14 @@ class Player
 						else if(c.isKeyJustPressed(KEY_MBUTTON))
 						{
 							uint8 block_looking_at = world.getBlock(hit_pos.x, hit_pos.y, hit_pos.z);
-							hand_block = block_looking_at;
+							if(Block::allowed_to_build[block_looking_at] && block_looking_at > 0 && block_looking_at < Block::block_names.size())
+							{
+								hand_block = block_looking_at;
+							}
+							else
+							{
+								AddUText("Cant take this block!", 0xFFFF0000, 40);
+							}
 						}
 						// ---
 
@@ -797,8 +804,10 @@ class Player
 		Matrix::SetRotationDegrees(billboard_model, -camera.interpolated_dir_y, camera.interpolated_dir_x, 0);
 		Render::SetModelTransform(billboard_model);
 		Render::SetAlphaBlend(true);
+		Render::SetZBuffer(false, true);
 		mesh_nickname.RenderMeshWithMaterial();
 		Render::SetAlphaBlend(false);
+		Render::SetZBuffer(true, true);
 	}
 
 	void Serialize(CBitStream@ to_send)
